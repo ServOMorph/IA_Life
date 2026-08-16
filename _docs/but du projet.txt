@@ -1,0 +1,14 @@
+Crée un environnement godot très simple, une grande surface fermée.
+Dedans nous allons mettre 2 personnages Perso1 et Perso2.
+On mettre une camera attaché à chaque personnage pour voir ce qu'il voit et une camera au dessus de la scène. On ajoutera une camera qui suit le perso de façon à ce qu'on le voit en vue 3ème personne.
+Les 2 personnages seront crée en lowpoly, sans animation pour le moment.
+Chauqe personnage pourra se déplacer.
+Chaque personnage sera dirigé par un llm (on verra comment on connecte après).
+Les IA pourront communiquer par écrit entre eux, tout sera logué.
+On aura dans la fenêtre godot un endroit pour afficher ce qu'il se disent. Dans cette fenêtre on pourra changer de caméra très facilement.
+on codera de façon à ce que le projet pouisse grnadement évoluer.
+
+But global du projet faire évoluer 2 ia doté de corps dansun jeu vidéo.
+relevé et analyser tout le socmportements des ia.
+Evaluer comment les modifs du jeu modifie leur comportement.
+Exemple : si j'aoute un arbre avec des fruits et qu'on met en place un système de vie avec nourriture, que va t'il se passer ?
