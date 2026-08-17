@@ -19,6 +19,19 @@
   (`HeightMapShape3D` calé sur la même grille), `_build_decor()`/`_add_rock()`/`_add_tree()`.
 - Personnages et ronces repositionnés dynamiquement sur la hauteur du terrain à leur spawn.
 
+## Bug de culling corrigé + relief plus marqué (2026-08-17)
+Le mesh de terrain généré par `SurfaceTool` avait un ordre de winding inversé : Godot le
+traitait comme face arrière et le culled par défaut, le rendant invisible depuis le dessus
+(seule la nappe "ground" du ciel procédural était visible en arrière-plan, confondue avec un
+bug de texture). Diagnostiqué par capture d'écran automatisée (`run_screenshot.py`, nouveau)
+en isolant la variable relief (test à amplitude 0). Corrigé par `render_mode cull_disabled`
+sur `scripts/triplanar.gdshader`. À cette occasion, le relief a été rendu plus marqué
+(`TERRAIN_AMPLITUDE` 1.2 -> 5.0, `TERRAIN_NOISE_FREQUENCY` 0.025 -> 0.045) et des cuvettes de
+spawn ont été ajoutées (`_valley_offset`, rayon 20, profondeur 3.5) autour des 4 points
+d'apparition des personnages.
+
 ## Commentaire
-Choix d'approche validé explicitement par l'utilisateur. Implémentation vérifiée sans erreur
-en headless ; validation visuelle manuelle en attente (`tests_manuels.md`).
+Choix d'approche validé explicitement par l'utilisateur. Bug de rendu majeur (terrain
+invisible) corrigé et vérifié par capture d'écran automatisée. Validation visuelle manuelle
+en jeu toujours en attente (`tests_manuels.md`), notamment l'impact du relief plus escarpé
+et des cuvettes de spawn sur le déplacement des personnages.

@@ -1,3 +1,25 @@
+## v0.5 — 2026-08-17
+
+### Ajouté
+- Capture d'écran automatisée (`run_screenshot.py`) : lance le jeu en fenêtre réelle,
+  sauvegarde le viewport en PNG après un délai, permet une vérification visuelle sans
+  intervention manuelle.
+- Relief procédural rendu plus escarpé (amplitude 1.2 -> 5.0) et cuvettes de spawn
+  (dépression douce) autour des 4 points d'apparition des personnages.
+- Skill `synthese-projet` : génère un état des lieux complet du projet (personnages,
+  variables du monde, carte, UX, outillage) dans `_docs/`, avec archivage automatique
+  des synthèses précédentes.
+
+### Corrigé
+- Bug de rendu majeur : le terrain était invisible depuis le dessus (winding de mesh
+  inversé, culling par défaut de Godot), diagnostiqué à tort au premier abord comme un
+  problème de texture puis d'auto-ombrage. Corrigé par `render_mode cull_disabled` sur
+  le shader triplanar.
+
+### Modifié
+- Luminosité de la scène augmentée (énergie de la lumière directionnelle, exposition du
+  tonemap) — non validée visuellement de façon décisive.
+
 ## v0.4 — 2026-08-17
 
 ### Ajouté

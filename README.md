@@ -26,17 +26,26 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `scripts/game_logger.gd` : autoload `GameLogger`, archive chaque partie dans `logs/`.
 - `run.py` : lance le jeu (pas l'éditeur).
 - `run_headless.py` : lance une partie sans fenêtre avec overrides JSON, pour tests
-  automatisés.
-- `.claude/skills/analyse-partie/`, `.claude/skills/experimentation-headless/` : skills
-  d'analyse de logs et de campagnes de tests headless.
+  automatisés (aucun rendu GPU en mode `--headless`, inutilisable pour une capture
+  d'écran).
+- `run_screenshot.py` : lance une partie en fenêtre réelle, capture le viewport en PNG
+  après un délai configurable, puis quitte — vérification visuelle automatisée.
+- `.claude/skills/analyse-partie/`, `.claude/skills/experimentation-headless/`,
+  `.claude/skills/synthese-projet/` : skills d'analyse de logs, de campagnes de tests
+  headless, et de génération d'un état des lieux complet du projet.
 - `_docs/decisions/` : archive des décisions d'évolution du projet.
+- `_docs/*_synthese-projet.md` : dernier état des lieux complet généré (archives dans
+  `_docs/archives/`).
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
 Roadmap graphisme (`DESIGN/roadmap_graphisme.md`) : Phase 1 (lumière/post-traitement)
 validée. Phases 2 (matériaux PBR, ronces en buisson), 3 (animation procédurale des
-personnages) et 4 (terrain à relief procédural + décor) implémentées, sans erreur en
-headless, en attente de validation manuelle en jeu (`tests_manuels.md`). Cycle caméra 3
-clics par personnage (3e personne / 1re personne contrainte / retour) ajouté. Bug connu non
-résolu : clignotement occasionnel de la texture d'herbe. Mécaniques de simulation (faim,
-mémoire des ronciers, cueillette) inchangées depuis la session précédente.
+personnages) et 4 (terrain à relief procédural + décor) implémentées, en attente de
+validation manuelle en jeu (`tests_manuels.md`). Un bug de rendu majeur (terrain
+invisible depuis le dessus, culling de mesh) a été diagnostiqué et corrigé cette session
+via `run_screenshot.py` ; le relief a été rendu plus escarpé et des cuvettes de spawn ont
+été ajoutées. Cycle caméra 3 clics par personnage (3e personne / 1re personne contrainte
+/ retour) ajouté. Bug connu non résolu : clignotement occasionnel de la texture d'herbe.
+Mécaniques de simulation (faim, mémoire des ronciers, cueillette) inchangées depuis la
+session précédente.

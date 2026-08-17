@@ -5,10 +5,13 @@ const WALL_HEIGHT := 3.0
 const WALL_THICKNESS := 1.0
 const HEADLESS_ENV_VAR := "IA_LIFE_HEADLESS_CONFIG"
 const TERRAIN_RESOLUTION := 80
-const TERRAIN_AMPLITUDE := 1.2
-const TERRAIN_NOISE_FREQUENCY := 0.025
+const TERRAIN_AMPLITUDE := 5.0
+const TERRAIN_NOISE_FREQUENCY := 0.045
 const TERRAIN_NOISE_SEED := 1337
 const TERRAIN_FLAT_MARGIN := 12.0
+const VALLEY_RADIUS := 20.0
+const VALLEY_DEPTH := 3.5
+const SPAWN_POINTS := [Vector2(-40, -40), Vector2(40, -40), Vector2(-40, 40), Vector2(40, 40)]
 
 var _character_defaults: Dictionary = {}
 var _quit_on_all_dead: bool = false
@@ -16,6 +19,9 @@ var _max_wall_seconds: float = 0.0
 var _wall_clock: float = 0.0
 var _characters: Array = []
 var _terrain_noise: FastNoiseLite
+var _screenshot_path: String = ""
+var _screenshot_delay: float = 0.0
+var _screenshot_clock: float = 0.0
 
 func _ready() -> void:
 	_load_headless_overrides()
@@ -38,6 +44,12 @@ func _ready() -> void:
 		_characters.append(c.node)
 
 func _process(delta: float) -> void:
+	if _screenshot_path != "":
+		_screenshot_clock += delta
+		if _screenshot_clock >= _screenshot_delay:
+			_take_screenshot()
+			return
+
 	if _quit_on_all_dead and _characters.size() > 0:
 		var all_dead := true
 		for c in _characters:
@@ -78,7 +90,20 @@ func _load_headless_overrides() -> void:
 
 	_quit_on_all_dead = parsed.get("quit_on_all_dead", true)
 	_max_wall_seconds = float(parsed.get("max_wall_seconds", 120.0))
+
+	if parsed.has("screenshot"):
+		var shot: Dictionary = parsed["screenshot"]
+		_screenshot_path = String(shot.get("path", ""))
+		_screenshot_delay = float(shot.get("delay_seconds", 3.0))
+
 	GameLogger.log_event("headless", "Overrides appliqués depuis %s : %s" % [path, JSON.stringify(parsed)])
+
+func _take_screenshot() -> void:
+	var image := get_viewport().get_texture().get_image()
+	image.save_png(_screenshot_path)
+	GameLogger.log_event("screenshot", "Capture enregistrée : %s" % _screenshot_path)
+	_screenshot_path = ""
+	get_tree().quit()
 
 func _build_environment() -> void:
 	var sky_material := ProceduralSkyMaterial.new()
@@ -105,6 +130,7 @@ func _build_environment() -> void:
 	env.glow_bloom = 0.1
 
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
+	env.tonemap_exposure = 1.6
 
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
@@ -116,9 +142,11 @@ func _build_light() -> void:
 	var light := DirectionalLight3D.new()
 	light.rotation_degrees = Vector3(-50, -30, 0)
 	light.light_color = Color(1.0, 0.88, 0.68)
-	light.light_energy = 1.2
+	light.light_energy = 2.2
 	light.shadow_enabled = true
 	light.light_angular_distance = 1.5
+	light.shadow_bias = 0.1
+	light.directional_shadow_normal_bias = 4.0
 	add_child(light)
 
 func _init_terrain_noise() -> void:
@@ -131,7 +159,17 @@ func _terrain_height(x: float, z: float) -> float:
 	var half := MAP_SIZE / 2.0
 	var edge_dist: float = min(half - abs(x), half - abs(z))
 	var falloff: float = clamp(edge_dist / TERRAIN_FLAT_MARGIN, 0.0, 1.0)
-	return _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff
+	var base := _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff
+	return base + _valley_offset(x, z)
+
+func _valley_offset(x: float, z: float) -> float:
+	var offset := 0.0
+	for p in SPAWN_POINTS:
+		var d: float = Vector2(x - p.x, z - p.y).length()
+		var t: float = clamp(1.0 - d / VALLEY_RADIUS, 0.0, 1.0)
+		var smooth_t: float = t * t * (3.0 - 2.0 * t)
+		offset -= VALLEY_DEPTH * smooth_t
+	return offset
 
 func _build_triplanar_material(dir: String, scale: float) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
