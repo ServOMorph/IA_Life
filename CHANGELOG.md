@@ -1,3 +1,12 @@
+## v0.2 — 2026-08-17
+
+### Ajouté
+- Analyse du rendu graphique actuel et pistes d'amélioration gratuites (DESIGN/pistes_graphisme.md).
+- Roadmap graphisme en 6 phases (DESIGN/roadmap_graphisme.md).
+
+### Modifié
+- Contrainte "personnages sans animation" levée — animation (marche/idle) intégrée au plan.
+
 ## v0.1 — 2026-08-17
 
 ### Ajouté
