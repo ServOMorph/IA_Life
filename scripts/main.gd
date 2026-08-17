@@ -4,6 +4,7 @@ const MAP_SIZE := 160.0
 const WALL_HEIGHT := 3.0
 const WALL_THICKNESS := 1.0
 const HEADLESS_ENV_VAR := "IA_LIFE_HEADLESS_CONFIG"
+const DEV_MODE_ENV_VAR := "IA_LIFE_DEV_MODE"
 const TERRAIN_RESOLUTION := 80
 const TERRAIN_AMPLITUDE := 5.0
 const TERRAIN_NOISE_FREQUENCY := 0.045
@@ -22,8 +23,14 @@ var _terrain_noise: FastNoiseLite
 var _screenshot_path: String = ""
 var _screenshot_delay: float = 0.0
 var _screenshot_clock: float = 0.0
+var _dev_mode: bool = false
+var _ronces: Array = []
+var _dev_frozen_scale: float = -1.0
+var _dev_step_frames: int = 0
+var _ui: CanvasLayer
 
 func _ready() -> void:
+	_dev_mode = OS.get_environment(DEV_MODE_ENV_VAR) != ""
 	_load_headless_overrides()
 	_init_terrain_noise()
 	_build_environment()
@@ -42,6 +49,83 @@ func _ready() -> void:
 	_build_ui(characters, camera)
 	for c in characters:
 		_characters.append(c.node)
+
+	if _dev_mode:
+		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim haute (déclenche cueillette), E: forcer faim basse (déclenche repas), F1-F4: téléporter le personnage au contact d'une ronce")
+
+func _physics_process(_delta: float) -> void:
+	if _dev_frozen_scale >= 0.0:
+		if _dev_step_frames > 0:
+			GameSpeed.time_scale = _dev_frozen_scale
+			_dev_step_frames -= 1
+		else:
+			GameSpeed.time_scale = 0.0
+
+func _unhandled_key_input(event: InputEvent) -> void:
+	if not _dev_mode:
+		return
+	if not (event is InputEventKey and event.pressed and not event.echo):
+		return
+	match event.keycode:
+		KEY_SPACE:
+			_dev_toggle_freeze()
+		KEY_N:
+			_dev_step_frame()
+		KEY_H:
+			_dev_force_hunger_all(95.0)
+		KEY_E:
+			_dev_force_hunger_all(40.0)
+		KEY_F1:
+			_dev_teleport_to_ronce(0)
+		KEY_F2:
+			_dev_teleport_to_ronce(1)
+		KEY_F3:
+			_dev_teleport_to_ronce(2)
+		KEY_F4:
+			_dev_teleport_to_ronce(3)
+
+func _dev_toggle_freeze() -> void:
+	if _dev_frozen_scale < 0.0:
+		_dev_frozen_scale = GameSpeed.time_scale
+		GameLogger.log_event("dev", "Simulation gelée (vitesse sauvegardée: %.1f)" % _dev_frozen_scale)
+		_ui.set_dev_frozen(true)
+	else:
+		GameSpeed.time_scale = _dev_frozen_scale
+		GameLogger.log_event("dev", "Simulation reprise (vitesse: %.1f)" % GameSpeed.time_scale)
+		_dev_frozen_scale = -1.0
+		_ui.set_dev_frozen(false)
+
+func _dev_step_frame() -> void:
+	if _dev_frozen_scale < 0.0:
+		return
+	_dev_step_frames = 1
+	GameLogger.log_event("dev", "Avance d'une frame (simulation gelée)")
+
+func _dev_force_hunger_all(value: float) -> void:
+	for c in _characters:
+		if not c.is_dead:
+			c.hunger = value
+	GameLogger.log_event("dev", "Faim forcée à %.0f pour tous les personnages vivants" % value)
+
+func _dev_teleport_to_ronce(index: int) -> void:
+	if index >= _characters.size():
+		return
+	var character = _characters[index]
+	if character.is_dead or _ronces.is_empty():
+		return
+	var nearest = null
+	var nearest_dist := INF
+	for r in _ronces:
+		if not is_instance_valid(r):
+			continue
+		var d: float = character.position.distance_squared_to(r.position)
+		if d < nearest_dist:
+			nearest_dist = d
+			nearest = r
+	if nearest == null:
+		return
+	character.position = Vector3(nearest.position.x, character.position.y, nearest.position.z)
+	GameLogger.log_event("dev", "%s téléporté au contact d'une ronce" % character.display_name)
 
 func _process(delta: float) -> void:
 	if _screenshot_path != "":
@@ -107,11 +191,11 @@ func _take_screenshot() -> void:
 
 func _build_environment() -> void:
 	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color(0.3, 0.5, 0.75)
-	sky_material.sky_horizon_color = Color(0.85, 0.6, 0.4)
-	sky_material.ground_bottom_color = Color(0.2, 0.16, 0.12)
-	sky_material.ground_horizon_color = Color(0.85, 0.6, 0.4)
-	sky_material.sun_angle_max = 30.0
+	sky_material.sky_top_color = Color(0.35, 0.6, 0.9)
+	sky_material.sky_horizon_color = Color(0.75, 0.85, 0.95)
+	sky_material.ground_bottom_color = Color(0.35, 0.3, 0.22)
+	sky_material.ground_horizon_color = Color(0.75, 0.85, 0.95)
+	sky_material.sun_angle_max = 50.0
 
 	var sky := Sky.new()
 	sky.sky_material = sky_material
@@ -130,7 +214,7 @@ func _build_environment() -> void:
 	env.glow_bloom = 0.1
 
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 1.6
+	env.tonemap_exposure = 2.0
 
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
@@ -140,9 +224,9 @@ func _build_environment() -> void:
 
 func _build_light() -> void:
 	var light := DirectionalLight3D.new()
-	light.rotation_degrees = Vector3(-50, -30, 0)
-	light.light_color = Color(1.0, 0.88, 0.68)
-	light.light_energy = 2.2
+	light.rotation_degrees = Vector3(-65, -30, 0)
+	light.light_color = Color(1.0, 0.96, 0.88)
+	light.light_energy = 3.0
 	light.shadow_enabled = true
 	light.light_angular_distance = 1.5
 	light.shadow_bias = 0.1
@@ -359,7 +443,8 @@ func _build_ui(characters: Array, camera: Camera3D) -> void:
 	var ui := CanvasLayer.new()
 	ui.set_script(load("res://scripts/ui_manager.gd"))
 	add_child(ui)
-	ui.setup(characters, camera)
+	ui.setup(characters, camera, _dev_mode)
+	_ui = ui
 
 func _spawn_character(x: float, z: float, color: Color, char_name: String, corner: String) -> Dictionary:
 	var character := CharacterBody3D.new()
@@ -476,3 +561,4 @@ func _spawn_ronce(pos: Vector3) -> void:
 
 	add_child(ronce)
 	ronce.setup_visual(mesh_instance, full_mat, empty_mat)
+	_ronces.append(ronce)

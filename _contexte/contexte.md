@@ -7,14 +7,13 @@ Créer un environnement Godot avec 2 personnages lowpoly pilotés chacun par un 
 Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
-Scaffold Godot fonctionnel : map 160x160 avec relief procédural escarpé (bruit simplex,
-cuvettes aux 4 points de spawn), 4 personnages lowpoly, caméra libre/suivi+zoom/1re
-personne, menu bas avec panneaux perso permanents, cueillette/consommation de mûres
-(ronces avec collision physique), mémoire spatiale des ronciers, vitesse de simulation
-x50, logging complet, mode headless + skills d'analyse/expérimentation/synthèse. Bug de
-rendu majeur (terrain invisible depuis le dessus) diagnostiqué et corrigé cette session
-via capture d'écran automatisée (`run_screenshot.py`, nouveau). Aucune mécanique ni
-aucun rendu encore validés par test utilisateur manuel en jeu (`python run.py`).
+Terrain/relief/cuvettes de spawn, faim/vieillissement/mort et vitesse de simulation
+validés manuellement en jeu. Bug de luminosité (scène de nuit) corrigé (ciel/lumière/
+exposition), vérifié par capture d'écran, en attente de confirmation utilisateur en jeu.
+Mode dev en construction (`roadmap_mode-dev.md`, Phases 1-2 faites : `run_dev.py`,
+raccourcis clavier, UX "MODE DEV") pour tester cueillette/mémoire/collision/4-personnages
+simultanés, encore bloqués en observation directe. Bug connu : personnages enfoncés
+visuellement dans le sol malgré un suivi correct de la hauteur du terrain.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-16 : Initialisation du protocole vibecoding.
@@ -26,3 +25,5 @@ aucun rendu encore validés par test utilisateur manuel en jeu (`python run.py`)
 - 2026-08-17 : Mémoire spatiale des ronciers par personnage + collision physique des ronces.
 - 2026-08-17 : Correctif bug terrain invisible (culling) + relief escarpé + cuvettes de
   spawn + capture d'écran automatisée (`run_screenshot.py`) + skill `synthese-projet`.
+- 2026-08-17 : Validation manuelle terrain/relief/faim-mort + correctif luminosité (scène
+  de jour) ; mode dev (`roadmap_mode-dev.md`) en cours de construction (Phases 1-2 faites).

@@ -112,4 +112,11 @@ l'`Area3D` inchangée. Vérifié en headless (8 runs x50) : cueillette/mémorisa
 inchangées, aucune régression détectée.
 
 ## Commentaire
-(à compléter lors de la validation/invalidation)
+Aucune des mécaniques de cueillette/consommation/mémoire/collision n'a encore été testée
+manuellement en jeu : elles n'avaient jamais été ajoutées à `tests_manuels.md` (seuls des
+tests de rendu graphique/caméra y figuraient). La bascule plein/vide des ronces (test
+prévu) est bloquée faute de pouvoir observer facilement un événement de cueillette en jeu.
+
+Décision 2026-08-17 : construire un mode dev (`roadmap_mode-dev.md`) pour rendre ces
+mécaniques observables et testables à la demande. Les 15 tests correspondants ont été
+ajoutés à `tests_manuels.md`.

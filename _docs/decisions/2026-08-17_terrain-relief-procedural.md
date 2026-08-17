@@ -32,6 +32,21 @@ d'apparition des personnages.
 
 ## Commentaire
 Choix d'approche validé explicitement par l'utilisateur. Bug de rendu majeur (terrain
-invisible) corrigé et vérifié par capture d'écran automatisée. Validation visuelle manuelle
-en jeu toujours en attente (`tests_manuels.md`), notamment l'impact du relief plus escarpé
-et des cuvettes de spawn sur le déplacement des personnages.
+invisible) corrigé et vérifié par capture d'écran automatisée.
+
+Validation manuelle en jeu (2026-08-17) : relief, aplanissement en bordure de murs,
+cuvettes de spawn, position des ronces/rochers/arbres sur le relief, absence de blocage
+sur les pentes — tous confirmés OK par l'utilisateur. Clignotement de la texture d'herbe
+(bug connu documenté dans `tests_manuels.md`) : non reproduit, considéré résolu.
+
+Bug détecté : les personnages suivent bien la hauteur du terrain en déplacement mais
+restent visuellement enfoncés dans le sol. Reporté dans `tests_manuels.md` (section "Bug
+connu — enfoncement des personnages dans le sol"), correctif non encore fait.
+
+Bug détecté et corrigé (2026-08-17) : malgré l'augmentation de luminosité de la session
+précédente, la scène ressemblait à une scène de nuit (ciel orange sombre, terrain terne).
+Correctif dans `scripts/main.gd` (`_build_environment`, `_build_light`) : ciel bleu clair
+au lieu d'orange (`sky_top_color`/`sky_horizon_color`/`ground_horizon_color`),
+`sun_angle_max` 30 -> 50, lumière plus haute et plus intense (`rotation_degrees.x` -50 ->
+-65, `light_energy` 2.2 -> 3.0), `tonemap_exposure` 1.6 -> 2.0. Vérifié par capture d'écran
+automatisée (`run_screenshot.py`) avant/après.

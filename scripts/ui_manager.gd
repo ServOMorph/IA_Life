@@ -28,12 +28,16 @@ var _menu_bar: HBoxContainer
 var _entries: Array = []
 var _camera: Camera3D
 var _game_data_panel: PanelContainer = null
+var _dev_panel: PanelContainer = null
+var _dev_status_label: Label = null
 
-func setup(characters: Array, camera: Camera3D) -> void:
+func setup(characters: Array, camera: Camera3D, dev_mode: bool = false) -> void:
 	_camera = camera
 	_entries = []
 	_build_root()
 	_build_menu_bar()
+	if dev_mode:
+		_build_dev_panel()
 	for info in characters:
 		_entries.append({
 			"node": info.node,
@@ -82,6 +86,30 @@ func _build_menu_bar() -> void:
 	row.add_child(_build_game_data_button())
 	row.add_child(_build_large_view_button())
 	row.add_child(_build_reset_button())
+
+func _build_dev_panel() -> void:
+	_dev_panel = PanelContainer.new()
+	_dev_panel.custom_minimum_size = Vector2(560, 0)
+
+	var label := Label.new()
+	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim haute (cueillette) | E : faim basse (repas) | F1-F4 : téléporter perso au contact d'une ronce"
+	label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var vbox := VBoxContainer.new()
+	vbox.add_child(label)
+
+	_dev_status_label = Label.new()
+	_dev_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_dev_status_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.1))
+	vbox.add_child(_dev_status_label)
+
+	_dev_panel.add_child(vbox)
+	_root.add_child(_dev_panel)
+
+func set_dev_frozen(frozen: bool) -> void:
+	if _dev_status_label == null:
+		return
+	_dev_status_label.text = "Temps gelé" if frozen else ""
 
 func _build_reset_button() -> Button:
 	var button := Button.new()
@@ -437,6 +465,8 @@ func _process(_delta: float) -> void:
 		_position_panel(entry, viewport_size)
 	if _game_data_panel != null:
 		_game_data_panel.position = (viewport_size - _game_data_panel.size) / 2.0
+	if _dev_panel != null:
+		_dev_panel.position = Vector2((viewport_size.x - _dev_panel.size.x) / 2.0, MARGIN)
 
 func _update_panel_texts(entry: Dictionary) -> void:
 	var node = entry.node

@@ -1,3 +1,20 @@
+## v0.6 — 2026-08-17
+
+### Ajouté
+- Mode dev (`run_dev.py`, `IA_LIFE_DEV_MODE`) : raccourcis clavier de déclenchement
+  contrôlé (geler/reprendre la simulation, avancer d'une frame, forcer la faim,
+  téléporter un personnage au contact d'une ronce), bandeau UX "MODE DEV" et indicateur
+  "Temps gelé" — pour tester les mécaniques bloquées en observation directe.
+
+### Corrigé
+- Scène qui apparaissait comme une scène de nuit malgré la luminosité augmentée en
+  session précédente : ciel, lumière directionnelle et exposition retravaillés (vérifié
+  par capture d'écran automatisée avant/après).
+
+### Validé
+- Terrain, relief, cuvettes de spawn, faim/vieillissement/mort, vitesse de simulation et
+  absence de clignotement de texture d'herbe — confirmés manuellement en jeu.
+
 ## v0.5 — 2026-08-17
 
 ### Ajouté

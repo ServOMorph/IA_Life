@@ -30,6 +30,8 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
   d'écran).
 - `run_screenshot.py` : lance une partie en fenêtre réelle, capture le viewport en PNG
   après un délai configurable, puis quitte — vérification visuelle automatisée.
+- `run_dev.py` : lance le jeu en mode dev (`IA_LIFE_DEV_MODE=1`), avec raccourcis clavier
+  de déclenchement contrôlé des mécaniques (voir `roadmap_mode-dev.md`).
 - `.claude/skills/analyse-partie/`, `.claude/skills/experimentation-headless/`,
   `.claude/skills/synthese-projet/` : skills d'analyse de logs, de campagnes de tests
   headless, et de génération d'un état des lieux complet du projet.
@@ -39,13 +41,11 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
-Roadmap graphisme (`DESIGN/roadmap_graphisme.md`) : Phase 1 (lumière/post-traitement)
-validée. Phases 2 (matériaux PBR, ronces en buisson), 3 (animation procédurale des
-personnages) et 4 (terrain à relief procédural + décor) implémentées, en attente de
-validation manuelle en jeu (`tests_manuels.md`). Un bug de rendu majeur (terrain
-invisible depuis le dessus, culling de mesh) a été diagnostiqué et corrigé cette session
-via `run_screenshot.py` ; le relief a été rendu plus escarpé et des cuvettes de spawn ont
-été ajoutées. Cycle caméra 3 clics par personnage (3e personne / 1re personne contrainte
-/ retour) ajouté. Bug connu non résolu : clignotement occasionnel de la texture d'herbe.
-Mécaniques de simulation (faim, mémoire des ronciers, cueillette) inchangées depuis la
-session précédente.
+Roadmap graphisme (`DESIGN/roadmap_graphisme.md`) : Phases 1 à 4 implémentées et
+validées manuellement en jeu (relief, cuvettes de spawn, clignotement de texture non
+reproduit). Bug de luminosité (scène de nuit) corrigé (ciel/lumière/exposition), vérifié
+par capture d'écran. Mécaniques de simulation (faim/vieillissement/mort, vitesse) validées ;
+cueillette/consommation/mémoire des ronciers/collision et comportement simultané des 4
+personnages encore en attente de validation (`tests_manuels.md`), bloqués en observation
+directe. Mode dev en construction (`roadmap_mode-dev.md`, `run_dev.py`) pour lever ce
+blocage. Bug connu non résolu : personnages visuellement enfoncés dans le sol.
