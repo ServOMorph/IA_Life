@@ -13,3 +13,5 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 | 2026-08-17 | Ronces à mûres, cueillette/consommation automatiques, modale Données du jeu | proposé | [detail](2026-08-17_ronces-mures-donnees-jeu.md) |
 | 2026-08-17 | Mode headless + skills d'analyse/expérimentation | proposé | [detail](2026-08-17_experimentation-headless.md) |
 | 2026-08-17 | Levée de la contrainte "personnages sans animation" | validé | [detail](2026-08-17_animation-personnages.md) |
+| 2026-08-17 | Relief procédural par code plutôt que le plugin Terrain3D (Phase 4) | validé | [detail](2026-08-17_terrain-relief-procedural.md) |
+| 2026-08-17 | Cycle caméra 3 clics sur le nom (3e personne / 1re personne / retour) | proposé | [detail](2026-08-17_camera-cycle-3clics.md) |

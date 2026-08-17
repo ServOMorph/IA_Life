@@ -1,3 +1,20 @@
+## v0.4 — 2026-08-17
+
+### Ajouté
+- Matériaux PBR CC0 (Poly Haven) via shader triplanar pour le sol et les murs ; ronces
+  remodelées en buisson (cluster de sphères).
+- Animation procédurale des personnages : orientation vers la direction de déplacement,
+  bobbing de marche, animation de mort progressive (tween).
+- Cycle caméra 3 clics sur le nom d'un personnage : 3e personne, 1re personne ("yeux",
+  regard souris contraint à ~±90° de lacet / ~±63° de tangage relatif au corps), retour
+  exact à la caméra précédente.
+- Terrain à relief procédural (bruit simplex + `HeightMapShape3D`, aplani en bordure de
+  map) et décor procédural (rochers, arbres), en remplacement du sol plat — choisi plutôt
+  que le plugin Terrain3D pour rester cohérent avec l'approche "tout par code" du projet.
+
+### Connu
+- Clignotement occasionnel de la texture d'herbe non résolu (aliasing spéculaire probable).
+
 ## v0.3 — 2026-08-17
 
 ### Ajouté

@@ -3,7 +3,7 @@
 Créée le : 2026-08-17
 Basée sur : `pistes_graphisme.md`
 
-## Phase 1 — Lumière et post-traitement [EN COURS]
+## Phase 1 — Lumière et post-traitement [FAIT]
 Piste A. Aucun asset externe requis.
 
 - Ajouter un `WorldEnvironment` avec `ProceduralSkyMaterial` (ciel + lumière ambiante).
@@ -14,7 +14,7 @@ Piste A. Aucun asset externe requis.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 2 — Matériaux PBR et ressources visuelles [TODO]
+## Phase 2 — Matériaux PBR et ressources visuelles [EN COURS — implémenté, validation manuelle en attente]
 Pistes B + E.
 
 - Textures PBR CC0 (Poly Haven) pour le sol et les murs, shader triplanar pour éviter l'étirement sur les `BoxMesh`.
@@ -24,7 +24,7 @@ Pistes B + E.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 3 — Animation procédurale des personnages [TODO]
+## Phase 3 — Animation procédurale des personnages [EN COURS — implémenté, validation manuelle en attente]
 Piste D1. Aucun nouvel asset, sur la géométrie actuelle (corps + tête).
 
 - Orientation du personnage vers sa direction de déplacement (absente actuellement).
@@ -35,12 +35,13 @@ Piste D1. Aucun nouvel asset, sur la géométrie actuelle (corps + tête).
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Terrain et décor [TODO]
-Piste C.
+## Phase 4 — Terrain et décor [EN COURS — implémenté, validation manuelle en attente]
+Piste C. Décision 2026-08-17 : relief procédural par code (bruit simplex + `HeightMapShape3D`)
+plutôt que le plugin Terrain3D — voir `_docs/decisions/2026-08-17_terrain-relief-procedural.md`.
 
-- Intégration du plugin Terrain3D, relief léger, chemins, zones d'herbe haute/basse.
-- Adaptation du déplacement des personnages au sol non plat (suivi de la hauteur Y — actuellement un simple clamp X/Z).
-- Décor CC0 (rochers, arbres) via Kenney/Quaternius.
+- Relief léger généré par bruit simplex, aplani en bordure de map (murs).
+- Personnages/ronces repositionnés à leur hauteur de terrain au spawn ; suivi de la hauteur en jeu géré par la collision physique (`HeightMapShape3D`) plutôt qu'un clamp Y.
+- Décor procédural (rochers, arbres) sans dépendance externe.
 - Test : entrée `tests_manuels.md` pour validation visuelle et fonctionnelle (personnages ne traversent pas le relief, pas de blocage sur les pentes).
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.

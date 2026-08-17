@@ -15,11 +15,15 @@ l'objectif d'étude comportementale des IA pilotées par LLM.
 - Architecture pensée pour évoluer fortement — ne pas figer le design prématurément.
 
 ## État actuel (réécrit intégralement à chaque /close)
-Analyse du rendu graphique actuel réalisée (pistes_graphisme.md). Roadmap graphisme créée
-(roadmap_graphisme.md, 6 phases) : Phase 1 (lumière/post-traitement) en cours, aucune
-implémentation de code encore réalisée. Contrainte "sans animation" levée.
+Roadmap graphisme (roadmap_graphisme.md, 6 phases) : Phase 1 validée [FAIT]. Phases 2 (PBR +
+ronces), 3 (animation procédurale) et 4 (terrain/décor procédural) codées, sans erreur en
+headless, mais aucune validation manuelle en jeu reçue -> marquées [EN COURS] en attente.
+Cycle caméra 3 clics (3e/1re personne/retour) ajouté ad hoc, hors séquence roadmap. Bug
+connu non résolu : clignotement texture herbe (tests_manuels.md).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-17 : Initialisation du protocole vibecoding.
 - 2026-08-17 : Levée de la contrainte "sans animation" — les personnages auront des animations (marche/idle a minima). Impacte piste D de `pistes_graphisme.md`.
 - 2026-08-17 : Roadmap graphisme créée, trajectoire validée A → B+E → D1 → C → D2 → écriture de la roadmap suivante.
+- 2026-08-17 : Relief procédural par code (Phase 4) plutôt que le plugin Terrain3D — cohérence avec l'approche "tout par code" du projet.
+- 2026-08-17 : Cycle caméra 3 clics sur le nom (3e personne/1re personne contrainte/retour) ajouté, hors séquence formelle de la roadmap.

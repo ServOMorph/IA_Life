@@ -26,3 +26,11 @@
 - Reclic à nouveau sur le même nom : retour exact à la caméra précédente (position/rotation libre si c'était le cas).
 - Clic sur "Large" pendant un suivi/1re personne : retour à la vue d'ensemble par défaut.
 - Clic sur un autre nom pendant un suivi/1re personne en cours : bascule correctement sans état incohérent.
+
+## Rendu graphique — Phase 4 (terrain et décor)
+- Vérifier que le sol affiche un relief léger (vallonnement doux), avec la texture d'herbe toujours correctement mappée dessus.
+- Vérifier que le relief s'aplatit près des murs (les murs restent bien plantés sur un sol plat, pas de décalage/flottement).
+- Vérifier que les personnages suivent la hauteur du terrain lors de leurs déplacements (pas de flottement au-dessus du sol, pas d'enfoncement).
+- Vérifier que les ronces sont posées correctement sur le relief (pas flottantes, pas enfoncées).
+- Vérifier la présence de rochers et d'arbres décoratifs répartis sur la map, sans bloquer la circulation des personnages de façon anormale (pas de personnage bloqué en boucle contre un décor).
+- Valider sur la map complète (caméra libre ZQSD) qu'aucun personnage ne traverse le relief ni ne reste bloqué sur une pente.

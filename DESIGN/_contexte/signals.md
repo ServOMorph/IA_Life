@@ -1,30 +1,48 @@
 # Signals — design   (MAJ 2026-08-17)
 
 ## Actions ouvertes
-- [P1|ouvert] Réaliser la Phase 1 de la roadmap graphisme (lumière et post-traitement) — fait quand: WorldEnvironment + post-processing (SSAO/SSR/glow/tonemap/AA) implémentés et test manuel validé — réf: DESIGN/roadmap_graphisme.md (Phase 1), scripts/main.gd (_build_light)
+- [P1|ouvert] Valider manuellement en jeu (`python run.py`) les Phases 2, 3, 4 de la roadmap
+  graphisme + le cycle caméra 3 clics — fait quand: chaque section de `tests_manuels.md` est
+  confirmée et supprimée par l'utilisateur — réf: `tests_manuels.md`, `DESIGN/roadmap_graphisme.md`
+  (Phases 2-4)
+- [P2|ouvert] Clignotement occasionnel de la texture d'herbe (aliasing spéculaire probable) —
+  fait quand: cause identifiée et correction validée visuellement (pistes : désactiver SSR sur
+  cette surface, réduire l'échelle de la normal map, vérifier filtrage/mipmaps, tester sans TAA)
+  — réf: `scripts/triplanar.gdshader`, `tests_manuels.md` (section "Bug connu")
+- [P2|ouvert] Démarrer la Phase 5 (personnages riggés et animation squelettique) — fait quand:
+  utilisateur confirme les validations Phases 2-4 et donne le feu vert (post-checkpoint/compact)
+  — réf: `DESIGN/roadmap_graphisme.md` (Phase 5)
+
+## Contexte chaud
+- Les Phases 2, 3 et 4 ont été codées dans la même session sans validation intermédiaire (les
+  checkpoints `/compact` entre phases n'ont pas été respectés à la lettre — l'utilisateur a
+  enchaîné via "continue"/"continue roadmap"). Toutes marquées `[EN COURS]` dans la roadmap en
+  attendant validation groupée, plutôt qu'une seule à la fois comme prévu par le protocole.
 
 ## Dernière session (2026-08-17)
 <!-- Écrasé intégralement par /close. Synthèse < 25 lignes. -->
 # Session du 2026-08-17
 
 ## Décisions prises
-- Autorisation permanente de l'agent design à lire/modifier des fichiers hors DESIGN/ dès lors qu'ils concernent le design du jeu.
-- Levée de la contrainte "personnages sans animation" — animation (marche/idle a minima) intégrée au plan.
-- Trajectoire graphisme validée : A (lumière/post-traitement) → B+E (matériaux PBR/ronces) → D1 (animation procédurale) → C (terrain/décor) → D2 (personnages riggés) → écriture roadmap suivante.
+- Phase 2 : textures PBR CC0 (Poly Haven) via shader triplanar (sol/murs), ronces en buisson
+- Phase 3 : orientation personnages, bobbing de marche, animation de mort (tween)
+- Caméra : cycle 3 clics (3e personne / 1re personne contrainte / retour), ad hoc hors roadmap
+- Phase 4 : relief procédural par code (bruit simplex) choisi plutôt que Terrain3D + décor procédural
 
 ## Livrables produits ou modifiés
-- DESIGN/pistes_graphisme.md : créé, 6 pistes détaillées avec outils gratuits.
-- DESIGN/roadmap_graphisme.md : créé, 6 phases, Phase 1 en cours.
-- DESIGN/_contexte/contexte.md : contrainte animation mise à jour, décisions ajoutées.
-- .claude/memory.md : entrée autorisation hors DESIGN/.
+- scripts/triplanar.gdshader, assets/textures/{leafy_grass,brick_wall_001}/ : créés
+- scripts/main.gd, character.gd, free_camera.gd, ui_manager.gd : modifiés
+- tests_manuels.md : 5 sections ajoutées (Phases 2/3/4, bug herbe, caméra), en attente
+- _docs/decisions/2026-08-17_{terrain-relief-procedural,camera-cycle-3clics}.md : créés
 
 ## Hypothèses validées / invalidées
-- VALIDE : le rendu actuel sous-exploite le renderer Forward+ (pas de WorldEnvironment, matériaux plats, aucun post-processing).
-- VALIDE : animation nécessaire — décision utilisateur explicite, contrainte initiale levée.
-- EN ATTENTE : Phase 1 de la roadmap non commencée en code.
+- VALIDE (choix utilisateur) : relief procédural par code préférable à Terrain3D
+- INVALIDE (partiel) : clamp roughness/normal map n'a pas résolu le clignotement herbe -> ouvert
+- EN ATTENTE : aucune validation manuelle en jeu reçue cette session (Phases 2-4 + caméra)
 
 ## Prochaine étape exacte
-Démarrer la Phase 1 : WorldEnvironment + ProceduralSkyMaterial + post-processing (SSAO/SSR/glow/tonemap/AA) + ombres douces sur la DirectionalLight3D.
+Valider manuellement en jeu les Phases 2/3/4 + caméra, vider les sections correspondantes de
+`tests_manuels.md`, puis démarrer la Phase 5 (personnages riggés).
 
 ## Question bloquante pour la session suivante
-Aucune.
+Aucune

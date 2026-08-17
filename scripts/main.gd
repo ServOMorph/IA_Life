@@ -4,25 +4,33 @@ const MAP_SIZE := 160.0
 const WALL_HEIGHT := 3.0
 const WALL_THICKNESS := 1.0
 const HEADLESS_ENV_VAR := "IA_LIFE_HEADLESS_CONFIG"
+const TERRAIN_RESOLUTION := 80
+const TERRAIN_AMPLITUDE := 1.2
+const TERRAIN_NOISE_FREQUENCY := 0.025
+const TERRAIN_NOISE_SEED := 1337
+const TERRAIN_FLAT_MARGIN := 12.0
 
 var _character_defaults: Dictionary = {}
 var _quit_on_all_dead: bool = false
 var _max_wall_seconds: float = 0.0
 var _wall_clock: float = 0.0
 var _characters: Array = []
+var _terrain_noise: FastNoiseLite
 
 func _ready() -> void:
 	_load_headless_overrides()
+	_init_terrain_noise()
 	_build_environment()
 	_build_light()
 	_build_floor()
 	_build_walls()
+	_build_decor()
 	var camera := _build_camera()
 	var characters := [
-		_spawn_character(Vector3(-40, 1, -40), Color(0.8, 0.2, 0.2), "Rouge", "top_left"),
-		_spawn_character(Vector3(40, 1, -40), Color(0.2, 0.4, 0.8), "Bleu", "top_right"),
-		_spawn_character(Vector3(-40, 1, 40), Color(0.2, 0.7, 0.3), "Vert", "bottom_left"),
-		_spawn_character(Vector3(40, 1, 40), Color(0.9, 0.7, 0.1), "Jaune", "bottom_right"),
+		_spawn_character(-40, -40, Color(0.8, 0.2, 0.2), "Rouge", "top_left"),
+		_spawn_character(40, -40, Color(0.2, 0.4, 0.8), "Bleu", "top_right"),
+		_spawn_character(-40, 40, Color(0.2, 0.7, 0.3), "Vert", "bottom_left"),
+		_spawn_character(40, 40, Color(0.9, 0.7, 0.1), "Jaune", "bottom_right"),
 	]
 	_spawn_ronces()
 	_build_ui(characters, camera)
@@ -113,6 +121,18 @@ func _build_light() -> void:
 	light.light_angular_distance = 1.5
 	add_child(light)
 
+func _init_terrain_noise() -> void:
+	_terrain_noise = FastNoiseLite.new()
+	_terrain_noise.seed = TERRAIN_NOISE_SEED
+	_terrain_noise.frequency = TERRAIN_NOISE_FREQUENCY
+	_terrain_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+
+func _terrain_height(x: float, z: float) -> float:
+	var half := MAP_SIZE / 2.0
+	var edge_dist: float = min(half - abs(x), half - abs(z))
+	var falloff: float = clamp(edge_dist / TERRAIN_FLAT_MARGIN, 0.0, 1.0)
+	return _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff
+
 func _build_triplanar_material(dir: String, scale: float) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
 	mat.shader = load("res://scripts/triplanar.gdshader")
@@ -122,24 +142,68 @@ func _build_triplanar_material(dir: String, scale: float) -> ShaderMaterial:
 	mat.set_shader_parameter("texture_scale", scale)
 	return mat
 
+func _build_terrain_mesh() -> ArrayMesh:
+	var resolution := TERRAIN_RESOLUTION
+	var half := MAP_SIZE / 2.0
+	var step := MAP_SIZE / float(resolution)
+	var st := SurfaceTool.new()
+	st.begin(Mesh.PRIMITIVE_TRIANGLES)
+	for zi in resolution + 1:
+		for xi in resolution + 1:
+			var x := -half + xi * step
+			var z := -half + zi * step
+			var y := _terrain_height(x, z)
+			st.set_uv(Vector2(float(xi) / resolution, float(zi) / resolution))
+			st.add_vertex(Vector3(x, y, z))
+	for zi in resolution:
+		for xi in resolution:
+			var i0 := zi * (resolution + 1) + xi
+			var i1 := i0 + 1
+			var i2 := i0 + (resolution + 1)
+			var i3 := i2 + 1
+			st.add_index(i0)
+			st.add_index(i2)
+			st.add_index(i1)
+			st.add_index(i1)
+			st.add_index(i2)
+			st.add_index(i3)
+	st.generate_normals()
+	st.generate_tangents()
+	return st.commit()
+
+func _build_terrain_collision_shape() -> HeightMapShape3D:
+	var resolution := TERRAIN_RESOLUTION
+	var half := MAP_SIZE / 2.0
+	var step := MAP_SIZE / float(resolution)
+	var width := resolution + 1
+	var shape := HeightMapShape3D.new()
+	shape.map_width = width
+	shape.map_depth = width
+	var data := PackedFloat32Array()
+	data.resize(width * width)
+	for zi in width:
+		for xi in width:
+			var x := -half + xi * step
+			var z := -half + zi * step
+			data[zi * width + xi] = _terrain_height(x, z)
+	shape.map_data = data
+	return shape
+
 func _build_floor() -> void:
 	var body := StaticBody3D.new()
 	body.name = "Floor"
 
 	var mesh_instance := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(MAP_SIZE, 1.0, MAP_SIZE)
-	mesh_instance.mesh = mesh
+	mesh_instance.mesh = _build_terrain_mesh()
 	mesh_instance.material_override = _build_triplanar_material("leafy_grass", 0.25)
 	body.add_child(mesh_instance)
 
 	var collision := CollisionShape3D.new()
-	var shape := BoxShape3D.new()
-	shape.size = Vector3(MAP_SIZE, 1.0, MAP_SIZE)
-	collision.shape = shape
+	collision.shape = _build_terrain_collision_shape()
+	var step := MAP_SIZE / float(TERRAIN_RESOLUTION)
+	collision.scale = Vector3(step, 1.0, step)
 	body.add_child(collision)
 
-	body.position = Vector3(0, -0.5, 0)
 	add_child(body)
 
 func _build_walls() -> void:
@@ -169,6 +233,83 @@ func _add_wall(pos: Vector3, size: Vector3) -> void:
 	body.position = pos
 	add_child(body)
 
+func _build_decor() -> void:
+	var half := MAP_SIZE / 2.0 - WALL_THICKNESS - 3.0
+	var rng := RandomNumberGenerator.new()
+	rng.seed = TERRAIN_NOISE_SEED
+	for i in 8:
+		var x := rng.randf_range(-half, half)
+		var z := rng.randf_range(-half, half)
+		_add_rock(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.5, 1.1))
+	for i in 6:
+		var x := rng.randf_range(-half, half)
+		var z := rng.randf_range(-half, half)
+		_add_tree(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.85, 1.3))
+
+func _add_rock(pos: Vector3, scale: float) -> void:
+	var body := StaticBody3D.new()
+	body.name = "Rock"
+
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := BoxMesh.new()
+	mesh.size = Vector3(1.0, 0.7, 0.9) * scale
+	mesh_instance.mesh = mesh
+	mesh_instance.rotation_degrees = Vector3(0, randf() * 90.0, 0)
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = Color(0.45, 0.44, 0.42)
+	mat.roughness = 0.95
+	mesh_instance.material_override = mat
+	body.add_child(mesh_instance)
+
+	var collision := CollisionShape3D.new()
+	var shape := BoxShape3D.new()
+	shape.size = mesh.size
+	collision.shape = shape
+	body.add_child(collision)
+
+	body.position = pos + Vector3(0, mesh.size.y / 2.0, 0)
+	add_child(body)
+
+func _add_tree(pos: Vector3, scale: float) -> void:
+	var root := Node3D.new()
+	root.name = "Tree"
+
+	var trunk_mesh := MeshInstance3D.new()
+	var trunk := CylinderMesh.new()
+	trunk.top_radius = 0.15 * scale
+	trunk.bottom_radius = 0.2 * scale
+	trunk.height = 2.0 * scale
+	trunk_mesh.mesh = trunk
+	trunk_mesh.position = Vector3(0, trunk.height / 2.0, 0)
+	var trunk_mat := StandardMaterial3D.new()
+	trunk_mat.albedo_color = Color(0.35, 0.24, 0.15)
+	trunk_mesh.material_override = trunk_mat
+	root.add_child(trunk_mesh)
+
+	var canopy_mesh := MeshInstance3D.new()
+	var canopy := SphereMesh.new()
+	canopy.radius = 1.1 * scale
+	canopy.height = 1.8 * scale
+	canopy_mesh.mesh = canopy
+	canopy_mesh.position = Vector3(0, trunk.height + canopy.height / 2.5, 0)
+	var canopy_mat := StandardMaterial3D.new()
+	canopy_mat.albedo_color = Color(0.2, 0.4, 0.18)
+	canopy_mesh.material_override = canopy_mat
+	root.add_child(canopy_mesh)
+
+	var body := StaticBody3D.new()
+	var collision := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = trunk.bottom_radius
+	shape.height = trunk.height
+	collision.shape = shape
+	collision.position = Vector3(0, trunk.height / 2.0, 0)
+	body.add_child(collision)
+	root.add_child(body)
+
+	root.position = pos
+	add_child(root)
+
 func _build_camera() -> Camera3D:
 	var camera := Camera3D.new()
 	camera.set_script(load("res://scripts/free_camera.gd"))
@@ -182,10 +323,10 @@ func _build_ui(characters: Array, camera: Camera3D) -> void:
 	add_child(ui)
 	ui.setup(characters, camera)
 
-func _spawn_character(spawn_pos: Vector3, color: Color, char_name: String, corner: String) -> Dictionary:
+func _spawn_character(x: float, z: float, color: Color, char_name: String, corner: String) -> Dictionary:
 	var character := CharacterBody3D.new()
 	character.set_script(load("res://scripts/character.gd"))
-	character.position = spawn_pos
+	character.position = Vector3(x, _terrain_height(x, z) + 1.0, z)
 	character.set("display_name", char_name)
 	var half := MAP_SIZE / 2.0 - WALL_THICKNESS / 2.0 - 0.4
 	character.set("map_half_x", half)
@@ -240,7 +381,7 @@ func _spawn_ronces() -> void:
 		for j in count:
 			var x := randf_range(0.0, quadrant_half) * sign_vec.x
 			var z := randf_range(0.0, quadrant_half) * sign_vec.y
-			_spawn_ronce(Vector3(x, 0.5, z))
+			_spawn_ronce(Vector3(x, _terrain_height(x, z) + 0.5, z))
 
 func _build_bush_mesh() -> ArrayMesh:
 	var lobes := [
