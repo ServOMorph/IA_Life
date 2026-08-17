@@ -1,7 +1,7 @@
 # Menu bas d'écran, panneaux persos par coin, focus caméra au clic
 
 **Date :** 2026-08-16
-**Statut :** proposé
+**Statut :** validé
 
 ## Décision
 Une barre de menu en bas d'écran liste les 4 personnages (nom coloré). Cliquer sur un nom
@@ -19,4 +19,4 @@ la caméra sur le personnage en vue plongeante ("plan hélicoptère").
   `_build_ui`.
 
 ## Commentaire
-(à compléter lors de la validation/invalidation)
+Validé par test manuel en jeu le 2026-08-17.

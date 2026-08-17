@@ -1,7 +1,7 @@
 # Vitesse de simulation globale, faim/vieillissement/mort, reset complet
 
 **Date :** 2026-08-17
-**Statut :** proposé
+**Statut :** validé
 
 ## Décision
 - Un slider "Vitesse jeu" (0.1x à 5x) dans le menu bas contrôle un facteur global
@@ -24,4 +24,4 @@
 - `project.godot` : déclaration de l'autoload `GameSpeed`.
 
 ## Commentaire
-(à compléter lors de la validation/invalidation)
+Validé par test manuel en jeu le 2026-08-17.

@@ -21,3 +21,10 @@ L'agent design est autorisé à lire et modifier des fichiers en dehors de son d
 (racine du projet, dossiers de code applicatif) dès lors que la modification concerne le design
 du jeu. Cette autorisation prévaut sur l'invariant par défaut d'`agent_role.md` limitant l'agent
 à DESIGN/.
+
+## 2026-08-17 — Collision physique par défaut sur les objets de scène
+Tout objet ajouté dans une scène Godot doit recevoir une collision physique (StaticBody3D/
+CollisionShape3D ou équivalent selon le type d'objet), sauf demande explicite contraire de
+l'utilisateur. Une Area3D de détection ne suffit pas à elle seule si une collision physique
+bloquante est aussi pertinente pour l'objet — les deux ne sont pas interchangeables (ex: les
+ronces n'avaient qu'une Area3D de cueillette, sans bloquer physiquement les personnages).

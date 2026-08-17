@@ -1,7 +1,7 @@
 # Agrandissement de la map x4 (surface), 4 personnages/4 zones conservés
 
 **Date :** 2026-08-16
-**Statut :** proposé
+**Statut :** validé
 
 ## Décision
 La map est agrandie deux fois (MAP_SIZE 40 -> 80 -> 160, soit x4 la surface à chaque
@@ -16,4 +16,4 @@ l'utilisateur au profit du maintien à 4 personnages.
   (refactor conservé bien que la map soit restée carrée).
 
 ## Commentaire
-(à compléter lors de la validation/invalidation)
+Validé par test manuel en jeu le 2026-08-17.

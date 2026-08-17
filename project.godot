@@ -17,3 +17,5 @@ config/features=PackedStringArray("4.5", "Forward Plus")
 [autoload]
 
 GameSpeed="*res://scripts/game_speed.gd"
+GameConfig="*res://scripts/game_config.gd"
+GameLogger="*res://scripts/game_logger.gd"

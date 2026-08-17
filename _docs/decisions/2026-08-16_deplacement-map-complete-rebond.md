@@ -1,7 +1,7 @@
 # Déplacement des personnages sur toute la map + rebond aux collisions
 
 **Date :** 2026-08-16
-**Statut :** proposé
+**Statut :** validé
 
 ## Décision
 Les personnages doivent pouvoir se déplacer sur toute la surface de la map (jusqu'aux murs),
@@ -15,4 +15,4 @@ lieu de repartir dans une direction aléatoire.
 - `scripts/main.gd` : `map_half_size` élargi pour se rapprocher de la face intérieure des murs.
 
 ## Commentaire
-(à compléter lors de la validation/invalidation)
+Validé par test manuel en jeu le 2026-08-17.
