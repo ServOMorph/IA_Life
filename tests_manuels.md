@@ -5,12 +5,14 @@ en charge par le mode dev (voir `roadmap_mode-dev.md`).
 
 ## Rendu graphique — Phase 2 (matériaux PBR et ressources visuelles)
 1. Vérifier que la bascule plein/vide des ronces (récolte de mûres) reste visuellement
-   lisible. BLOQUÉ : nécessite d'observer un personnage cueillir une mûre en direct.
+   lisible. Testable via mode dev (F1-F4 téléporte au contact d'une ronce et bascule la
+   caméra en suivi automatique du personnage depuis cette session).
 
 ## Rendu graphique — Phase 3 (animation procédurale des personnages)
 2. Valider sur les 4 personnages simultanément, pas de comportement erratique (rotation
-   qui vibre, bobbing qui persiste à l'arrêt). BLOQUÉ : pas de moyen actuel d'observer les
-   4 personnages en détail simultanément.
+   qui vibre, bobbing qui persiste à l'arrêt). BLOQUÉ : le suivi caméra du mode dev ne
+   permet d'observer qu'un personnage en détail à la fois ; la vue "Large" les montre tous
+   les 4 mais trop éloignés pour juger de la rotation/du bobbing.
 
 ## Bug connu — enfoncement des personnages dans le sol (Phase 4 terrain)
 - Constaté 2026-08-17 : les personnages suivent bien la hauteur du terrain lors de leurs

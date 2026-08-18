@@ -52,19 +52,35 @@ simulation en temps réel :
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 3 — UX de checklist en jeu [TODO]
-- Panneau listant les tests issus de `tests_manuels.md` (par catégorie), avec pour chacun :
-  case validé/invalidé + champ commentaire libre.
-- Sauvegarde des résultats dans un fichier (ex. `logs/dev_session_<horodatage>.json` ou
-  équivalent) : id du test, statut, commentaire.
+## Phase 3 — UX de checklist en jeu [FAIT]
+- Panneau listant les tests issus de `tests_manuels.md` (par catégorie, sections repliables),
+  parsing direct du fichier, validé/invalidé (boutons exclusifs) + champ commentaire libre.
+  Touche **T** en mode dev (initialement C, renommée pour éviter un conflit avec le
+  déplacement caméra libre).
+- Sauvegarde des résultats dans `logs/dev_session_<horodatage>.json` : id, catégorie, statut,
+  commentaire. Premier cycle de validation effectué le 2026-08-17 (3 tests renseignés).
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Restitution et bouclage [TODO]
+## Phase 4 — Restitution et bouclage [EN COURS]
 - Lecture du fichier de résultats en session Claude Code.
 - Traitement test par test : tests validés retirés de `tests_manuels.md`, tests invalidés
   ou commentés transformés en actions concrètes (bug à corriger, ajustement à faire).
+- Premier cycle traité (2026-08-17/18) : items 1-3 invalidés, tous pour la même cause racine
+  (mode dev F1-F4 sans suivi caméra = observation impossible). Actions concrètes tirées :
+  - Suivi caméra automatique ajouté sur téléportation F1-F4 (débloque l'item 1, bascule
+    plein/vide des ronces désormais testable).
+  - Item 2 (4 personnages simultanément) reste BLOQUÉ : cause affinée dans
+    `tests_manuels.md` (pas de vue rapprochée multi-personnages).
+  - Pivot majeur décidé avec l'utilisateur : ajout d'un 5ème personnage de test contrôlable
+    manuellement (F5, ZQSD + souris, vue 3ème personne orbitale, immortel) — voir
+    `_docs/decisions/2026-08-18_personnage-test-controlable.md`. Remplace la dépendance à
+    F1-F4 seul pour observer cueillette/collision en direct.
+- Reste à traiter : items 2 et 4-12 de `tests_manuels.md`, via un nouveau cycle de checklist
+  utilisant le personnage de test. Contrôle clavier (ZQSD) du personnage de test pas encore
+  confirmé fonctionnel par l'utilisateur (terrain aplani en conséquence, log de diagnostic
+  ajouté, retour en attente).
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.

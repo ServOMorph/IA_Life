@@ -12,6 +12,7 @@ const TERRAIN_NOISE_SEED := 1337
 const TERRAIN_FLAT_MARGIN := 12.0
 const VALLEY_RADIUS := 20.0
 const VALLEY_DEPTH := 3.5
+const CENTER_FLAT_RADIUS := 18.0
 const SPAWN_POINTS := [Vector2(-40, -40), Vector2(40, -40), Vector2(-40, 40), Vector2(40, 40)]
 
 var _character_defaults: Dictionary = {}
@@ -28,6 +29,10 @@ var _ronces: Array = []
 var _dev_frozen_scale: float = -1.0
 var _dev_step_frames: int = 0
 var _ui: CanvasLayer
+var _camera: Camera3D
+var _test_character: CharacterBody3D = null
+var _test_control_active: bool = false
+var _test_debug_log_timer: float = 0.0
 
 func _ready() -> void:
 	_dev_mode = OS.get_environment(DEV_MODE_ENV_VAR) != ""
@@ -39,6 +44,7 @@ func _ready() -> void:
 	_build_walls()
 	_build_decor()
 	var camera := _build_camera()
+	_camera = camera
 	var characters := [
 		_spawn_character(-40, -40, Color(0.8, 0.2, 0.2), "Rouge", "top_left"),
 		_spawn_character(40, -40, Color(0.2, 0.4, 0.8), "Bleu", "top_right"),
@@ -51,7 +57,10 @@ func _ready() -> void:
 		_characters.append(c.node)
 
 	if _dev_mode:
-		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim haute (déclenche cueillette), E: forcer faim basse (déclenche repas), F1-F4: téléporter le personnage au contact d'une ronce")
+		_test_character = _spawn_test_character()
+		_characters.append(_test_character)
+		_ui.set_test_character(_test_character)
+		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), E: action personnage de test (à définir), F1-F4: téléporter le personnage au contact d'une ronce (caméra suit), F5: activer/désactiver le contrôle du personnage de test, T: checklist de tests")
 
 func _physics_process(_delta: float) -> void:
 	if _dev_frozen_scale >= 0.0:
@@ -60,6 +69,64 @@ func _physics_process(_delta: float) -> void:
 			_dev_step_frames -= 1
 		else:
 			GameSpeed.time_scale = 0.0
+	if _test_control_active and _test_character != null and not _test_character.is_dead:
+		_update_test_character_movement()
+
+func _update_test_character_movement() -> void:
+	var forward: Vector3 = -_camera.global_transform.basis.z
+	forward.y = 0.0
+	forward = forward.normalized() if forward.length() > 0.001 else Vector3.FORWARD
+
+	var right: Vector3 = _camera.global_transform.basis.x
+	right.y = 0.0
+	right = right.normalized() if right.length() > 0.001 else Vector3.RIGHT
+
+	var input_dir := Vector3.ZERO
+	if Input.is_key_pressed(KEY_Z):
+		input_dir += forward
+	if Input.is_key_pressed(KEY_S):
+		input_dir -= forward
+	if Input.is_key_pressed(KEY_Q):
+		input_dir -= right
+	if Input.is_key_pressed(KEY_D):
+		input_dir += right
+	if input_dir.length() > 0.0:
+		input_dir = input_dir.normalized()
+	_test_character.set_manual_direction(input_dir)
+
+	_test_debug_log_timer -= get_physics_process_delta_time()
+	if _test_debug_log_timer <= 0.0:
+		_test_debug_log_timer = 0.5
+		GameLogger.log_event("dev", "Debug test-perso: keys(Z=%s S=%s Q=%s D=%s) input_dir=%s move_speed=%s time_scale=%.2f manual_control=%s pos=%s velocity=%s" % [
+			Input.is_key_pressed(KEY_Z), Input.is_key_pressed(KEY_S), Input.is_key_pressed(KEY_Q), Input.is_key_pressed(KEY_D),
+			input_dir, _test_character.get("move_speed"), GameSpeed.time_scale, _test_character.get("manual_control"),
+			_test_character.position, _test_character.velocity
+		])
+
+func _dev_test_character_action() -> void:
+	if not _test_control_active or _test_character == null:
+		return
+	GameLogger.log_event("dev", "Action personnage de test déclenchée (aucune action définie pour le moment)")
+
+func _dev_toggle_test_control() -> void:
+	if _test_character == null:
+		return
+	_test_control_active = not _test_control_active
+	if _test_control_active:
+		_camera.start_orbit(_test_character)
+		GameLogger.log_event("dev", "Contrôle du personnage de test activé")
+	else:
+		_test_character.set_manual_direction(Vector3.ZERO)
+		_camera.stop_orbit()
+		GameLogger.log_event("dev", "Contrôle du personnage de test désactivé")
+	_ui.set_test_control_active(_test_control_active)
+
+func _spawn_test_character() -> CharacterBody3D:
+	var info := _spawn_character(0.0, 0.0, Color(0.15, 0.15, 0.18), "Test", "")
+	var node: CharacterBody3D = info.node
+	node.set("manual_control", true)
+	node.set("immortal", true)
+	return node
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if not _dev_mode:
@@ -72,9 +139,9 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		KEY_N:
 			_dev_step_frame()
 		KEY_H:
-			_dev_force_hunger_all(95.0)
-		KEY_E:
 			_dev_force_hunger_all(40.0)
+		KEY_E:
+			_dev_test_character_action()
 		KEY_F1:
 			_dev_teleport_to_ronce(0)
 		KEY_F2:
@@ -83,6 +150,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_dev_teleport_to_ronce(2)
 		KEY_F4:
 			_dev_teleport_to_ronce(3)
+		KEY_T:
+			_ui.toggle_dev_checklist()
+		KEY_F5:
+			_dev_toggle_test_control()
 
 func _dev_toggle_freeze() -> void:
 	if _dev_frozen_scale < 0.0:
@@ -125,7 +196,8 @@ func _dev_teleport_to_ronce(index: int) -> void:
 	if nearest == null:
 		return
 	character.position = Vector3(nearest.position.x, character.position.y, nearest.position.z)
-	GameLogger.log_event("dev", "%s téléporté au contact d'une ronce" % character.display_name)
+	_camera.follow(character)
+	GameLogger.log_event("dev", "%s téléporté au contact d'une ronce (caméra en suivi)" % character.display_name)
 
 func _process(delta: float) -> void:
 	if _screenshot_path != "":
@@ -204,6 +276,7 @@ func _build_environment() -> void:
 	env.background_mode = Environment.BG_SKY
 	env.sky = sky
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_SKY
+	env.ambient_light_energy = 0.9
 	env.reflected_light_source = Environment.REFLECTION_SOURCE_SKY
 
 	env.ssao_enabled = true
@@ -230,7 +303,7 @@ func _build_light() -> void:
 	light.shadow_enabled = true
 	light.light_angular_distance = 1.5
 	light.shadow_bias = 0.1
-	light.directional_shadow_normal_bias = 4.0
+	light.shadow_normal_bias = 4.0
 	add_child(light)
 
 func _init_terrain_noise() -> void:
@@ -243,8 +316,13 @@ func _terrain_height(x: float, z: float) -> float:
 	var half := MAP_SIZE / 2.0
 	var edge_dist: float = min(half - abs(x), half - abs(z))
 	var falloff: float = clamp(edge_dist / TERRAIN_FLAT_MARGIN, 0.0, 1.0)
-	var base := _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff
+	var base := _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff * _center_flatten_factor(x, z)
 	return base + _valley_offset(x, z)
+
+func _center_flatten_factor(x: float, z: float) -> float:
+	var d := Vector2(x, z).length()
+	var t: float = clamp(d / CENTER_FLAT_RADIUS, 0.0, 1.0)
+	return t * t * (3.0 - 2.0 * t)
 
 func _valley_offset(x: float, z: float) -> float:
 	var offset := 0.0

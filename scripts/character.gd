@@ -11,6 +11,8 @@ extends CharacterBody3D
 @export var memory_capacity: int = 5
 @export var memory_decay_rate: float = 0.15
 @export var display_name: String = ""
+@export var manual_control: bool = false
+@export var immortal: bool = false
 
 const MEMORY_MAX_STRENGTH := 10.0
 
@@ -20,6 +22,7 @@ var berries_picked_total: int = 0
 var berries_eaten_total: int = 0
 
 var _direction := Vector3.ZERO
+var _manual_direction := Vector3.ZERO
 var _timer := 0.0
 var _memories: Array = []
 
@@ -39,22 +42,30 @@ func setup_visual(body_mesh: MeshInstance3D, head_mesh: MeshInstance3D) -> void:
 	_body_base_y = body_mesh.position.y
 	_head_base_y = head_mesh.position.y
 
+func set_manual_direction(dir: Vector3) -> void:
+	_manual_direction = dir
+
 func _physics_process(delta: float) -> void:
 	var scaled_delta := delta * GameSpeed.time_scale
 
 	if is_dead:
 		return
 
-	hunger -= hunger_depletion_rate * aging_factor * scaled_delta
-	if hunger <= 0.0:
-		hunger = 0.0
-		_die()
-		return
+	if immortal:
+		hunger = clamp(hunger - hunger_depletion_rate * aging_factor * scaled_delta, 1.0, 100.0)
+	else:
+		hunger -= hunger_depletion_rate * aging_factor * scaled_delta
+		if hunger <= 0.0:
+			hunger = 0.0
+			_die()
+			return
 
 	_try_eat_berry()
 	_decay_memories(scaled_delta)
 
-	if hunger > GameConfig.pickup_hunger_threshold and not _memories.is_empty():
+	if manual_control:
+		_direction = _manual_direction
+	elif hunger > GameConfig.pickup_hunger_threshold and not _memories.is_empty():
 		_direction = _direction_to_nearest_memory()
 	else:
 		_timer -= scaled_delta

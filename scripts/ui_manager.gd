@@ -30,6 +30,13 @@ var _camera: Camera3D
 var _game_data_panel: PanelContainer = null
 var _dev_panel: PanelContainer = null
 var _dev_status_label: Label = null
+var _checklist_panel: PanelContainer = null
+var _checklist_entries: Array = []
+var _dev_frozen: bool = false
+var _test_control_active: bool = false
+var _test_character_node: Node = null
+var _test_stats_panel: PanelContainer = null
+var _test_stats_label: Label = null
 
 func setup(characters: Array, camera: Camera3D, dev_mode: bool = false) -> void:
 	_camera = camera
@@ -92,7 +99,7 @@ func _build_dev_panel() -> void:
 	_dev_panel.custom_minimum_size = Vector2(560, 0)
 
 	var label := Label.new()
-	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim haute (cueillette) | E : faim basse (repas) | F1-F4 : téléporter perso au contact d'une ronce"
+	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim basse (repas) | E : action perso de test (à définir) | F1-F4 : téléporter perso au contact d'une ronce (+ suivi caméra) | F5 : contrôler le personnage de test (ZQSD + souris) | T : checklist de tests"
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var vbox := VBoxContainer.new()
@@ -107,9 +114,199 @@ func _build_dev_panel() -> void:
 	_root.add_child(_dev_panel)
 
 func set_dev_frozen(frozen: bool) -> void:
+	_dev_frozen = frozen
+	_update_dev_status()
+
+func set_test_control_active(active: bool) -> void:
+	_test_control_active = active
+	_update_dev_status()
+
+func _update_dev_status() -> void:
 	if _dev_status_label == null:
 		return
-	_dev_status_label.text = "Temps gelé" if frozen else ""
+	var parts: Array = []
+	if _dev_frozen:
+		parts.append("Temps gelé")
+	if _test_control_active:
+		parts.append("Contrôle personnage de test actif")
+	_dev_status_label.text = " | ".join(parts)
+
+func set_test_character(node: Node) -> void:
+	_test_character_node = node
+	if node == null:
+		return
+	_build_test_stats_panel()
+
+func _build_test_stats_panel() -> void:
+	_test_stats_panel = PanelContainer.new()
+
+	var vbox := VBoxContainer.new()
+	_test_stats_panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "Personnage de test"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(title)
+
+	_test_stats_label = Label.new()
+	_test_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	vbox.add_child(_test_stats_label)
+
+	_root.add_child(_test_stats_panel)
+
+func toggle_dev_checklist() -> void:
+	if _checklist_panel != null:
+		_checklist_panel.queue_free()
+		_checklist_panel = null
+		_checklist_entries = []
+		return
+	_build_checklist_panel()
+
+func _parse_tests_manuels() -> Array:
+	var tests: Array = []
+	var path := "res://tests_manuels.md"
+	if not FileAccess.file_exists(path):
+		return tests
+
+	var id_regex := RegEx.new()
+	id_regex.compile("^(\\d+)\\.\\s+(.*)$")
+
+	var category := ""
+	var current: Dictionary = {}
+	for raw_line in FileAccess.get_file_as_string(path).split("\n"):
+		var line := raw_line.strip_edges()
+		if line.begins_with("## "):
+			if current.size() > 0:
+				tests.append(current)
+				current = {}
+			category = line.substr(3).strip_edges()
+			continue
+		if line.begins_with("#") or line.begins_with("-") or line == "":
+			continue
+		var m := id_regex.search(line)
+		if m != null:
+			if current.size() > 0:
+				tests.append(current)
+			current = {"id": m.get_string(1), "category": category, "text": m.get_string(2)}
+			continue
+		if current.size() > 0:
+			current.text += " " + line
+	if current.size() > 0:
+		tests.append(current)
+	return tests
+
+func _build_checklist_test_row(test: Dictionary) -> VBoxContainer:
+	var row := VBoxContainer.new()
+
+	var text_label := Label.new()
+	text_label.text = "%s. %s" % [test.id, test.text]
+	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	row.add_child(text_label)
+
+	var controls := HBoxContainer.new()
+	controls.add_theme_constant_override("separation", 8)
+
+	var valide_button := Button.new()
+	valide_button.text = "Valide"
+	valide_button.toggle_mode = true
+	controls.add_child(valide_button)
+
+	var invalide_button := Button.new()
+	invalide_button.text = "Invalide"
+	invalide_button.toggle_mode = true
+	controls.add_child(invalide_button)
+
+	var comment_edit := LineEdit.new()
+	comment_edit.placeholder_text = "Commentaire"
+	comment_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	controls.add_child(comment_edit)
+
+	row.add_child(controls)
+	row.add_child(HSeparator.new())
+
+	var state := {"id": test.id, "category": test.category, "status": "", "comment_edit": comment_edit}
+	_checklist_entries.append(state)
+
+	valide_button.pressed.connect(func() -> void:
+		invalide_button.button_pressed = false
+		state.status = "valide" if valide_button.button_pressed else ""
+	)
+	invalide_button.pressed.connect(func() -> void:
+		valide_button.button_pressed = false
+		state.status = "invalide" if invalide_button.button_pressed else ""
+	)
+
+	return row
+
+func _build_checklist_panel() -> void:
+	_checklist_panel = PanelContainer.new()
+	_checklist_panel.custom_minimum_size = Vector2(640, 500)
+
+	var outer := VBoxContainer.new()
+	_checklist_panel.add_child(outer)
+
+	var title := Label.new()
+	title.text = "Checklist de tests manuels"
+	title.add_theme_font_size_override("font_size", 20)
+	outer.add_child(title)
+	outer.add_child(HSeparator.new())
+
+	var scroll := ScrollContainer.new()
+	scroll.custom_minimum_size = Vector2(0, 400)
+	outer.add_child(scroll)
+
+	var scroll_content := VBoxContainer.new()
+	scroll.add_child(scroll_content)
+
+	_checklist_entries = []
+	var tests := _parse_tests_manuels()
+	var by_category: Dictionary = {}
+	var category_order: Array = []
+	for test in tests:
+		if not by_category.has(test.category):
+			by_category[test.category] = []
+			category_order.append(test.category)
+		by_category[test.category].append(test)
+
+	for category in category_order:
+		var content := VBoxContainer.new()
+		for test in by_category[category]:
+			content.add_child(_build_checklist_test_row(test))
+		scroll_content.add_child(_build_collapsible_section(category, content, true))
+
+	var save_button := Button.new()
+	save_button.text = "Sauvegarder les résultats"
+	save_button.pressed.connect(_on_checklist_save_pressed)
+	outer.add_child(save_button)
+
+	var close_button := Button.new()
+	close_button.text = "Fermer"
+	close_button.pressed.connect(toggle_dev_checklist)
+	outer.add_child(close_button)
+
+	_root.add_child(_checklist_panel)
+
+func _on_checklist_save_pressed() -> void:
+	var results: Array = []
+	for entry in _checklist_entries:
+		if entry.status == "":
+			continue
+		results.append({
+			"id": entry.id,
+			"category": entry.category,
+			"statut": entry.status,
+			"commentaire": entry.comment_edit.text,
+		})
+
+	var dir := DirAccess.open("res://")
+	if dir != null and not dir.dir_exists("logs"):
+		dir.make_dir("logs")
+	var stamp: String = Time.get_datetime_string_from_system(false, true).replace(":", "-").replace(" ", "_")
+	var path := "res://logs/dev_session_%s.json" % stamp
+	var file := FileAccess.open(path, FileAccess.WRITE)
+	file.store_string(JSON.stringify(results, "\t"))
+	file.close()
+	GameLogger.log_event("dev", "Checklist sauvegardée : %s (%d résultats)" % [path, results.size()])
 
 func _build_reset_button() -> Button:
 	var button := Button.new()
@@ -467,6 +664,17 @@ func _process(_delta: float) -> void:
 		_game_data_panel.position = (viewport_size - _game_data_panel.size) / 2.0
 	if _dev_panel != null:
 		_dev_panel.position = Vector2((viewport_size.x - _dev_panel.size.x) / 2.0, MARGIN)
+	if _checklist_panel != null:
+		_checklist_panel.position = (viewport_size - _checklist_panel.size) / 2.0
+	if _test_stats_panel != null and _test_character_node != null:
+		_test_stats_label.text = "Mûres portées : %d/%d | Mûres ramassées (total) : %d | Faim : %.0f" % [
+			_test_character_node.get("berries_carried"), GameConfig.max_berries_carried,
+			_test_character_node.get("berries_picked_total"), _test_character_node.get("hunger"),
+		]
+		_test_stats_panel.position = Vector2(
+			(viewport_size.x - _test_stats_panel.size.x) / 2.0,
+			viewport_size.y - MENU_HEIGHT - _test_stats_panel.size.y - MARGIN
+		)
 
 func _update_panel_texts(entry: Dictionary) -> void:
 	var node = entry.node

@@ -1,3 +1,23 @@
+## v0.7 — 2026-08-18
+
+### Ajouté
+- Phase 3 du mode dev : checklist de tests manuels en jeu (touche T), sauvegarde des
+  résultats dans `logs/dev_session_<horodatage>.json`.
+- Personnage de test contrôlable manuellement (mode dev) : touche F5, déplacement ZQSD
+  relatif à une caméra en orbite 3e personne pilotée à la souris, immortel. Remplace la
+  dépendance à la téléportation F1-F4 seule pour observer cueillette/collision en direct.
+  Panneau "Personnage de test" (mûres portées/ramassées, faim) en bas d'écran.
+- Suivi caméra automatique lors d'une téléportation F1-F4.
+- Aplanissement léger du terrain autour du spawn central (personnage de test).
+
+### Modifié
+- Touches dev réaffectées : H = forcer faim basse (repas), E = réservée à une future
+  action du personnage de test (aucun effet pour l'instant).
+- Luminosité ambiante réduite de 10%.
+
+### Corrigé
+- Propriété invalide `directional_shadow_normal_bias` (Godot 4.5) -> `shadow_normal_bias`.
+
 ## v0.6 — 2026-08-17
 
 ### Ajouté

@@ -1,6 +1,6 @@
 extends Camera3D
 
-enum Mode { FREE, FOLLOW, FPS }
+enum Mode { FREE, FOLLOW, FPS, ORBIT }
 
 const INITIAL_POSITION := Vector3(0, 60, 80)
 const INITIAL_ROTATION_DEGREES := Vector3(-30, 0, 0)
@@ -12,6 +12,12 @@ const FPS_EYE_HEIGHT := 1.2
 const FPS_FORWARD_OFFSET := 0.25
 const FPS_YAW_LIMIT := 1.5708
 const FPS_PITCH_LIMIT := 1.1
+const ORBIT_HEIGHT := 1.5
+const ORBIT_DISTANCE_DEFAULT := 6.0
+const ORBIT_DISTANCE_MIN := 3.0
+const ORBIT_DISTANCE_MAX := 15.0
+const ORBIT_DISTANCE_STEP := 0.5
+const ORBIT_PITCH_LIMIT := 1.2
 
 @export var move_speed: float = 10.0
 @export var boost_multiplier: float = 3.0
@@ -25,6 +31,10 @@ var _follow_zoom := 1.0
 var _previous_snapshot: Dictionary = {}
 var _fps_yaw_offset := 0.0
 var _fps_pitch := 0.0
+var _orbit_target: Node3D = null
+var _orbit_yaw := 0.0
+var _orbit_pitch := -0.3
+var _orbit_distance := ORBIT_DISTANCE_DEFAULT
 
 func _ready() -> void:
 	reset_view()
@@ -37,6 +47,9 @@ func _unhandled_input(event: InputEvent) -> void:
 		if _mode == Mode.FPS:
 			_fps_yaw_offset = clamp(_fps_yaw_offset - event.relative.x * mouse_sensitivity, -FPS_YAW_LIMIT, FPS_YAW_LIMIT)
 			_fps_pitch = clamp(_fps_pitch - event.relative.y * mouse_sensitivity, -FPS_PITCH_LIMIT, FPS_PITCH_LIMIT)
+		elif _mode == Mode.ORBIT:
+			_orbit_yaw -= event.relative.x * mouse_sensitivity
+			_orbit_pitch = clamp(_orbit_pitch - event.relative.y * mouse_sensitivity, -ORBIT_PITCH_LIMIT, ORBIT_PITCH_LIMIT)
 		else:
 			_rotation_y -= event.relative.x * mouse_sensitivity
 			_rotation_x -= event.relative.y * mouse_sensitivity
@@ -47,6 +60,23 @@ func _unhandled_input(event: InputEvent) -> void:
 			_follow_zoom = clamp(_follow_zoom - FOLLOW_ZOOM_STEP, FOLLOW_ZOOM_MIN, FOLLOW_ZOOM_MAX)
 		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
 			_follow_zoom = clamp(_follow_zoom + FOLLOW_ZOOM_STEP, FOLLOW_ZOOM_MIN, FOLLOW_ZOOM_MAX)
+	elif event is InputEventMouseButton and event.pressed and _mode == Mode.ORBIT:
+		if event.button_index == MOUSE_BUTTON_WHEEL_UP:
+			_orbit_distance = clamp(_orbit_distance - ORBIT_DISTANCE_STEP, ORBIT_DISTANCE_MIN, ORBIT_DISTANCE_MAX)
+		elif event.button_index == MOUSE_BUTTON_WHEEL_DOWN:
+			_orbit_distance = clamp(_orbit_distance + ORBIT_DISTANCE_STEP, ORBIT_DISTANCE_MIN, ORBIT_DISTANCE_MAX)
+
+func start_orbit(target: Node3D) -> void:
+	_save_snapshot()
+	_mode = Mode.ORBIT
+	_orbit_target = target
+	_orbit_yaw = 0.0
+	_orbit_pitch = -0.3
+	_orbit_distance = ORBIT_DISTANCE_DEFAULT
+
+func stop_orbit() -> void:
+	_orbit_target = null
+	_restore_previous()
 
 func follow(target: Node3D) -> void:
 	_mode = Mode.FOLLOW
@@ -113,6 +143,17 @@ func _process(delta: float) -> void:
 		position = _follow_target.position + Vector3(0, FPS_EYE_HEIGHT, 0) + target_forward * FPS_FORWARD_OFFSET
 		var target_yaw: float = _follow_target.rotation.y
 		rotation = Vector3(_fps_pitch, target_yaw + _fps_yaw_offset, 0.0)
+		return
+
+	if _mode == Mode.ORBIT and _orbit_target != null:
+		var pivot: Vector3 = _orbit_target.position + Vector3(0, ORBIT_HEIGHT, 0)
+		var offset := Vector3(
+			sin(_orbit_yaw) * cos(_orbit_pitch),
+			sin(_orbit_pitch),
+			cos(_orbit_yaw) * cos(_orbit_pitch)
+		) * _orbit_distance
+		position = pivot + offset
+		look_at(pivot, Vector3.UP)
 		return
 
 	var input_dir := Vector3.ZERO

@@ -7,13 +7,12 @@ Créer un environnement Godot avec 2 personnages lowpoly pilotés chacun par un 
 Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
-Terrain/relief/cuvettes de spawn, faim/vieillissement/mort et vitesse de simulation
-validés manuellement en jeu. Bug de luminosité (scène de nuit) corrigé (ciel/lumière/
-exposition), vérifié par capture d'écran, en attente de confirmation utilisateur en jeu.
-Mode dev en construction (`roadmap_mode-dev.md`, Phases 1-2 faites : `run_dev.py`,
-raccourcis clavier, UX "MODE DEV") pour tester cueillette/mémoire/collision/4-personnages
-simultanés, encore bloqués en observation directe. Bug connu : personnages enfoncés
-visuellement dans le sol malgré un suivi correct de la hauteur du terrain.
+Mode dev : Phases 1-3 de `roadmap_mode-dev.md` faites (raccourcis clavier, checklist en jeu
+sauvegardant `logs/dev_session_*.json`), Phase 4 en cours (1er cycle traité). Pivot : un 5ème
+personnage de test contrôlable manuellement (F5, ZQSD + souris, immortel) remplace F1-F4 seul
+pour observer cueillette/collision en direct — contrôle clavier pas encore confirmé
+fonctionnel par l'utilisateur. Bugs connus : personnages enfoncés visuellement dans le sol ;
+correctif luminosité de la veille toujours pas confirmé en jeu par l'utilisateur.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-16 : Initialisation du protocole vibecoding.
@@ -27,3 +26,5 @@ visuellement dans le sol malgré un suivi correct de la hauteur du terrain.
   spawn + capture d'écran automatisée (`run_screenshot.py`) + skill `synthese-projet`.
 - 2026-08-17 : Validation manuelle terrain/relief/faim-mort + correctif luminosité (scène
   de jour) ; mode dev (`roadmap_mode-dev.md`) en cours de construction (Phases 1-2 faites).
+- 2026-08-18 : Checklist en jeu (Phase 3 mode dev) + pivot vers un personnage de test
+  contrôlable manuellement (remplace F1-F4 seul), voir `_docs/decisions/2026-08-18_*.md`.
