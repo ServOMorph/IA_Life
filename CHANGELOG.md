@@ -1,3 +1,29 @@
+## v0.8 — 2026-08-18
+
+### Ajouté
+- Personnage riggé (Phase 5 graphisme) : armature + animations Idle/Walk/Death générées via
+  Blender headless (`tools/blender/build_character.py` -> `assets/models/character.glb`),
+  intégré uniquement sur le personnage de test (mode dev).
+- Blender installé localement (`D:\blender`) pour régénérer le modèle sans dépendance
+  externe.
+- Touche K (mode dev) : tue le personnage de test à la demande (vérifie l'animation Death).
+- Touche G (mode dev) : force la faim haute (déclenche la cueillette). Shift+F1-F4 :
+  téléporte un personnage au contact de la ronce la plus proche (F1-F4 seul téléporte
+  désormais au centre de la map).
+- Persistance des réglages du jeu sur disque (`GameConfig`, `logs/game_config.json`) et
+  nouveau réglage "Intensité lumineuse".
+
+### Modifié
+- Checklist en jeu (Phase 3 mode dev) : sélection individuelle par test (panneau détail
+  Valide/Invalide/Fermer) au lieu d'un formulaire global, état persisté par test
+  (`logs/dev_checklist_state.json`), masquage automatique des tests déjà validés.
+- Caméra orbite (personnage de test) : correctif du pitch inversé, clamp au-dessus du
+  terrain.
+
+### Corrigé
+- Items 1-4 de `tests_manuels.md` (bascule ronce, animation procédurale des 4 personnages,
+  cueillette/consommation de base) validés et retirés après confirmation en jeu.
+
 ## v0.7 — 2026-08-18
 
 ### Ajouté

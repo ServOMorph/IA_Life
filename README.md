@@ -15,7 +15,11 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `scripts/character.gd` : comportement des personnages (déplacement, collisions, faim,
   vieillissement, mort, cueillette/consommation de mûres, mémoire des ronciers, orientation
   et animation procédurale). Mode `manual_control`/`immortal` pour le personnage de test
-  (mode dev).
+  (mode dev). Personnage de test uniquement : modèle riggé (`AnimationPlayer`, animations
+  Idle/Walk/Death) à la place de l'animation procédurale.
+- `tools/blender/build_character.py` : génère le personnage riggé (armature, skinning,
+  animations) et l'exporte en `assets/models/character.glb`, via Blender en ligne de
+  commande (`blender --background --python`).
 - `scripts/ronce.gd` : roncier (détection + cueillette).
 - `scripts/triplanar.gdshader` : shader triplanar pour les matériaux PBR (sol/murs).
 - `scripts/free_camera.gd` : caméra libre (ZQSD/E/C, souris) + cycle 3 clics par personnage
@@ -43,13 +47,14 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
-Mode dev (`roadmap_mode-dev.md`, `run_dev.py`) : Phases 1-3 faites (raccourcis clavier,
-checklist en jeu sauvegardant `logs/dev_session_*.json`), Phase 4 en cours. Un 5ème
-personnage de test contrôlable manuellement (touche F5, ZQSD + souris, immortel) remplace
-la téléportation F1-F4 seule pour observer cueillette/collision en direct — contrôle
-clavier pas encore confirmé fonctionnel par l'utilisateur. Mécaniques de simulation
-(faim/vieillissement/mort, vitesse, relief/cuvettes de spawn) validées manuellement en jeu.
-Cueillette/consommation/mémoire des ronciers/collision et comportement simultané des 4
-personnages encore en attente de validation (`tests_manuels.md`). Bugs connus non résolus :
-personnages visuellement enfoncés dans le sol ; correctif luminosité de la veille pas
-encore confirmé en jeu par l'utilisateur.
+Mode dev (`roadmap_mode-dev.md`, `run_dev.py`) : Phases 1-3 faites, Phase 4 en cours (2e
+cycle traité — contrôle clavier du personnage de test confirmé, checklist en jeu retravaillée
+avec sélection individuelle par test et état persisté dans `logs/dev_checklist_state.json`).
+Personnage riggé (Blender, `assets/models/character.glb`) intégré et validé sur le
+personnage de test uniquement (les 4 personnages normaux restent en box meshes/animation
+procédurale) — extension éventuelle aux 4 personnages normaux pas encore tranchée.
+Mécaniques de simulation (faim/vieillissement/mort, vitesse, relief/cuvettes de spawn,
+cueillette/consommation de base, bascule ronces, animation procédurale) validées
+manuellement en jeu. Items restants en attente de validation (`tests_manuels.md`) : capacité
+à se nourrir, modale "Données du jeu", mémoire spatiale des ronciers, collision des ronces.
+Bug connu non résolu : personnages visuellement enfoncés dans le sol.

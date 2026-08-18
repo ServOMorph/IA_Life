@@ -18,6 +18,7 @@ const ORBIT_DISTANCE_MIN := 3.0
 const ORBIT_DISTANCE_MAX := 15.0
 const ORBIT_DISTANCE_STEP := 0.5
 const ORBIT_PITCH_LIMIT := 1.2
+const ORBIT_GROUND_MARGIN := 0.5
 
 @export var move_speed: float = 10.0
 @export var boost_multiplier: float = 3.0
@@ -35,6 +36,7 @@ var _orbit_target: Node3D = null
 var _orbit_yaw := 0.0
 var _orbit_pitch := -0.3
 var _orbit_distance := ORBIT_DISTANCE_DEFAULT
+var terrain_height_fn: Callable
 
 func _ready() -> void:
 	reset_view()
@@ -49,7 +51,7 @@ func _unhandled_input(event: InputEvent) -> void:
 			_fps_pitch = clamp(_fps_pitch - event.relative.y * mouse_sensitivity, -FPS_PITCH_LIMIT, FPS_PITCH_LIMIT)
 		elif _mode == Mode.ORBIT:
 			_orbit_yaw -= event.relative.x * mouse_sensitivity
-			_orbit_pitch = clamp(_orbit_pitch - event.relative.y * mouse_sensitivity, -ORBIT_PITCH_LIMIT, ORBIT_PITCH_LIMIT)
+			_orbit_pitch = clamp(_orbit_pitch + event.relative.y * mouse_sensitivity, -ORBIT_PITCH_LIMIT, ORBIT_PITCH_LIMIT)
 		else:
 			_rotation_y -= event.relative.x * mouse_sensitivity
 			_rotation_x -= event.relative.y * mouse_sensitivity
@@ -153,6 +155,9 @@ func _process(delta: float) -> void:
 			cos(_orbit_yaw) * cos(_orbit_pitch)
 		) * _orbit_distance
 		position = pivot + offset
+		if terrain_height_fn.is_valid():
+			var min_y: float = terrain_height_fn.call(position.x, position.z) + ORBIT_GROUND_MARGIN
+			position.y = max(position.y, min_y)
 		look_at(pivot, Vector3.UP)
 		return
 

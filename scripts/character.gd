@@ -32,6 +32,9 @@ var _body_base_y: float = 0.0
 var _head_base_y: float = 0.0
 var _walk_time: float = 0.0
 
+var _anim_player: AnimationPlayer = null
+var _current_anim: String = ""
+
 func _ready() -> void:
 	_pick_new_direction()
 	GameLogger.log_event("spawn", "%s apparaît en (%.1f, %.1f)" % [display_name, position.x, position.z])
@@ -41,6 +44,10 @@ func setup_visual(body_mesh: MeshInstance3D, head_mesh: MeshInstance3D) -> void:
 	_head_mesh = head_mesh
 	_body_base_y = body_mesh.position.y
 	_head_base_y = head_mesh.position.y
+
+func setup_rigged_visual(anim_player: AnimationPlayer) -> void:
+	_anim_player = anim_player
+	_play_anim("Idle")
 
 func set_manual_direction(dir: Vector3) -> void:
 	_manual_direction = dir
@@ -98,7 +105,19 @@ func _update_facing(scaled_delta: float) -> void:
 	var target_basis := Basis.looking_at(_direction, Vector3.UP)
 	basis = basis.slerp(target_basis, clamp(scaled_delta * 8.0, 0.0, 1.0))
 
+func _play_anim(anim_name: String) -> void:
+	if _anim_player == null or _current_anim == anim_name:
+		return
+	if not _anim_player.has_animation(anim_name):
+		return
+	_anim_player.play(anim_name)
+	_current_anim = anim_name
+
 func _update_walk_animation(scaled_delta: float) -> void:
+	if _anim_player != null:
+		var rig_speed := Vector2(velocity.x, velocity.z).length()
+		_play_anim("Walk" if rig_speed > 0.1 else "Idle")
+		return
 	if _body_mesh == null or _head_mesh == null:
 		return
 	var speed := Vector2(velocity.x, velocity.z).length()
@@ -113,10 +132,19 @@ func _update_walk_animation(scaled_delta: float) -> void:
 		_head_mesh.position.y = lerp(_head_mesh.position.y, _head_base_y, scaled_delta * 6.0)
 		_body_mesh.rotation.z = lerp(_body_mesh.rotation.z, 0.0, scaled_delta * 6.0)
 
+func kill() -> void:
+	if is_dead:
+		return
+	hunger = 0.0
+	_die()
+
 func _die() -> void:
 	is_dead = true
 	velocity = Vector3.ZERO
 	GameLogger.log_event("mort", "%s meurt de faim en (%.1f, %.1f) — mûres ramassées: %d, mangées: %d" % [display_name, position.x, position.z, berries_picked_total, berries_eaten_total])
+	if _anim_player != null:
+		_play_anim("Death")
+		return
 	var tween := create_tween()
 	tween.set_trans(Tween.TRANS_CUBIC).set_ease(Tween.EASE_OUT)
 	tween.tween_property(self, "rotation:z", deg_to_rad(90.0), 0.6)

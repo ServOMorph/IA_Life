@@ -22,24 +22,30 @@ const MAX_BERRIES_MIN := 1
 const MAX_BERRIES_MAX := 10
 const FULL_LIFE_BERRIES_MIN := 1.0
 const FULL_LIFE_BERRIES_MAX := 20.0
+const LIGHT_ENERGY_MIN := 0.0
+const LIGHT_ENERGY_MAX := 8.0
 
 var _root: Control
 var _menu_bar: HBoxContainer
 var _entries: Array = []
 var _camera: Camera3D
+var _light: DirectionalLight3D
 var _game_data_panel: PanelContainer = null
 var _dev_panel: PanelContainer = null
 var _dev_status_label: Label = null
 var _checklist_panel: PanelContainer = null
-var _checklist_entries: Array = []
+var _checklist_state: Dictionary = {}
+var _test_detail_panel: PanelContainer = null
+const CHECKLIST_STATE_PATH := "res://logs/dev_checklist_state.json"
 var _dev_frozen: bool = false
 var _test_control_active: bool = false
 var _test_character_node: Node = null
 var _test_stats_panel: PanelContainer = null
 var _test_stats_label: Label = null
 
-func setup(characters: Array, camera: Camera3D, dev_mode: bool = false) -> void:
+func setup(characters: Array, camera: Camera3D, dev_mode: bool = false, light: DirectionalLight3D = null) -> void:
 	_camera = camera
+	_light = light
 	_entries = []
 	_build_root()
 	_build_menu_bar()
@@ -99,7 +105,7 @@ func _build_dev_panel() -> void:
 	_dev_panel.custom_minimum_size = Vector2(560, 0)
 
 	var label := Label.new()
-	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim basse (repas) | E : action perso de test (à définir) | F1-F4 : téléporter perso au contact d'une ronce (+ suivi caméra) | F5 : contrôler le personnage de test (ZQSD + souris) | T : checklist de tests"
+	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim basse (repas) | G : faim haute (cueillette) | E : action perso de test (à définir) | K : tuer le perso de test | F1-F4 : téléporter perso au centre de la map (+ suivi caméra) | Shift+F1-F4 : téléporter perso au contact d'une ronce (+ suivi caméra) | F5 : contrôler le personnage de test (ZQSD + souris) | T : checklist de tests"
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var vbox := VBoxContainer.new()
@@ -139,6 +145,13 @@ func set_test_character(node: Node) -> void:
 
 func _build_test_stats_panel() -> void:
 	_test_stats_panel = PanelContainer.new()
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 8
+	style.content_margin_bottom = 8
+	_test_stats_panel.add_theme_stylebox_override("panel", style)
 
 	var vbox := VBoxContainer.new()
 	_test_stats_panel.add_child(vbox)
@@ -158,7 +171,6 @@ func toggle_dev_checklist() -> void:
 	if _checklist_panel != null:
 		_checklist_panel.queue_free()
 		_checklist_panel = null
-		_checklist_entries = []
 		return
 	_build_checklist_panel()
 
@@ -195,52 +207,153 @@ func _parse_tests_manuels() -> Array:
 		tests.append(current)
 	return tests
 
-func _build_checklist_test_row(test: Dictionary) -> VBoxContainer:
-	var row := VBoxContainer.new()
+func _load_checklist_state() -> Dictionary:
+	if not FileAccess.file_exists(CHECKLIST_STATE_PATH):
+		return {}
+	var file := FileAccess.open(CHECKLIST_STATE_PATH, FileAccess.READ)
+	var parsed = JSON.parse_string(file.get_as_text())
+	file.close()
+	return parsed if parsed is Dictionary else {}
 
-	var text_label := Label.new()
-	text_label.text = "%s. %s" % [test.id, test.text]
-	text_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+func _persist_checklist_entry(id: String, status: String, commentaire: String) -> void:
+	_checklist_state[id] = {"status": status, "commentaire": commentaire}
+	var dir := DirAccess.open("res://")
+	if dir != null and not dir.dir_exists("logs"):
+		dir.make_dir("logs")
+	var file := FileAccess.open(CHECKLIST_STATE_PATH, FileAccess.WRITE)
+	file.store_string(JSON.stringify(_checklist_state, "\t"))
+	file.close()
+	GameLogger.log_event("dev", "Checklist : test %s -> %s" % [id, status])
+
+func _format_test_text(text: String) -> String:
+	var with_break := text.replace("**Étapes :**", "\n\n[b]Étapes :[/b]")
+	var parts := with_break.split("**")
+	var result := ""
+	var bold := false
+	for part in parts:
+		result += "[b]%s[/b]" % part if bold else part
+		bold = not bold
+	return result
+
+func _build_checklist_test_row(test: Dictionary) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 8)
+
+	var text_label := RichTextLabel.new()
+	text_label.bbcode_enabled = true
+	text_label.text = "[b]%s.[/b] %s" % [test.id, _format_test_text(test.text)]
+	text_label.fit_content = true
+	text_label.scroll_active = false
+	text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_label.custom_minimum_size = Vector2(520, 0)
 	row.add_child(text_label)
+
+	var saved: Dictionary = _checklist_state.get(test.id, {})
+	var select_button := Button.new()
+	select_button.text = "Invalidé -> Sélectionner" if saved.get("status", "") == "invalide" else "Sélectionner"
+	select_button.pressed.connect(func() -> void:
+		_open_test_detail(test)
+	)
+	row.add_child(select_button)
+
+	return row
+
+func _open_test_detail(test: Dictionary) -> void:
+	if _checklist_panel != null:
+		_checklist_panel.queue_free()
+		_checklist_panel = null
+	if _test_detail_panel != null:
+		_test_detail_panel.queue_free()
+		_test_detail_panel = null
+
+	_test_detail_panel = PanelContainer.new()
+	_test_detail_panel.custom_minimum_size = Vector2(360, 0)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	_test_detail_panel.add_theme_stylebox_override("panel", style)
+
+	var vbox := VBoxContainer.new()
+	_test_detail_panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "Test %s" % test.id
+	title.add_theme_font_size_override("font_size", 18)
+	vbox.add_child(title)
+	vbox.add_child(HSeparator.new())
+
+	var text_label := RichTextLabel.new()
+	text_label.bbcode_enabled = true
+	text_label.text = _format_test_text(test.text)
+	text_label.fit_content = true
+	text_label.scroll_active = false
+	text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	text_label.custom_minimum_size = Vector2(336, 0)
+	vbox.add_child(text_label)
+	vbox.add_child(HSeparator.new())
+
+	var saved: Dictionary = _checklist_state.get(test.id, {})
+
+	var comment_edit := LineEdit.new()
+	comment_edit.text = saved.get("commentaire", "")
+	comment_edit.placeholder_text = "Commentaire"
+	comment_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	vbox.add_child(comment_edit)
 
 	var controls := HBoxContainer.new()
 	controls.add_theme_constant_override("separation", 8)
 
 	var valide_button := Button.new()
 	valide_button.text = "Valide"
-	valide_button.toggle_mode = true
 	controls.add_child(valide_button)
 
 	var invalide_button := Button.new()
 	invalide_button.text = "Invalide"
-	invalide_button.toggle_mode = true
 	controls.add_child(invalide_button)
 
-	var comment_edit := LineEdit.new()
-	comment_edit.placeholder_text = "Commentaire"
-	comment_edit.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	controls.add_child(comment_edit)
+	vbox.add_child(controls)
 
-	row.add_child(controls)
-	row.add_child(HSeparator.new())
+	var close_button := Button.new()
+	close_button.text = "Fermer"
+	close_button.pressed.connect(_close_test_detail)
+	vbox.add_child(close_button)
 
-	var state := {"id": test.id, "category": test.category, "status": "", "comment_edit": comment_edit}
-	_checklist_entries.append(state)
+	var decided_status: String = saved.get("status", "")
 
 	valide_button.pressed.connect(func() -> void:
-		invalide_button.button_pressed = false
-		state.status = "valide" if valide_button.button_pressed else ""
+		_persist_checklist_entry(test.id, "valide", comment_edit.text)
+		_close_test_detail()
 	)
 	invalide_button.pressed.connect(func() -> void:
-		valide_button.button_pressed = false
-		state.status = "invalide" if invalide_button.button_pressed else ""
+		decided_status = "invalide"
+		_persist_checklist_entry(test.id, "invalide", comment_edit.text)
+	)
+	comment_edit.text_changed.connect(func(new_text: String) -> void:
+		if decided_status != "":
+			_persist_checklist_entry(test.id, decided_status, new_text)
 	)
 
-	return row
+	_root.add_child(_test_detail_panel)
+
+func _close_test_detail() -> void:
+	if _test_detail_panel != null:
+		_test_detail_panel.queue_free()
+		_test_detail_panel = null
 
 func _build_checklist_panel() -> void:
 	_checklist_panel = PanelContainer.new()
 	_checklist_panel.custom_minimum_size = Vector2(640, 500)
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 10
+	style.content_margin_bottom = 10
+	_checklist_panel.add_theme_stylebox_override("panel", style)
 
 	var outer := VBoxContainer.new()
 	_checklist_panel.add_child(outer)
@@ -253,16 +366,21 @@ func _build_checklist_panel() -> void:
 
 	var scroll := ScrollContainer.new()
 	scroll.custom_minimum_size = Vector2(0, 400)
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	outer.add_child(scroll)
 
 	var scroll_content := VBoxContainer.new()
+	scroll_content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(scroll_content)
 
-	_checklist_entries = []
+	_checklist_state = _load_checklist_state()
 	var tests := _parse_tests_manuels()
 	var by_category: Dictionary = {}
 	var category_order: Array = []
 	for test in tests:
+		if _checklist_state.get(test.id, {}).get("status", "") == "valide":
+			continue
 		if not by_category.has(test.category):
 			by_category[test.category] = []
 			category_order.append(test.category)
@@ -270,14 +388,10 @@ func _build_checklist_panel() -> void:
 
 	for category in category_order:
 		var content := VBoxContainer.new()
+		content.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		for test in by_category[category]:
 			content.add_child(_build_checklist_test_row(test))
 		scroll_content.add_child(_build_collapsible_section(category, content, true))
-
-	var save_button := Button.new()
-	save_button.text = "Sauvegarder les résultats"
-	save_button.pressed.connect(_on_checklist_save_pressed)
-	outer.add_child(save_button)
 
 	var close_button := Button.new()
 	close_button.text = "Fermer"
@@ -285,28 +399,6 @@ func _build_checklist_panel() -> void:
 	outer.add_child(close_button)
 
 	_root.add_child(_checklist_panel)
-
-func _on_checklist_save_pressed() -> void:
-	var results: Array = []
-	for entry in _checklist_entries:
-		if entry.status == "":
-			continue
-		results.append({
-			"id": entry.id,
-			"category": entry.category,
-			"statut": entry.status,
-			"commentaire": entry.comment_edit.text,
-		})
-
-	var dir := DirAccess.open("res://")
-	if dir != null and not dir.dir_exists("logs"):
-		dir.make_dir("logs")
-	var stamp: String = Time.get_datetime_string_from_system(false, true).replace(":", "-").replace(" ", "_")
-	var path := "res://logs/dev_session_%s.json" % stamp
-	var file := FileAccess.open(path, FileAccess.WRITE)
-	file.store_string(JSON.stringify(results, "\t"))
-	file.close()
-	GameLogger.log_event("dev", "Checklist sauvegardée : %s (%d résultats)" % [path, results.size()])
 
 func _build_reset_button() -> Button:
 	var button := Button.new()
@@ -388,16 +480,26 @@ func _build_game_data_panel() -> PanelContainer:
 
 	vbox.add_child(_build_slider_row("Mûres max portées", MAX_BERRIES_MIN, MAX_BERRIES_MAX, 1, GameConfig.max_berries_carried, func(v: float) -> void:
 		GameConfig.max_berries_carried = int(v)
+		GameConfig.save_to_disk()
 	, 0))
 	vbox.add_child(_build_slider_row("Seuil cueillette (faim)", PICKUP_THRESHOLD_MIN, PICKUP_THRESHOLD_MAX, 1, GameConfig.pickup_hunger_threshold, func(v: float) -> void:
 		GameConfig.pickup_hunger_threshold = v
+		GameConfig.save_to_disk()
 	, 0))
 	vbox.add_child(_build_slider_row("Seuil consommation (faim)", EAT_THRESHOLD_MIN, EAT_THRESHOLD_MAX, 1, GameConfig.eat_hunger_threshold, func(v: float) -> void:
 		GameConfig.eat_hunger_threshold = v
+		GameConfig.save_to_disk()
 	, 0))
 	vbox.add_child(_build_slider_row("Mûres pour vie complète", FULL_LIFE_BERRIES_MIN, FULL_LIFE_BERRIES_MAX, 1, GameConfig.full_life_berries, func(v: float) -> void:
 		GameConfig.full_life_berries = v
+		GameConfig.save_to_disk()
 	, 0))
+	vbox.add_child(_build_slider_row("Intensité lumineuse", LIGHT_ENERGY_MIN, LIGHT_ENERGY_MAX, 0.1, GameConfig.light_energy, func(v: float) -> void:
+		GameConfig.light_energy = v
+		if _light != null:
+			_light.light_energy = v
+		GameConfig.save_to_disk()
+	, 1))
 
 	vbox.add_child(HSeparator.new())
 	var note := Label.new()
@@ -407,9 +509,11 @@ func _build_game_data_panel() -> PanelContainer:
 
 	vbox.add_child(_build_slider_row("Nombre de ronces", 1, 30, 1, GameConfig.ronce_count, func(v: float) -> void:
 		GameConfig.ronce_count = int(v)
+		GameConfig.save_to_disk()
 	, 0))
 	vbox.add_child(_build_slider_row("Mûres par ronce", 1, 10, 1, GameConfig.berries_per_ronce, func(v: float) -> void:
 		GameConfig.berries_per_ronce = int(v)
+		GameConfig.save_to_disk()
 	, 0))
 
 	var close_button := Button.new()
@@ -666,6 +770,8 @@ func _process(_delta: float) -> void:
 		_dev_panel.position = Vector2((viewport_size.x - _dev_panel.size.x) / 2.0, MARGIN)
 	if _checklist_panel != null:
 		_checklist_panel.position = (viewport_size - _checklist_panel.size) / 2.0
+	if _test_detail_panel != null:
+		_test_detail_panel.position = Vector2(MARGIN, (viewport_size.y - _test_detail_panel.size.y) / 2.0)
 	if _test_stats_panel != null and _test_character_node != null:
 		_test_stats_label.text = "Mûres portées : %d/%d | Mûres ramassées (total) : %d | Faim : %.0f" % [
 			_test_character_node.get("berries_carried"), GameConfig.max_berries_carried,

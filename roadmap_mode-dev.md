@@ -71,16 +71,22 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
   (mode dev F1-F4 sans suivi caméra = observation impossible). Actions concrètes tirées :
   - Suivi caméra automatique ajouté sur téléportation F1-F4 (débloque l'item 1, bascule
     plein/vide des ronces désormais testable).
-  - Item 2 (4 personnages simultanément) reste BLOQUÉ : cause affinée dans
-    `tests_manuels.md` (pas de vue rapprochée multi-personnages).
   - Pivot majeur décidé avec l'utilisateur : ajout d'un 5ème personnage de test contrôlable
     manuellement (F5, ZQSD + souris, vue 3ème personne orbitale, immortel) — voir
     `_docs/decisions/2026-08-18_personnage-test-controlable.md`. Remplace la dépendance à
     F1-F4 seul pour observer cueillette/collision en direct.
-- Reste à traiter : items 2 et 4-12 de `tests_manuels.md`, via un nouveau cycle de checklist
-  utilisant le personnage de test. Contrôle clavier (ZQSD) du personnage de test pas encore
-  confirmé fonctionnel par l'utilisateur (terrain aplani en conséquence, log de diagnostic
-  ajouté, retour en attente).
+- Deuxième cycle (2026-08-18) : contrôle clavier (ZQSD) du personnage de test confirmé
+  fonctionnel (voir `_docs/decisions/2026-08-18_personnage-test-controlable.md`, statut
+  validé). Items 1, 2 (Phase 2/3 graphisme), 3 et 4 (cueillette/consommation de base)
+  validés et retirés de `tests_manuels.md`. Rig Phase 5 (`roadmap_graphisme.md`, zone
+  design) intégré et validé sur le personnage de test uniquement — voir
+  `_docs/decisions/2026-08-18_personnage-rigge-perso-test.md`.
+- Checklist en jeu (Phase 3) retravaillée par l'utilisateur en session : sélection
+  individuelle par test (au lieu d'un formulaire global), état persistant
+  (`logs/dev_checklist_state.json`), masquage automatique des tests déjà validés.
+- Reste à traiter : items 5, 6, 8-12 de `tests_manuels.md` (étapes précises déjà rédigées),
+  bug d'enfoncement des personnages dans le sol (Phase 4 terrain, toujours ouvert), décision
+  sur le retrait du log de diagnostic temporaire (`_test_debug_log_timer`).
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.

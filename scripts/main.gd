@@ -12,7 +12,8 @@ const TERRAIN_NOISE_SEED := 1337
 const TERRAIN_FLAT_MARGIN := 12.0
 const VALLEY_RADIUS := 20.0
 const VALLEY_DEPTH := 3.5
-const CENTER_FLAT_RADIUS := 18.0
+const CENTER_FLAT_RADIUS := 45.0
+const SPAWN_FLAT_RADIUS := 20.0
 const SPAWN_POINTS := [Vector2(-40, -40), Vector2(40, -40), Vector2(-40, 40), Vector2(40, 40)]
 
 var _character_defaults: Dictionary = {}
@@ -39,7 +40,7 @@ func _ready() -> void:
 	_load_headless_overrides()
 	_init_terrain_noise()
 	_build_environment()
-	_build_light()
+	var light := _build_light()
 	_build_floor()
 	_build_walls()
 	_build_decor()
@@ -52,7 +53,7 @@ func _ready() -> void:
 		_spawn_character(40, 40, Color(0.9, 0.7, 0.1), "Jaune", "bottom_right"),
 	]
 	_spawn_ronces()
-	_build_ui(characters, camera)
+	_build_ui(characters, camera, light)
 	for c in characters:
 		_characters.append(c.node)
 
@@ -60,7 +61,8 @@ func _ready() -> void:
 		_test_character = _spawn_test_character()
 		_characters.append(_test_character)
 		_ui.set_test_character(_test_character)
-		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), E: action personnage de test (à définir), F1-F4: téléporter le personnage au contact d'une ronce (caméra suit), F5: activer/désactiver le contrôle du personnage de test, T: checklist de tests")
+		_spawn_dev_spawn_ronces()
+		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), G: forcer faim haute (déclenche cueillette), E: action personnage de test (à définir), K: tuer le personnage de test (teste l'animation Death), F1-F4: téléporter le personnage au centre de la map (caméra suit), Shift+F1-F4: téléporter le personnage au contact de la ronce la plus proche (caméra suit), F5: activer/désactiver le contrôle du personnage de test, T: checklist de tests")
 
 func _physics_process(_delta: float) -> void:
 	if _dev_frozen_scale >= 0.0:
@@ -112,17 +114,18 @@ func _dev_toggle_test_control() -> void:
 	if _test_character == null:
 		return
 	_test_control_active = not _test_control_active
+	_test_character.set("manual_control", _test_control_active)
 	if _test_control_active:
 		_camera.start_orbit(_test_character)
 		GameLogger.log_event("dev", "Contrôle du personnage de test activé")
 	else:
 		_test_character.set_manual_direction(Vector3.ZERO)
 		_camera.stop_orbit()
-		GameLogger.log_event("dev", "Contrôle du personnage de test désactivé")
+		GameLogger.log_event("dev", "Contrôle du personnage de test désactivé (comportement autonome repris)")
 	_ui.set_test_control_active(_test_control_active)
 
 func _spawn_test_character() -> CharacterBody3D:
-	var info := _spawn_character(0.0, 0.0, Color(0.15, 0.15, 0.18), "Test", "")
+	var info := _spawn_character(0.0, 0.0, Color(0.15, 0.15, 0.18), "Test", "", true)
 	var node: CharacterBody3D = info.node
 	node.set("manual_control", true)
 	node.set("immortal", true)
@@ -133,6 +136,10 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		return
 	if not (event is InputEventKey and event.pressed and not event.echo):
 		return
+	if event.shift_pressed and event.keycode in [KEY_F1, KEY_F2, KEY_F3, KEY_F4]:
+		var shift_index := [KEY_F1, KEY_F2, KEY_F3, KEY_F4].find(event.keycode)
+		_dev_teleport_to_nearest_ronce(shift_index)
+		return
 	match event.keycode:
 		KEY_SPACE:
 			_dev_toggle_freeze()
@@ -140,8 +147,12 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_dev_step_frame()
 		KEY_H:
 			_dev_force_hunger_all(40.0)
+		KEY_G:
+			_dev_force_hunger_all(95.0)
 		KEY_E:
 			_dev_test_character_action()
+		KEY_K:
+			_dev_kill_test_character()
 		KEY_F1:
 			_dev_teleport_to_ronce(0)
 		KEY_F2:
@@ -172,6 +183,12 @@ func _dev_step_frame() -> void:
 	_dev_step_frames = 1
 	GameLogger.log_event("dev", "Avance d'une frame (simulation gelée)")
 
+func _dev_kill_test_character() -> void:
+	if _test_character == null:
+		return
+	_test_character.kill()
+	GameLogger.log_event("dev", "Personnage de test tué manuellement (K)")
+
 func _dev_force_hunger_all(value: float) -> void:
 	for c in _characters:
 		if not c.is_dead:
@@ -179,6 +196,16 @@ func _dev_force_hunger_all(value: float) -> void:
 	GameLogger.log_event("dev", "Faim forcée à %.0f pour tous les personnages vivants" % value)
 
 func _dev_teleport_to_ronce(index: int) -> void:
+	if index >= _characters.size():
+		return
+	var character = _characters[index]
+	if character.is_dead:
+		return
+	character.position = Vector3(0.0, _terrain_height(0.0, 0.0), 0.0)
+	_camera.follow(character)
+	GameLogger.log_event("dev", "%s téléporté au centre de la map (caméra en suivi)" % character.display_name)
+
+func _dev_teleport_to_nearest_ronce(index: int) -> void:
 	if index >= _characters.size():
 		return
 	var character = _characters[index]
@@ -295,16 +322,17 @@ func _build_environment() -> void:
 
 	get_viewport().use_taa = true
 
-func _build_light() -> void:
+func _build_light() -> DirectionalLight3D:
 	var light := DirectionalLight3D.new()
 	light.rotation_degrees = Vector3(-65, -30, 0)
 	light.light_color = Color(1.0, 0.96, 0.88)
-	light.light_energy = 3.0
+	light.light_energy = GameConfig.light_energy
 	light.shadow_enabled = true
 	light.light_angular_distance = 1.5
 	light.shadow_bias = 0.1
 	light.shadow_normal_bias = 4.0
 	add_child(light)
+	return light
 
 func _init_terrain_noise() -> void:
 	_terrain_noise = FastNoiseLite.new()
@@ -316,13 +344,21 @@ func _terrain_height(x: float, z: float) -> float:
 	var half := MAP_SIZE / 2.0
 	var edge_dist: float = min(half - abs(x), half - abs(z))
 	var falloff: float = clamp(edge_dist / TERRAIN_FLAT_MARGIN, 0.0, 1.0)
-	var base := _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff * _center_flatten_factor(x, z)
+	var base := _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff * _center_flatten_factor(x, z) * _spawn_flatten_factor(x, z)
 	return base + _valley_offset(x, z)
 
 func _center_flatten_factor(x: float, z: float) -> float:
 	var d := Vector2(x, z).length()
 	var t: float = clamp(d / CENTER_FLAT_RADIUS, 0.0, 1.0)
 	return t * t * (3.0 - 2.0 * t)
+
+func _spawn_flatten_factor(x: float, z: float) -> float:
+	var factor := 1.0
+	for p in SPAWN_POINTS:
+		var d: float = Vector2(x - p.x, z - p.y).length()
+		var t: float = clamp(d / SPAWN_FLAT_RADIUS, 0.0, 1.0)
+		factor = min(factor, t * t * (3.0 - 2.0 * t))
+	return factor
 
 func _valley_offset(x: float, z: float) -> float:
 	var offset := 0.0
@@ -514,17 +550,18 @@ func _build_camera() -> Camera3D:
 	var camera := Camera3D.new()
 	camera.set_script(load("res://scripts/free_camera.gd"))
 	camera.current = true
+	camera.terrain_height_fn = Callable(self, "_terrain_height")
 	add_child(camera)
 	return camera
 
-func _build_ui(characters: Array, camera: Camera3D) -> void:
+func _build_ui(characters: Array, camera: Camera3D, light: DirectionalLight3D) -> void:
 	var ui := CanvasLayer.new()
 	ui.set_script(load("res://scripts/ui_manager.gd"))
 	add_child(ui)
-	ui.setup(characters, camera, _dev_mode)
+	ui.setup(characters, camera, _dev_mode, light)
 	_ui = ui
 
-func _spawn_character(x: float, z: float, color: Color, char_name: String, corner: String) -> Dictionary:
+func _spawn_character(x: float, z: float, color: Color, char_name: String, corner: String, rigged: bool = false) -> Dictionary:
 	var character := CharacterBody3D.new()
 	character.set_script(load("res://scripts/character.gd"))
 	character.position = Vector3(x, _terrain_height(x, z) + 1.0, z)
@@ -535,6 +572,29 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 	for key in _character_defaults:
 		character.set(key, _character_defaults[key])
 
+	var collision := CollisionShape3D.new()
+	var shape := CapsuleShape3D.new()
+	shape.radius = 0.35
+	shape.height = 1.4
+	collision.shape = shape
+	collision.position = Vector3(0, 0.7, 0)
+	character.add_child(collision)
+
+	add_child(character)
+
+	if rigged:
+		_setup_rigged_visual(character, color)
+	else:
+		_setup_box_visual(character, color)
+
+	return {
+		"node": character,
+		"name": char_name,
+		"color": color,
+		"corner": corner,
+	}
+
+func _setup_box_visual(character: CharacterBody3D, color: Color) -> void:
 	var body_mesh := MeshInstance3D.new()
 	var body_shape_mesh := BoxMesh.new()
 	body_shape_mesh.size = Vector3(0.6, 1.0, 0.4)
@@ -553,23 +613,24 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 	head_mesh.material_override = mat
 	character.add_child(head_mesh)
 
-	var collision := CollisionShape3D.new()
-	var shape := CapsuleShape3D.new()
-	shape.radius = 0.35
-	shape.height = 1.4
-	collision.shape = shape
-	collision.position = Vector3(0, 0.7, 0)
-	character.add_child(collision)
-
-	add_child(character)
 	character.setup_visual(body_mesh, head_mesh)
 
-	return {
-		"node": character,
-		"name": char_name,
-		"color": color,
-		"corner": corner,
-	}
+func _setup_rigged_visual(character: CharacterBody3D, color: Color) -> void:
+	var scene: PackedScene = load("res://assets/models/character.glb")
+	var model: Node3D = scene.instantiate()
+	character.add_child(model)
+
+	var mat := StandardMaterial3D.new()
+	mat.albedo_color = color
+	for child in model.find_children("*", "MeshInstance3D", true, false):
+		child.material_override = mat
+
+	var anim_player: AnimationPlayer = model.find_child("AnimationPlayer", true, false)
+	if anim_player != null:
+		for anim_name in ["Idle", "Walk"]:
+			if anim_player.has_animation(anim_name):
+				anim_player.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
+	character.setup_rigged_visual(anim_player)
 
 func _spawn_ronces() -> void:
 	var quadrant_half := MAP_SIZE / 2.0 - WALL_THICKNESS - 2.0
@@ -583,6 +644,12 @@ func _spawn_ronces() -> void:
 			var x := randf_range(0.0, quadrant_half) * sign_vec.x
 			var z := randf_range(0.0, quadrant_half) * sign_vec.y
 			_spawn_ronce(Vector3(x, _terrain_height(x, z) + 0.5, z))
+
+func _spawn_dev_spawn_ronces() -> void:
+	var offsets := [Vector2(6, 0), Vector2(-6, 0), Vector2(0, 6), Vector2(0, -6)]
+	for offset in offsets:
+		var pos := Vector3(offset.x, _terrain_height(offset.x, offset.y) + 0.5, offset.y)
+		_spawn_ronce(pos)
 
 func _build_bush_mesh() -> ArrayMesh:
 	var lobes := [

@@ -1,7 +1,7 @@
 # Personnage de test contrôlable manuellement (mode dev)
 
 **Date :** 2026-08-18
-**Statut :** proposé
+**Statut :** validé
 
 ## Décision
 - Remplacement de l'approche F1-F4 seule (téléportation automatique vers une ronce) par un
@@ -28,8 +28,8 @@
 - F1-F4 (téléportation + suivi caméra automatique) conservés pour les 4 personnages IA.
 
 ## Commentaire
-Non encore validé : le contrôle clavier (ZQSD) du personnage de test n'a pas été confirmé
-fonctionnel par l'utilisateur (terrain jugé trop accidenté lors du premier essai, aplani en
-conséquence ; un log de diagnostic temporaire a été ajouté dans
-`scripts/main.gd::_update_test_character_movement` mais aucun retour n'a encore été reçu après
-le nouvel essai).
+Validé : le contrôle clavier (ZQSD + F5) a été utilisé de façon intensive dans la session du
+2026-08-18 (validation des items cueillette/consommation, mémoire spatiale, collision ronces et
+du rig Phase 5 — touche **K** ajoutée pour tuer le personnage de test à la demande). Le log de
+diagnostic temporaire (`_test_debug_log_timer`) reste en place ; son retrait n'a pas encore été
+tranché avec l'utilisateur.
