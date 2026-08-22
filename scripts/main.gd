@@ -651,17 +651,20 @@ func _spawn_dev_spawn_ronces() -> void:
 		var pos := Vector3(offset.x, _terrain_height(offset.x, offset.y) + 0.5, offset.y)
 		_spawn_ronce(pos)
 
+const BUSH_LOBES := [
+	{"pos": Vector3(0, 0.4, 0), "radius": 1.0, "height": 1.4},
+	{"pos": Vector3(0.7, 0.5, 0.3), "radius": 0.55, "height": 0.75},
+	{"pos": Vector3(-0.6, 0.45, -0.4), "radius": 0.6, "height": 0.8},
+	{"pos": Vector3(0.1, 0.75, -0.6), "radius": 0.5, "height": 0.7},
+	{"pos": Vector3(-0.4, 0.7, 0.6), "radius": 0.45, "height": 0.65},
+	{"pos": Vector3(0.5, 0.35, -0.75), "radius": 0.45, "height": 0.6},
+	{"pos": Vector3(-0.75, 0.3, 0.25), "radius": 0.4, "height": 0.55},
+]
+
 func _build_bush_mesh() -> ArrayMesh:
-	var lobes := [
-		{"pos": Vector3(0, 0.4, 0), "radius": 1.0, "height": 1.4},
-		{"pos": Vector3(0.7, 0.6, 0.3), "radius": 0.6, "height": 0.85},
-		{"pos": Vector3(-0.6, 0.55, -0.4), "radius": 0.65, "height": 0.9},
-		{"pos": Vector3(0.1, 0.9, -0.6), "radius": 0.55, "height": 0.75},
-		{"pos": Vector3(-0.4, 0.85, 0.6), "radius": 0.5, "height": 0.7},
-	]
 	var surface_tool := SurfaceTool.new()
 	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for lobe in lobes:
+	for lobe in BUSH_LOBES:
 		var sphere := SphereMesh.new()
 		sphere.radius = lobe["radius"]
 		sphere.height = lobe["height"]
@@ -670,6 +673,15 @@ func _build_bush_mesh() -> ArrayMesh:
 		var transform := Transform3D(Basis(), lobe["pos"])
 		surface_tool.append_from(sphere, 0, transform)
 	return surface_tool.commit()
+
+func _bush_berry_positions(count: int) -> Array:
+	var positions: Array = []
+	for i in count:
+		var lobe: Dictionary = BUSH_LOBES[i % BUSH_LOBES.size()]
+		var dir := Vector3(randf_range(-1.0, 1.0), randf_range(0.4, 1.0), randf_range(-1.0, 1.0)).normalized()
+		var pos: Vector3 = lobe["pos"] + dir * (lobe["radius"] * 0.85)
+		positions.append(pos)
+	return positions
 
 func _spawn_ronce(pos: Vector3) -> void:
 	var ronce := Area3D.new()
@@ -680,12 +692,16 @@ func _spawn_ronce(pos: Vector3) -> void:
 
 	var mesh_instance := MeshInstance3D.new()
 	mesh_instance.mesh = _build_bush_mesh()
+	var bush_mat := StandardMaterial3D.new()
+	bush_mat.albedo_color = Color(0.16, 0.34, 0.12)
+	bush_mat.roughness = 0.95
+	mesh_instance.material_override = bush_mat
 	ronce.add_child(mesh_instance)
 
-	var full_mat := StandardMaterial3D.new()
-	full_mat.albedo_color = Color(0.25, 0.15, 0.35)
-	var empty_mat := StandardMaterial3D.new()
-	empty_mat.albedo_color = Color(0.3, 0.3, 0.25)
+	var berry_mat := StandardMaterial3D.new()
+	berry_mat.albedo_color = Color(0.04, 0.04, 0.05)
+	berry_mat.roughness = 0.3
+	berry_mat.metallic = 0.05
 
 	var collision := CollisionShape3D.new()
 	var shape := SphereShape3D.new()
@@ -705,5 +721,5 @@ func _spawn_ronce(pos: Vector3) -> void:
 	ronce.add_child(solid_body)
 
 	add_child(ronce)
-	ronce.setup_visual(mesh_instance, full_mat, empty_mat)
+	ronce.setup_visual(_bush_berry_positions(ronce.berries), berry_mat)
 	_ronces.append(ronce)

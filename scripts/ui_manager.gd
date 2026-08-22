@@ -165,6 +165,16 @@ func _build_test_stats_panel() -> void:
 	_test_stats_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	vbox.add_child(_test_stats_label)
 
+	var node := _test_character_node
+	vbox.add_child(_build_slider_row("Capacité à se nourrir", FEEDING_MIN, FEEDING_MAX, 0.1, node.get("feeding_capacity"), func(v: float) -> void:
+		node.set("feeding_capacity", v)
+		GameLogger.log_event("config", "Personnage de test capacité à se nourrir -> %.1f" % v)
+	, 1))
+	vbox.add_child(_build_slider_row("Mémoire", MEMORY_MIN, MEMORY_MAX, 1, node.get("memory_capacity"), func(v: float) -> void:
+		node.set("memory_capacity", int(v))
+		GameLogger.log_event("config", "Personnage de test mémoire -> %d" % int(v))
+	, 0))
+
 	_root.add_child(_test_stats_panel)
 
 func toggle_dev_checklist() -> void:
@@ -286,6 +296,11 @@ func _open_test_detail(test: Dictionary) -> void:
 	vbox.add_child(title)
 	vbox.add_child(HSeparator.new())
 
+	var text_scroll := ScrollContainer.new()
+	text_scroll.custom_minimum_size = Vector2(336, 260)
+	text_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(text_scroll)
+
 	var text_label := RichTextLabel.new()
 	text_label.bbcode_enabled = true
 	text_label.text = _format_test_text(test.text)
@@ -293,7 +308,7 @@ func _open_test_detail(test: Dictionary) -> void:
 	text_label.scroll_active = false
 	text_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	text_label.custom_minimum_size = Vector2(336, 0)
-	vbox.add_child(text_label)
+	text_scroll.add_child(text_label)
 	vbox.add_child(HSeparator.new())
 
 	var saved: Dictionary = _checklist_state.get(test.id, {})

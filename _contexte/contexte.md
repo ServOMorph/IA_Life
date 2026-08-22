@@ -7,14 +7,13 @@ Créer un environnement Godot avec 2 personnages lowpoly pilotés chacun par un 
 Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
-Mode dev : Phases 1-3 de `roadmap_mode-dev.md` faites, Phase 4 en cours (2e cycle traité —
-contrôle clavier du personnage de test confirmé, items 1-4 + rig Phase 5 validés, items 5, 6,
-8-12 restent à valider). Personnage riggé (Blender, `assets/models/character.glb`) intégré et
-validé sur le personnage de test uniquement (les 4 personnages normaux restent en box meshes).
-Bug connu : personnages enfoncés visuellement dans le sol (Phase 4 terrain, non résolu).
+Mode dev : Phases 1-3 de `roadmap_mode-dev.md` faites, Phase 4 en cours (3e cycle traité —
+test 5 validé, restent items 6, 8-12 de `tests_manuels.md`). Ronces refondues visuellement
+(buisson vert fixe + mûres noires disparaissant à la cueillette), rendu à confirmer.
+Personnage riggé validé sur le personnage de test uniquement (4 personnages normaux en box
+meshes). Bug connu : personnages enfoncés visuellement dans le sol (non résolu).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-16 : Scaffold Godot (map, 4 persos, caméra libre, run.py) + map x4 (160x160).
 - 2026-08-16 : Menu bas + panneaux persos par coin + focus caméra au clic.
 - 2026-08-17 : Vitesse de simulation globale, faim/vieillissement/mort, reset complet.
 - 2026-08-17 : Cueillette de mûres (ronces), consommation auto, modale "Données du jeu".
@@ -29,3 +28,6 @@ Bug connu : personnages enfoncés visuellement dans le sol (Phase 4 terrain, non
 - 2026-08-18 : Personnage riggé (Phase 5 graphisme, Blender custom généré par script)
   branché uniquement sur le personnage de test, validé — voir
   `_docs/decisions/2026-08-18_personnage-rigge-perso-test.md`.
+- 2026-08-22 : Refonte visuelle des ronces (buisson vert fixe + mûres noires visibles,
+  retrait à la cueillette) ; test manuel 5 validé — voir
+  `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.

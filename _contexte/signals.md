@@ -1,9 +1,9 @@
-# Signals — ia_life   (MAJ 2026-08-18)
+# Signals — ia_life   (MAJ 2026-08-22)
 
 ## Actions ouvertes
 - [P1|ouvert] Reprendre la validation checklist (`tests_manuels.md`) avec le personnage de
-  test : items 5, 6, 8-12 (capacité à se nourrir, données du jeu, mémoire spatiale,
-  collision des ronces), étapes déjà rédigées dans le fichier.
+  test : items 6, 8-12 (données du jeu, mémoire spatiale, collision des ronces), étapes
+  déjà rédigées dans le fichier. Test 5 validé (2026-08-21).
   fait quand: chaque test restant de `tests_manuels.md` est confirmé ou invalidé par
   l'utilisateur
   réf: `tests_manuels.md`, `roadmap_mode-dev.md` (Phase 4)
@@ -28,47 +28,48 @@
 
 ## Contexte chaud
 - Zone `design` (`DESIGN/roadmap_graphisme.md`) : Phase 5 avancée et validée (rig +
-  animations sur le personnage de test) dans cette même session mais sans passer par
-  `/close design` — penser à clore cette zone séparément (`_contexte/signals.md` de design
-  encore sur l'état "bloqué" antérieur à cette session).
+  animations sur le personnage de test) dans une session sans passer par `/close design`
+  — penser à clore cette zone séparément (`_contexte/signals.md` de design encore sur
+  l'état antérieur ; fichiers DESIGN/ modifiés non commités : signals.md et
+  roadmap_graphisme.md, à valider lors de la clôture de la zone design).
 - Blender installé localement (`D:\blender`, via winget) pour permettre la régénération du
   modèle riggé sans dépendance à un poste tiers.
 - Dossier `_docs/Analyse du projet/` : non suivi par git, origine hors de cette session,
   laissé de côté.
+- Refonte visuelle des ronces faite en session (buisson vert + mûres noires) — validation
+  visuelle globale du rendu en attente d'une confirmation explicite (voir
+  `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`).
 
-## Dernière session (2026-08-18)
+## Dernière session (2026-08-22)
 <!-- Écrasé intégralement par /close. Synthèse < 25 lignes. -->
-# Session du 2026-08-18
+# Session du 2026-08-22
 
 ## Décisions prises
-- Rig personnage (Phase 5, `roadmap_graphisme.md`) généré via Blender headless (script
-  reproductible), branché uniquement sur le personnage de test — voir
-  `_docs/decisions/2026-08-18_personnage-rigge-perso-test.md`.
-- Personnage de test contrôlable (F5/ZQSD) confirmé fonctionnel après usage intensif cette
-  session — statut de la décision passé à validé.
-- Checklist en jeu retravaillée (sélection individuelle par test, état persisté, masquage
-  des tests validés) ; réglages du jeu persistés sur disque (`GameConfig`).
+- Refonte visuelle des ronces : buisson vert réaliste (7 lobes, couleur fixe qui ne change
+  plus quand le roncier est vide), mûres noires visibles sur le buisson (1 sphère par mûre
+  restante), retrait visuel d'une mûre à chaque cueillette ; suppression de la bascule
+  plein/vide par matériaux — voir
+  `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.
+- Test manuel 5 validé (slider "Capacité à se nourrir" : gain de PV proportionnel).
 
 ## Livrables produits ou modifiés
-- `tools/blender/build_character.py`, `assets/models/character.glb` : créés (rig 10 os,
-  animations Idle/Walk/Death)
-- `scripts/main.gd`, `character.gd` : rig branché sur le perso test, touche K (tuer le
-  perso test), touche G (faim haute), Shift+F1-F4 (téléport au contact d'une ronce)
-- `scripts/ui_manager.gd`, `game_config.gd` : refonte checklist, persistance des réglages
-- `scripts/free_camera.gd` : correctif pitch orbite + clamp au sol
-- `tests_manuels.md` : items 1-4 et rig Phase 5 validés et retirés ; items 5, 6, 8-12
-  enrichis d'étapes précises
-- `_docs/decisions/` : 2 fichiers mis à jour/créés (statuts validé)
+- `scripts/ronce.gd` : mûres visuelles (sphères noires, retrait à la cueillette),
+  suppression des matériaux plein/vide
+- `scripts/main.gd` : buisson 7 lobes + matériau vert fixe, génération des positions de
+  mûres (`_bush_berry_positions`)
+- `scripts/ui_manager.gd` : sliders "Capacité à se nourrir"/"Mémoire" au panneau perso de
+  test, détail de test scrollable (travail hors de cette session, lié au test 5)
+- `tests_manuels.md` : test 5 validé et retiré (restent items 6, 8-12)
+- `_docs/decisions/2026-08-22_ronces-mures-visuelles.md` : créé (statut validé)
 
 ## Hypothèses validées / invalidées
-- VALIDE : contrôle clavier du personnage de test fonctionnel
-- VALIDE : rig Phase 5 (Idle/Walk/Death) sur le personnage de test
-- VALIDE : cueillette/consommation de base, bascule ronce, animation procédurale 4 persos
-- EN ATTENTE : items 5, 6, 8-12 de `tests_manuels.md`
+- VALIDE : test 5 (gain de PV proportionnel au slider "Capacité à se nourrir")
+- EN ATTENTE : validation visuelle globale de la refonte ronces/mûres (aspect du buisson,
+  lisibilité des mûres)
 
 ## Prochaine étape exacte
-Reprendre la checklist en jeu (touche T) pour les items 5, 6, 8-12 ; trancher l'extension
-du rig aux 4 personnages normaux.
+Reprendre la checklist en jeu (touche T) pour les items 6, 8-12 de `tests_manuels.md` ;
+confirmer visuellement la refonte ronces/mûres.
 
 ## Question bloquante pour la session suivante
 Aucune

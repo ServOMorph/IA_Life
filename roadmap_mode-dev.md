@@ -84,9 +84,14 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 - Checklist en jeu (Phase 3) retravaillée par l'utilisateur en session : sélection
   individuelle par test (au lieu d'un formulaire global), état persistant
   (`logs/dev_checklist_state.json`), masquage automatique des tests déjà validés.
-- Reste à traiter : items 5, 6, 8-12 de `tests_manuels.md` (étapes précises déjà rédigées),
-  bug d'enfoncement des personnages dans le sol (Phase 4 terrain, toujours ouvert), décision
-  sur le retrait du log de diagnostic temporaire (`_test_debug_log_timer`).
+- Troisième cycle (2026-08-22) : item 5 validé (slider "Capacité à se nourrir", gain de PV
+  proportionnel) et retiré de `tests_manuels.md`. Refonte visuelle des ronces demandée
+  pour poursuivre la validation (buisson vert + mûres noires visibles, retrait à la
+  cueillette) — voir `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.
+- Reste à traiter : items 6, 8-12 de `tests_manuels.md` (étapes précises déjà rédigées),
+  confirmation visuelle du rendu ronces/mûres, bug d'enfoncement des personnages dans le
+  sol (Phase 4 terrain, toujours ouvert), décision sur le retrait du log de diagnostic
+  temporaire (`_test_debug_log_timer`).
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.

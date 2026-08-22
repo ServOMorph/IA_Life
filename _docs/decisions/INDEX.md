@@ -17,3 +17,4 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 | 2026-08-17 | Cycle caméra 3 clics sur le nom (3e personne / 1re personne / retour) | proposé | [detail](2026-08-17_camera-cycle-3clics.md) |
 | 2026-08-18 | Personnage de test contrôlable manuellement (mode dev), remplace F1-F4 seul | validé | [detail](2026-08-18_personnage-test-controlable.md) |
 | 2026-08-18 | Personnage riggé (Phase 5, Blender custom) branché uniquement sur le personnage de test | validé | [detail](2026-08-18_personnage-rigge-perso-test.md) |
+| 2026-08-22 | Refonte visuelle des ronces : buisson vert fixe + mûres noires visibles (retrait à la cueillette) | validé | [detail](2026-08-22_ronces-mures-visuelles.md) |

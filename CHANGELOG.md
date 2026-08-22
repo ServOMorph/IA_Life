@@ -1,3 +1,17 @@
+## v0.9 — 2026-08-22
+
+### Modifié
+- Ronces refondues visuellement : buisson vert réaliste (7 lobes, couleur fixe qui ne
+  change plus quand le roncier est vide) + mûres noires visibles sur le buisson (une
+  sphère par mûre restante), retrait visuel d'une mûre à chaque cueillette ; suppression
+  de la bascule plein/vide par matériaux.
+- Sliders "Capacité à se nourrir" / "Mémoire" dans le panneau "Personnage de test" (mode
+  dev) et détail de test scrollable dans la checklist.
+
+### Validé
+- Test manuel 5 ("Capacité à se nourrir" : gain de PV proportionnel au slider) confirmé
+  en jeu et retiré de `tests_manuels.md` — restent les items 6, 8-12.
+
 ## v0.8 — 2026-08-18
 
 ### Ajouté

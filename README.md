@@ -20,7 +20,8 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `tools/blender/build_character.py` : génère le personnage riggé (armature, skinning,
   animations) et l'exporte en `assets/models/character.glb`, via Blender en ligne de
   commande (`blender --background --python`).
-- `scripts/ronce.gd` : roncier (détection + cueillette).
+- `scripts/ronce.gd` : roncier (détection + cueillette, mûres visuelles retirées une à
+  une à chaque cueillette).
 - `scripts/triplanar.gdshader` : shader triplanar pour les matériaux PBR (sol/murs).
 - `scripts/free_camera.gd` : caméra libre (ZQSD/E/C, souris) + cycle 3 clics par personnage
   (3e personne / 1re personne contrainte / retour) + mode orbite 3e personne pilotable
@@ -47,14 +48,16 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
-Mode dev (`roadmap_mode-dev.md`, `run_dev.py`) : Phases 1-3 faites, Phase 4 en cours (2e
+Mode dev (`roadmap_mode-dev.md`, `run_dev.py`) : Phases 1-3 faites, Phase 4 en cours (3e
 cycle traité — contrôle clavier du personnage de test confirmé, checklist en jeu retravaillée
-avec sélection individuelle par test et état persisté dans `logs/dev_checklist_state.json`).
+avec sélection individuelle par test et état persisté dans `logs/dev_checklist_state.json`,
+test 5 validé). Ronces refondues visuellement : buisson vert réaliste + mûres noires
+visibles, retirées une à une à la cueillette (rendu global à confirmer).
 Personnage riggé (Blender, `assets/models/character.glb`) intégré et validé sur le
 personnage de test uniquement (les 4 personnages normaux restent en box meshes/animation
 procédurale) — extension éventuelle aux 4 personnages normaux pas encore tranchée.
 Mécaniques de simulation (faim/vieillissement/mort, vitesse, relief/cuvettes de spawn,
-cueillette/consommation de base, bascule ronces, animation procédurale) validées
-manuellement en jeu. Items restants en attente de validation (`tests_manuels.md`) : capacité
-à se nourrir, modale "Données du jeu", mémoire spatiale des ronciers, collision des ronces.
-Bug connu non résolu : personnages visuellement enfoncés dans le sol.
+cueillette/consommation de base, capacité à se nourrir, bascule ronces, animation
+procédurale) validées manuellement en jeu. Items restants en attente de validation
+(`tests_manuels.md`) : modale "Données du jeu", mémoire spatiale des ronciers, collision
+des ronces. Bug connu non résolu : personnages visuellement enfoncés dans le sol.
