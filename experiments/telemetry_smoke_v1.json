@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "experiment_id": "telemetry-smoke-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {
+      "ronce_count": 0
+    }
+  },
+  "agents": {
+    "defaults": {
+      "exploration_tendency": 0.5
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_wall_seconds": 2.0,
+    "quit_on_all_dead": false
+  }
+}

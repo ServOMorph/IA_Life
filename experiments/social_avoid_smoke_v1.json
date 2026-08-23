@@ -1,0 +1,21 @@
+{
+  "format_version": 1,
+  "experiment_id": "social-avoid-smoke-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {
+      "ronce_count": 0
+    }
+  },
+  "agents": {
+    "defaults": {
+      "social_radius": 200.0,
+      "follow_probability": 0.0,
+      "avoid_probability": 1.0
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_wall_seconds": 2.0
+  }
+}

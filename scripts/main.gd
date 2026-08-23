@@ -4,11 +4,12 @@ const MAP_SIZE := 160.0
 const WALL_HEIGHT := 3.0
 const WALL_THICKNESS := 1.0
 const HEADLESS_ENV_VAR := "IA_LIFE_HEADLESS_CONFIG"
+const PROJECT_REVISION_ENV_VAR := "IA_LIFE_PROJECT_REVISION"
 const DEV_MODE_ENV_VAR := "IA_LIFE_DEV_MODE"
 const TERRAIN_RESOLUTION := 80
 const TERRAIN_AMPLITUDE := 5.0
 const TERRAIN_NOISE_FREQUENCY := 0.045
-const TERRAIN_NOISE_SEED := 1337
+const DEFAULT_EXPERIMENT_SEED := 1337
 const TERRAIN_FLAT_MARGIN := 12.0
 const VALLEY_RADIUS := 20.0
 const VALLEY_DEPTH := 3.5
@@ -18,6 +19,15 @@ const SPAWN_POINTS := [Vector2(-40, -40), Vector2(40, -40), Vector2(-40, 40), Ve
 const DEV_INTERACTION_RADIUS := 2.4
 
 var _character_defaults: Dictionary = {}
+var _character_overrides: Dictionary = {}
+var _experiment_seed: int = DEFAULT_EXPERIMENT_SEED
+var _normalized_experiment_config: Dictionary = {}
+var _headless_run: bool = false
+var _run_finished: bool = false
+var _scheduled_events: Array = []
+var _executed_events: Array = []
+var _next_event_index: int = 0
+var _simulation_clock: float = 0.0
 var _quit_on_all_dead: bool = false
 var _max_wall_seconds: float = 0.0
 var _wall_clock: float = 0.0
@@ -38,6 +48,7 @@ var _test_control_active: bool = false
 func _ready() -> void:
 	_dev_mode = OS.get_environment(DEV_MODE_ENV_VAR) != ""
 	_load_headless_overrides()
+	seed(_experiment_seed)
 	_init_terrain_noise()
 	_build_environment()
 	var light := _build_light()
@@ -242,6 +253,7 @@ func _process(delta: float) -> void:
 		if _screenshot_clock >= _screenshot_delay:
 			_take_screenshot()
 			return
+	_process_scheduled_events(delta * GameSpeed.time_scale)
 
 	if _quit_on_all_dead and _characters.size() > 0:
 		var all_dead := true
@@ -251,52 +263,164 @@ func _process(delta: float) -> void:
 				break
 		if all_dead:
 			GameLogger.log_event("headless", "Tous les personnages sont morts — arrêt automatique")
-			get_tree().quit()
+			_finish_headless_run("all_agents_dead")
 			return
 
 	if _max_wall_seconds > 0.0:
 		_wall_clock += delta
 		if _wall_clock >= _max_wall_seconds:
 			GameLogger.log_event("headless", "Timeout atteint (%.0fs) — arrêt automatique" % _max_wall_seconds)
-			get_tree().quit()
+			_finish_headless_run("timeout")
 
 func _load_headless_overrides() -> void:
 	var path := OS.get_environment(HEADLESS_ENV_VAR)
 	if path == "":
 		return
 	if not FileAccess.file_exists(path):
-		GameLogger.log_event("headless", "Fichier de config introuvable: %s" % path)
+		_fail_headless_config("Fichier de config introuvable: %s" % path)
 		return
 
 	var text := FileAccess.get_file_as_string(path)
 	var parsed = JSON.parse_string(text)
 	if typeof(parsed) != TYPE_DICTIONARY:
-		GameLogger.log_event("headless", "Config JSON invalide dans %s" % path)
+		_fail_headless_config("Config JSON invalide dans %s" % path)
 		return
 
-	if parsed.has("game_config"):
-		GameConfig.apply_overrides(parsed["game_config"])
-	if parsed.has("game_speed"):
-		GameSpeed.time_scale = float(parsed["game_speed"])
-	if parsed.has("character_defaults"):
-		_character_defaults = parsed["character_defaults"]
+	var experiment := ExperimentConfig.from_raw(parsed)
+	if not experiment.is_valid():
+		_fail_headless_config("Configuration refusée : %s" % "; ".join(experiment.errors))
+		return
+	var normalized := experiment.normalized
+	normalized["runtime"] = {
+		"project_revision": OS.get_environment(PROJECT_REVISION_ENV_VAR),
+	}
+	_experiment_seed = int(normalized["seed"])
+	var environment: Dictionary = normalized["environment"]
+	var agents: Dictionary = normalized["agents"]
+	var simulation: Dictionary = normalized["simulation"]
+	GameConfig.apply_overrides(environment["game_config"])
+	GameSpeed.time_scale = float(simulation["game_speed"])
+	_character_defaults = agents["defaults"]
+	_character_overrides = agents["individual"]
+	_normalized_experiment_config = normalized
+	_headless_run = true
+	_scheduled_events = normalized["events"]
+	_quit_on_all_dead = simulation["quit_on_all_dead"]
+	_max_wall_seconds = float(simulation["max_wall_seconds"])
 
-	_quit_on_all_dead = parsed.get("quit_on_all_dead", true)
-	_max_wall_seconds = float(parsed.get("max_wall_seconds", 120.0))
-
-	if parsed.has("screenshot"):
-		var shot: Dictionary = parsed["screenshot"]
+	if normalized.has("screenshot") and normalized["screenshot"] is Dictionary:
+		var shot: Dictionary = normalized["screenshot"]
 		_screenshot_path = String(shot.get("path", ""))
 		_screenshot_delay = float(shot.get("delay_seconds", 3.0))
 
-	GameLogger.log_event("headless", "Overrides appliqués depuis %s : %s" % [path, JSON.stringify(parsed)])
+	GameLogger.log_event("headless", "Configuration validée depuis %s" % path)
+	GameLogger.log_experiment_config(normalized)
+
+func _fail_headless_config(message: String) -> void:
+	_headless_run = true
+	_run_finished = true
+	GameLogger.log_event("headless", message)
+	call_deferred("_quit_after_invalid_headless_config")
+
+func _quit_after_invalid_headless_config() -> void:
+	get_tree().quit(1)
 
 func _take_screenshot() -> void:
 	var image := get_viewport().get_texture().get_image()
 	image.save_png(_screenshot_path)
 	GameLogger.log_event("screenshot", "Capture enregistrée : %s" % _screenshot_path)
 	_screenshot_path = ""
+	_finish_headless_run("screenshot_complete")
+
+func _finish_headless_run(reason: String) -> void:
+	if _run_finished:
+		return
+	_run_finished = true
+	if _headless_run:
+		var agents: Array = []
+		for character in _characters:
+			if not is_instance_valid(character):
+				continue
+			var parameters := _character_defaults.duplicate(true)
+			if _character_overrides.has(character.display_name):
+				parameters.merge(_character_overrides[character.display_name], true)
+			var lifetime: float = character.death_elapsed_seconds
+			if lifetime < 0.0:
+				lifetime = GameLogger.get_elapsed_seconds()
+			agents.append({
+				"name": character.display_name,
+				"parameters": parameters,
+				"alive": not character.is_dead,
+				"current_goal": character.current_goal,
+				"hunger": character.hunger,
+				"berries_picked_total": character.berries_picked_total,
+				"berries_eaten_total": character.berries_eaten_total,
+				"berries_carried": character.berries_carried,
+				"memorized_ronces": character.memorized_ronces_count(),
+				"wander_reorientations_total": character.wander_reorientations_total,
+				"distance_travelled_total": character.distance_travelled_total,
+				"visited_zones_total": character.visited_zones_total,
+				"zone_discoveries_total": character.zone_discoveries_total,
+				"zone_revisits_total": character.zone_revisits_total,
+				"social_encounters_total": character.social_encounters_total,
+				"social_contact_seconds": character.social_contact_seconds,
+				"current_social_neighbors": character.current_social_neighbors,
+				"social_follow_decisions_total": character.social_follow_decisions_total,
+				"social_avoid_decisions_total": character.social_avoid_decisions_total,
+				"lifetime_seconds": lifetime,
+			})
+		GameLogger.write_summary({
+			"status": "completed",
+			"reason": reason,
+			"experiment": _normalized_experiment_config,
+			"executed_events": _executed_events,
+			"agents": agents,
+		})
 	get_tree().quit()
+
+func _process_scheduled_events(scaled_delta: float) -> void:
+	_simulation_clock += scaled_delta
+	while _next_event_index < _scheduled_events.size():
+		var event: Dictionary = _scheduled_events[_next_event_index]
+		if float(event["at_seconds"]) > _simulation_clock:
+			return
+		_execute_environment_event(event, _next_event_index)
+		_next_event_index += 1
+
+func _execute_environment_event(event: Dictionary, event_index: int) -> void:
+	var event_type := String(event["type"])
+	var affected := 0
+	if event_type == "remove_ronces_fraction":
+		var active_ronces := _ronces.filter(func(ronce): return is_instance_valid(ronce))
+		var target_count := ceili(active_ronces.size() * float(event["fraction"]))
+		var rng := RandomNumberGenerator.new()
+		rng.seed = _experiment_seed + event_index + 1000003
+		for _i in target_count:
+			if active_ronces.is_empty():
+				break
+			var selected_index := rng.randi_range(0, active_ronces.size() - 1)
+			var ronce = active_ronces[selected_index]
+			active_ronces.remove_at(selected_index)
+			_ronces.erase(ronce)
+			ronce.queue_free()
+			affected += 1
+	elif event_type == "spawn_ronces":
+		affected = _spawn_event_ronces(int(event["count"]), event_index)
+	var record := event.duplicate(true)
+	record["executed_at_simulation_seconds"] = _simulation_clock
+	record["affected_ronces"] = affected
+	_executed_events.append(record)
+	GameLogger.log_event_data("environment_event", "Événement %s exécuté (%d ronciers affectés)" % [event_type, affected], record)
+
+func _spawn_event_ronces(count: int, event_index: int) -> int:
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _experiment_seed + event_index + 2000003
+	var half := MAP_SIZE / 2.0 - WALL_THICKNESS - 2.0
+	for _i in count:
+		var x := rng.randf_range(-half, half)
+		var z := rng.randf_range(-half, half)
+		_spawn_ronce(Vector3(x, _terrain_height(x, z) + 0.5, z))
+	return count
 
 func _build_environment() -> void:
 	var sky_material := ProceduralSkyMaterial.new()
@@ -346,7 +470,7 @@ func _build_light() -> DirectionalLight3D:
 
 func _init_terrain_noise() -> void:
 	_terrain_noise = FastNoiseLite.new()
-	_terrain_noise.seed = TERRAIN_NOISE_SEED
+	_terrain_noise.seed = _experiment_seed
 	_terrain_noise.frequency = TERRAIN_NOISE_FREQUENCY
 	_terrain_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
 
@@ -482,7 +606,7 @@ func _add_wall(pos: Vector3, size: Vector3) -> void:
 func _build_decor() -> void:
 	var half := MAP_SIZE / 2.0 - WALL_THICKNESS - 3.0
 	var rng := RandomNumberGenerator.new()
-	rng.seed = TERRAIN_NOISE_SEED
+	rng.seed = _experiment_seed
 	for i in 8:
 		var x := rng.randf_range(-half, half)
 		var z := rng.randf_range(-half, half)
@@ -576,11 +700,15 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 	character.set_script(load("res://scripts/character.gd"))
 	character.position = Vector3(x, _terrain_height(x, z) + 1.0, z)
 	character.set("display_name", char_name)
+	character.add_to_group("agents")
 	var half := MAP_SIZE / 2.0 - WALL_THICKNESS / 2.0 - 0.4
 	character.set("map_half_x", half)
 	character.set("map_half_z", half)
 	for key in _character_defaults:
 		character.set(key, _character_defaults[key])
+	if _character_overrides.has(char_name):
+		for key in _character_overrides[char_name]:
+			character.set(key, _character_overrides[char_name][key])
 
 	var collision := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()

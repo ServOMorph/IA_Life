@@ -1,0 +1,29 @@
+{
+  "experiment_id": "smoke-config-v1",
+  "seed": 4242,
+  "environment": {
+    "game_config": {
+      "ronce_count": 4,
+      "berries_per_ronce": 2
+    }
+  },
+  "agents": {
+    "defaults": {
+      "move_speed": 2.5
+    },
+    "individual": {
+      "Rouge": {
+        "memory_capacity": 7
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 10,
+    "quit_on_all_dead": false,
+    "max_wall_seconds": 1
+  },
+  "events": [],
+  "metadata": {
+    "purpose": "smoke test du contrat ExperimentConfig v1"
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "experiment_id": "exploration-profiles-v1",
+  "seed": 424242,
+  "environment": {
+    "game_config": {
+      "ronce_count": 0
+    }
+  },
+  "agents": {
+    "defaults": {
+      "exploration_tendency": 0.5
+    },
+    "individual": {
+      "Rouge": {
+        "exploration_tendency": 0.0
+      },
+      "Bleu": {
+        "exploration_tendency": 1.0
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_wall_seconds": 30.0
+  }
+}

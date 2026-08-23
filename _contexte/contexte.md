@@ -7,14 +7,14 @@ Créer un environnement Godot avec 2 personnages lowpoly pilotés chacun par un 
 Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
-Mode dev clôturé (roadmap : `_docs/archives/2026-08-23_roadmap_mode-dev.md`) : tests 6, 8,
-9, 10 et 11 automatisés avec `tools/run_manual_checks.py`, rendu ronces/mûres validé.
-Le personnage de test peut ramasser une mûre proche avec E ; l'enfoncement visuel est résolu.
-Personnage riggé validé uniquement sur le personnage de test ; extension aux quatre personnages
-normaux encore à décider.
+Le prototype est désormais un laboratoire headless reproductible : configurations versionnées,
+hashées, journalisées et agrégées par campagne.
+Le baseline inclut exploration, mémoire, événements de ressources, perception, suivi et évitement.
+Le smoke test reproductible est python tools/run_smoke_tests.py.
+Le rig reste limité au personnage de développement ; les quatre agents de simulation restent légers.
+Le contexte historique est une piste documentée, mais aucune période n'est encore intégrée au jeu.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-16 : Menu bas + panneaux persos par coin + focus caméra au clic.
 - 2026-08-17 : Vitesse de simulation globale, faim/vieillissement/mort, reset complet.
 - 2026-08-17 : Cueillette de mûres (ronces), consommation auto, modale "Données du jeu".
 - 2026-08-17 : Mode headless + skills `analyse-partie`/`experimentation-headless`.
@@ -32,3 +32,5 @@ normaux encore à décider.
 - 2026-08-22 : Refonte visuelle des ronces (buisson vert fixe + mûres noires visibles,
   retrait à la cueillette) ; test manuel 5 validé — voir
   `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.
+- 2026-08-23 : Le rig Blender reste un outil du personnage de développement ; les quatre
+  agents normaux conservent un rendu léger afin de préserver la priorité expérimentale.

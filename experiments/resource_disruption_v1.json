@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "experiment_id": "resource-disruption-v1",
+  "seed": 20260823,
+  "environment": {
+    "game_config": {
+      "ronce_count": 40,
+      "berries_per_ronce": 3
+    }
+  },
+  "events": [
+    {
+      "type": "remove_ronces_fraction",
+      "at_seconds": 10.0,
+      "fraction": 0.5
+    }
+  ],
+  "simulation": {
+    "game_speed": 1.0,
+    "max_wall_seconds": 20.0
+  }
+}

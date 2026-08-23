@@ -1,0 +1,11 @@
+{
+  "campaign_id": "exploration-smoke-v1",
+  "base_config": "../telemetry_smoke_v1.json",
+  "parameter_grid": {
+    "agents.defaults.exploration_tendency": [0.0, 1.0]
+  },
+  "seeds": [1337],
+  "repetitions": 1,
+  "python_timeout_seconds": 10,
+  "output_dir": "../../results/exploration_smoke_v1"
+}

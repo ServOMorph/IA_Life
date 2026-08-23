@@ -20,7 +20,8 @@ func pv_per_berry(feeding_capacity: float) -> float:
 
 func apply_overrides(values: Dictionary) -> void:
 	for key in values:
-		set(key, values[key])
+		if key in PERSISTED_KEYS:
+			set(key, values[key])
 
 func save_to_disk() -> void:
 	var data := {}

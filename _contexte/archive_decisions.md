@@ -1,4 +1,3 @@
-# Décisions structurantes archivées — ia_life
+# Décisions structurantes archivées
 
-- 2026-08-16 : Initialisation du protocole vibecoding.
-- 2026-08-16 : Scaffold Godot (map, 4 persos, caméra libre, run.py) + map x4 (160x160).
+- 2026-08-16 : Menu bas + panneaux persos par coin + focus caméra au clic.

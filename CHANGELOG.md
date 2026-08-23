@@ -1,3 +1,14 @@
+## v0.11 — 2026-08-23
+
+### Ajouté
+- Contrat d'expérience versionné, validation des variables, événements environnementaux,
+  campagnes reproductibles, logs JSONL, résumés et agrégation de résultats.
+- Perception sociale, suivi et évitement paramétrables avec métriques dédiées.
+- Dossier DOCUMENTATION et commande `python tools/run_smoke_tests.py`.
+
+### Modifié
+- Le rig Blender est officiellement réservé au personnage de développement.
+
 ## v0.9 — 2026-08-22
 
 ### Modifié

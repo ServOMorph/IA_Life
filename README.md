@@ -49,13 +49,9 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
-Mode dev (`run_dev.py`) : roadmap terminée et archivée dans
-`_docs/archives/2026-08-23_roadmap_mode-dev.md`. Les tests fonctionnels de paramètres et
-de mémoire sont automatisés avec `python tools/run_manual_checks.py`. La touche E du
-personnage de test ramasse une mûre proche ; l'enfoncement visuel des personnages est résolu.
-Personnage riggé (Blender, `assets/models/character.glb`) intégré et validé sur le
-personnage de test uniquement (les 4 personnages normaux restent en box meshes/animation
-procédurale) — extension éventuelle aux 4 personnages normaux pas encore tranchée.
-Mécaniques de simulation (faim/vieillissement/mort, vitesse, relief/cuvettes de spawn,
-cueillette/consommation de base, capacité à se nourrir, mémoire, animation procédurale)
-validées en jeu ou par la suite automatisée. Aucun test manuel n'est en attente.
+Le prototype est un laboratoire reproductible : configurations versionnées et hashées,
+logs JSONL, résumés par run, agrégation et campagnes headless. Le baseline couvre
+exploration, mémoire, événements de ressources, perception, suivi et évitement.
+Lancer `python tools/run_smoke_tests.py` pour le contrôle minimal automatisé.
+Le personnage riggé reste limité au mode dev ; les quatre agents normaux restent légers.
+Un contexte historique est envisagé, mais aucune période n'est encore intégrée au jeu.

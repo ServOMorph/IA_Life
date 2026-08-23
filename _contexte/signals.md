@@ -1,46 +1,50 @@
-# Signals — ia_life   (MAJ 2026-08-23)
+# Signals — ia_life (MAJ 2026-08-23)
 
 ## Actions ouvertes
-- [P1|ouvert] Décider si le personnage riggé (Phase 5, `assets/models/character.glb`) doit
-  être étendu aux 4 personnages normaux ou rester un outil de test.
-  fait quand: décision prise avec l'utilisateur
-  réf: `_docs/decisions/2026-08-18_personnage-rigge-perso-test.md`,
-  `DESIGN/roadmap_graphisme.md` (Phase 5)
+
+- [P1|ouvert] Choisir l'identité de contexte du jeu : comparer le Paléolithique ancien à
+  au moins un cadre non historique, sans introduire de contenu avant décision.
+  fait quand: un choix est documenté avec ses conséquences de gameplay et ses limites.
+  réf: DOCUMENTATION/orientation_contexte.md, roadmap_experimentation.md (Phase 0)
+- [P1|ouvert] Formaliser les trois campagnes de référence (mémoire, rareté, profils) sur
+  plusieurs seeds et produire leurs graphiques de comparaison.
+  fait quand: les trois campagnes sont exécutables, reproductibles et agrégées.
+  réf: roadmap_experimentation.md (Phase 4), tools/run_campaign.py
+- [P2|ouvert] Réconcilier la documentation et la roadmap de la zone design avec les
+  validations graphiques déjà réalisées.
+  fait quand: DESIGN/_contexte/signals.md et DESIGN/roadmap_graphisme.md reflètent l'état réel.
+  réf: DESIGN/_contexte/, DESIGN/roadmap_graphisme.md
 
 ## Contexte chaud
-- Zone `design` (`DESIGN/roadmap_graphisme.md`) : Phase 5 avancée et validée (rig +
-  animations sur le personnage de test) dans une session sans passer par `/close design`
-  — penser à clore cette zone séparément (`_contexte/signals.md` de design encore sur
-  l'état antérieur ; fichiers DESIGN/ modifiés non commités : signals.md et
-  roadmap_graphisme.md, à valider lors de la clôture de la zone design).
-- Blender installé localement (`D:\blender`, via winget) pour permettre la régénération du
-  modèle riggé sans dépendance à un poste tiers.
-- Dossier `_docs/Analyse du projet/` : non suivi par git, origine hors de cette session,
-  laissé de côté.
-- Refonte visuelle des ronces faite en session (buisson vert + mûres noires) — validation
-  visuelle globale du rendu confirmée (test 15 validé le 2026-08-23 ; voir
-  `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`).
+
+- Le personnage riggé reste exclusivement celui du mode dev ; les quatre agents de
+  simulation conservent volontairement leurs représentations légères.
+- Les fichiers DESIGN modifiés et _docs/Analyse du projet/ sont préexistants ou relèvent
+  d'une autre zone : ils ne doivent pas être inclus dans le commit ia_life.
+- Écart connu : scripts/check_kit.py est absent ; le contrôle d'intégrité dédié ne peut
+  pas être lancé tant qu'il n'est pas fourni ou remplacé.
 
 ## Dernière session (2026-08-23)
-<!-- Écrasé intégralement par /close. Synthèse < 25 lignes. -->
+
 # Session du 2026-08-23
 
 ## Décisions prises
-- Roadmap du mode dev terminée et archivée ; les tests de paramètres/mémoire sont automatisés.
-- La touche E du personnage de test ramasse désormais une mûre proche ; le log temporaire de déplacement est retiré.
+- Le rig reste limité au personnage de développement ; le laboratoire privilégie les agents légers.
+- Le projet prépare un contexte historique possible sans l'adopter avant comparaison avec une autre identité.
 
 ## Livrables produits ou modifiés
-- `tools/run_manual_checks.py` : lance les vérifications automatisées 6, 8, 9, 10 et 11.
-- `scripts/character.gd`, `scripts/main.gd`, `scripts/ui_manager.gd` : cueillette manuelle E en mode dev.
-- `tests_manuels.md` : tests validés retirés ; aucune attente restante.
-- `_docs/archives/2026-08-23_roadmap_mode-dev.md` : roadmap clôturée et archivée.
+- roadmap_experimentation.md : feuille de route, métriques sociales et smoke test mis à jour.
+- scripts/experiment_config.gd, character.gd, main.gd : validation sociale, hash/revision et métriques.
+- tools/run_smoke_tests.py, aggregate_results.py : contrôle reproductible et rapports sociaux.
+- DOCUMENTATION/ : index et cadre de décision du contexte.
 
 ## Hypothèses validées / invalidées
-- VALIDE : navigation/mémoire, oubli, remplacement du souvenir faible et slider Mémoire.
-- VALIDE : rendu ronces/mûres et correction visuelle de l'enfoncement des personnages.
+- VALIDE : le suivi et l'évitement sont activables, mesurés et exportés en headless.
+- VALIDE : une configuration invalide est rejetée et chaque run laisse un résumé vérifiable.
+- EN ATTENTE : choix du contexte historique et campagnes statistiques multi-seeds.
 
 ## Prochaine étape exacte
-Décider si le personnage riggé de test doit être étendu aux quatre personnages normaux.
+Formaliser les trois campagnes de référence, puis produire leur tableau et graphiques comparatifs.
 
 ## Question bloquante pour la session suivante
-Le personnage riggé doit-il rester limité au mode dev ?
+Aucune.

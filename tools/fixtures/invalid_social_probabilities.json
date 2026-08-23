@@ -1,0 +1,9 @@
+{
+  "experiment_id": "invalid-social-probabilities",
+  "agents": {
+    "defaults": {
+      "follow_probability": 0.7,
+      "avoid_probability": 0.7
+    }
+  }
+}
