@@ -38,7 +38,8 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `run_screenshot.py` : lance une partie en fenêtre réelle, capture le viewport en PNG
   après un délai configurable, puis quitte — vérification visuelle automatisée.
 - `run_dev.py` : lance le jeu en mode dev (`IA_LIFE_DEV_MODE=1`), avec raccourcis clavier
-  de déclenchement contrôlé des mécaniques (voir `roadmap_mode-dev.md`).
+  de déclenchement contrôlé des mécaniques (roadmap terminée :
+  `_docs/archives/2026-08-23_roadmap_mode-dev.md`).
 - `.claude/skills/analyse-partie/`, `.claude/skills/experimentation-headless/`,
   `.claude/skills/synthese-projet/` : skills d'analyse de logs, de campagnes de tests
   headless, et de génération d'un état des lieux complet du projet.
@@ -48,16 +49,13 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
-Mode dev (`roadmap_mode-dev.md`, `run_dev.py`) : Phases 1-3 faites, Phase 4 en cours (3e
-cycle traité — contrôle clavier du personnage de test confirmé, checklist en jeu retravaillée
-avec sélection individuelle par test et état persisté dans `logs/dev_checklist_state.json`,
-test 5 validé). Ronces refondues visuellement : buisson vert réaliste + mûres noires
-visibles, retirées une à une à la cueillette (rendu global à confirmer).
+Mode dev (`run_dev.py`) : roadmap terminée et archivée dans
+`_docs/archives/2026-08-23_roadmap_mode-dev.md`. Les tests fonctionnels de paramètres et
+de mémoire sont automatisés avec `python tools/run_manual_checks.py`. La touche E du
+personnage de test ramasse une mûre proche ; l'enfoncement visuel des personnages est résolu.
 Personnage riggé (Blender, `assets/models/character.glb`) intégré et validé sur le
 personnage de test uniquement (les 4 personnages normaux restent en box meshes/animation
 procédurale) — extension éventuelle aux 4 personnages normaux pas encore tranchée.
 Mécaniques de simulation (faim/vieillissement/mort, vitesse, relief/cuvettes de spawn,
-cueillette/consommation de base, capacité à se nourrir, bascule ronces, animation
-procédurale) validées manuellement en jeu. Items restants en attente de validation
-(`tests_manuels.md`) : modale "Données du jeu", mémoire spatiale des ronciers, collision
-des ronces. Bug connu non résolu : personnages visuellement enfoncés dans le sol.
+cueillette/consommation de base, capacité à se nourrir, mémoire, animation procédurale)
+validées en jeu ou par la suite automatisée. Aucun test manuel n'est en attente.

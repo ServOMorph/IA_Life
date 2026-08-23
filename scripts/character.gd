@@ -164,17 +164,22 @@ func _clamp_to_map() -> void:
 	position.z = clamp(position.z, -map_half_z, map_half_z)
 
 func _on_ronce_contact(ronce) -> void:
+	try_pick_berry_from_ronce(ronce)
+
+func try_pick_berry_from_ronce(ronce, ignore_hunger_threshold: bool = false) -> bool:
 	if is_dead:
-		return
+		return false
 	_remember_ronce(ronce)
 	if berries_carried >= GameConfig.max_berries_carried:
-		return
-	if hunger > GameConfig.pickup_hunger_threshold:
-		return
+		return false
+	if not ignore_hunger_threshold and hunger > GameConfig.pickup_hunger_threshold:
+		return false
 	if ronce.harvest_one():
 		berries_carried += 1
 		berries_picked_total += 1
 		GameLogger.log_event("cueillette", "%s ramasse une mûre (faim: %.0f, portées: %d/%d)" % [display_name, hunger, berries_carried, GameConfig.max_berries_carried])
+		return true
+	return false
 
 func _remember_ronce(ronce) -> void:
 	for m in _memories:

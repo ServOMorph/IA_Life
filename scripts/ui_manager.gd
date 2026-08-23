@@ -105,7 +105,7 @@ func _build_dev_panel() -> void:
 	_dev_panel.custom_minimum_size = Vector2(560, 0)
 
 	var label := Label.new()
-	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim basse (repas) | G : faim haute (cueillette) | E : action perso de test (à définir) | K : tuer le perso de test | F1-F4 : téléporter perso au centre de la map (+ suivi caméra) | Shift+F1-F4 : téléporter perso au contact d'une ronce (+ suivi caméra) | F5 : contrôler le personnage de test (ZQSD + souris) | T : checklist de tests"
+	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim basse (repas) | G : faim haute (cueillette) | E : ramasser une mûre proche | K : tuer le perso de test | F1-F4 : téléporter perso au centre de la map (+ suivi caméra) | Shift+F1-F4 : téléporter perso au contact d'une ronce (+ suivi caméra) | F5 : contrôler le personnage de test (ZQSD + souris) | T : checklist de tests"
 	label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	var vbox := VBoxContainer.new()

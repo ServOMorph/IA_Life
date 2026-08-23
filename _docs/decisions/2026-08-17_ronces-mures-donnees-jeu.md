@@ -117,6 +117,7 @@ manuellement en jeu : elles n'avaient jamais été ajoutées à `tests_manuels.m
 tests de rendu graphique/caméra y figuraient). La bascule plein/vide des ronces (test
 prévu) est bloquée faute de pouvoir observer facilement un événement de cueillette en jeu.
 
-Décision 2026-08-17 : construire un mode dev (`roadmap_mode-dev.md`) pour rendre ces
+Décision 2026-08-17 : construire un mode dev
+(`_docs/archives/2026-08-23_roadmap_mode-dev.md`, terminée) pour rendre ces
 mécaniques observables et testables à la demande. Les 15 tests correspondants ont été
 ajoutés à `tests_manuels.md`.

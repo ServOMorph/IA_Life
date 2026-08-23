@@ -37,14 +37,14 @@ Aucune
 - Validation manuelle en jeu du terrain/relief/cuvettes de spawn, de la faim/
   vieillissement/mort et de la vitesse de simulation ; clignotement de texture d'herbe
   non reproduit (considéré résolu)
-- Construction du mode dev (`roadmap_mode-dev.md`) pour rendre observables à la demande
+- Construction du mode dev (`_docs/archives/2026-08-23_roadmap_mode-dev.md`) pour rendre observables à la demande
   les mécaniques bloquées en observation directe (cueillette isolée, 4 personnages
   simultanés) : `run_dev.py`, raccourcis clavier, UX en jeu
 - Correction du bug "scène de nuit" (ciel/lumière/exposition), vérifiée par capture
   d'écran automatisée avant/après
 
 ## Livrables produits ou modifiés
-- `roadmap_mode-dev.md` : créé (Phases 1 et 2 [FAIT], Phases 3-4 [TODO])
+- `_docs/archives/2026-08-23_roadmap_mode-dev.md` : créé (Phases 1 et 2 [FAIT], Phases 3-4 [TODO])
 - `run_dev.py` : créé
 - `scripts/main.gd` : raccourcis dev (Espace/N/H/E/F1-F4), correctif éclairage jour
 - `scripts/ui_manager.gd` : bandeau "MODE DEV" + indicateur "Temps gelé"
@@ -60,7 +60,7 @@ Aucune
   cueillette/consommation/mémoire/collision (items 3-12), bug enfoncement dans le sol
 
 ## Prochaine étape exacte
-Phase 3 de `roadmap_mode-dev.md` : UX de checklist en jeu.
+Phase 3 de `_docs/archives/2026-08-23_roadmap_mode-dev.md` : UX de checklist en jeu.
 
 ## Question bloquante pour la session suivante
 Aucune

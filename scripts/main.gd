@@ -15,6 +15,7 @@ const VALLEY_DEPTH := 3.5
 const CENTER_FLAT_RADIUS := 45.0
 const SPAWN_FLAT_RADIUS := 20.0
 const SPAWN_POINTS := [Vector2(-40, -40), Vector2(40, -40), Vector2(-40, 40), Vector2(40, 40)]
+const DEV_INTERACTION_RADIUS := 2.4
 
 var _character_defaults: Dictionary = {}
 var _quit_on_all_dead: bool = false
@@ -33,7 +34,6 @@ var _ui: CanvasLayer
 var _camera: Camera3D
 var _test_character: CharacterBody3D = null
 var _test_control_active: bool = false
-var _test_debug_log_timer: float = 0.0
 
 func _ready() -> void:
 	_dev_mode = OS.get_environment(DEV_MODE_ENV_VAR) != ""
@@ -62,7 +62,7 @@ func _ready() -> void:
 		_characters.append(_test_character)
 		_ui.set_test_character(_test_character)
 		_spawn_dev_spawn_ronces()
-		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), G: forcer faim haute (déclenche cueillette), E: action personnage de test (à définir), K: tuer le personnage de test (teste l'animation Death), F1-F4: téléporter le personnage au centre de la map (caméra suit), Shift+F1-F4: téléporter le personnage au contact de la ronce la plus proche (caméra suit), F5: activer/désactiver le contrôle du personnage de test, T: checklist de tests")
+		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), G: forcer faim haute (déclenche cueillette), E: ramasser une mûre proche, K: tuer le personnage de test (teste l'animation Death), F1-F4: téléporter le personnage au centre de la map (caméra suit), Shift+F1-F4: téléporter le personnage au contact de la ronce la plus proche (caméra suit), F5: activer/désactiver le contrôle du personnage de test, T: checklist de tests")
 
 func _physics_process(_delta: float) -> void:
 	if _dev_frozen_scale >= 0.0:
@@ -96,19 +96,29 @@ func _update_test_character_movement() -> void:
 		input_dir = input_dir.normalized()
 	_test_character.set_manual_direction(input_dir)
 
-	_test_debug_log_timer -= get_physics_process_delta_time()
-	if _test_debug_log_timer <= 0.0:
-		_test_debug_log_timer = 0.5
-		GameLogger.log_event("dev", "Debug test-perso: keys(Z=%s S=%s Q=%s D=%s) input_dir=%s move_speed=%s time_scale=%.2f manual_control=%s pos=%s velocity=%s" % [
-			Input.is_key_pressed(KEY_Z), Input.is_key_pressed(KEY_S), Input.is_key_pressed(KEY_Q), Input.is_key_pressed(KEY_D),
-			input_dir, _test_character.get("move_speed"), GameSpeed.time_scale, _test_character.get("manual_control"),
-			_test_character.position, _test_character.velocity
-		])
 
 func _dev_test_character_action() -> void:
-	if not _test_control_active or _test_character == null:
+	if _test_character == null:
 		return
-	GameLogger.log_event("dev", "Action personnage de test déclenchée (aucune action définie pour le moment)")
+	var nearest_ronce: Area3D = null
+	var nearest_distance := INF
+	for ronce in _ronces:
+		if not is_instance_valid(ronce):
+			continue
+		var distance := _test_character.global_position.distance_to(ronce.global_position)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_ronce = ronce
+	if nearest_ronce == null or nearest_distance > DEV_INTERACTION_RADIUS:
+		GameLogger.log_event("dev", "E : aucune ronce à portée (approchez-vous à moins de %.1f m)" % DEV_INTERACTION_RADIUS)
+		return
+	if _test_character.try_pick_berry_from_ronce(nearest_ronce, true):
+		GameLogger.log_event("dev", "E : mûre ramassée manuellement")
+		return
+	if _test_character.berries_carried >= GameConfig.max_berries_carried:
+		GameLogger.log_event("dev", "E : inventaire de mûres plein")
+	else:
+		GameLogger.log_event("dev", "E : le roncier ne contient plus de mûres")
 
 func _dev_toggle_test_control() -> void:
 	if _test_character == null:

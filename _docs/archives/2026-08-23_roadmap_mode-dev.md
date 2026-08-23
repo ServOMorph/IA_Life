@@ -63,7 +63,7 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Restitution et bouclage [EN COURS]
+## Phase 4 — Restitution et bouclage [FAIT]
 - Lecture du fichier de résultats en session Claude Code.
 - Traitement test par test : tests validés retirés de `tests_manuels.md`, tests invalidés
   ou commentés transformés en actions concrètes (bug à corriger, ajustement à faire).
@@ -88,10 +88,13 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
   proportionnel) et retiré de `tests_manuels.md`. Refonte visuelle des ronces demandée
   pour poursuivre la validation (buisson vert + mûres noires visibles, retrait à la
   cueillette) — voir `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.
-- Reste à traiter : items 6, 8-12 de `tests_manuels.md` (étapes précises déjà rédigées),
-  confirmation visuelle du rendu ronces/mûres, bug d'enfoncement des personnages dans le
-  sol (Phase 4 terrain, toujours ouvert), décision sur le retrait du log de diagnostic
-  temporaire (`_test_debug_log_timer`).
+- Quatrième cycle (2026-08-23) : items 6 (paramètres de jeu), 8 (navigation par mémoire),
+  9 (oubli), 10 (remplacement du souvenir le plus faible) et 11 (slider Mémoire) validés
+  automatiquement avec `tools/run_manual_checks.py`.
+- Test visuel 15 (ronces/mûres) validé le 2026-08-23.
+- Bug d'enfoncement visuel des personnages validé comme résolu le 2026-08-23.
+- Log de diagnostic temporaire (`_test_debug_log_timer`) retiré après confirmation du
+  bon fonctionnement du contrôle clavier du personnage de test.
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.

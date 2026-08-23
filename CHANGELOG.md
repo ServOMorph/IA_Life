@@ -153,3 +153,16 @@
   clic, slider de vitesse de simulation globale, bouton de reset complet.
 - Système de faim/vieillissement/mort par personnage.
 - Archive des décisions d'évolution (`_docs/decisions/`).
+## v0.10 — 2026-08-23
+
+### Ajouté
+- Suite automatisée `tools/run_manual_checks.py` pour les tests de paramètres et de mémoire
+  (6, 8, 9, 10 et 11).
+- Touche E du personnage de test : ramasse une mûre proche en mode dev.
+
+### Corrigé
+- Retrait du log de diagnostic temporaire du déplacement ; enfoncement visuel des personnages
+  et rendu des ronces/mûres validés.
+
+### Modifié
+- Roadmap du mode dev clôturée et archivée dans `_docs/archives/2026-08-23_roadmap_mode-dev.md`.

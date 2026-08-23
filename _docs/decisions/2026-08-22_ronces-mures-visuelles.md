@@ -21,5 +21,5 @@
 ## Commentaire
 Exercé en jeu lors de la validation du test manuel 5 (cueillette au contact d'une ronce
 puis consommation, gain de PV proportionnel au slider "Capacité à se nourrir").
-Validation visuelle globale du rendu (aspect du buisson, lisibilité des mûres) en attente
-d'une confirmation explicite.
+Validation visuelle globale du rendu (aspect du buisson, lisibilité des mûres) confirmée le
+2026-08-23 (test manuel 15 validé).
