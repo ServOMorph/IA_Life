@@ -28,7 +28,7 @@ des systèmes décisionnels interchangeables, dont un LLM.
   2026-08-23 : il reste limité au personnage de développement ; les quatre agents normaux
   conservent leur représentation légère pendant la priorité expérimentale.
 
-## Phase 0 — Assainissement et contrats de référence [À FAIRE]
+## Phase 0 — Assainissement et contrats de référence [FAIT]
 
 ### But
 
@@ -42,13 +42,16 @@ les expériences reposent sur un périmètre validé.
   développement.
 - [x] Mettre à jour la décision associée et clore la Phase 5 graphique dans le périmètre
   effectivement retenu pour le laboratoire expérimental.
-- [ ] Cadrer l'identité du projet avant d'ajouter du contenu : comparer l'intégration d'un
+- [x] Cadrer l'identité du projet avant d'ajouter du contenu : comparer l'intégration d'un
   contexte historique (dont le Paléolithique ancien) avec au moins un autre concept de
   monde/narration, puis documenter le choix, ses anachronismes à éviter et ses conséquences
-  sur les mécaniques expérimentales.
-- [ ] Réconcilier `DESIGN/roadmap_graphisme.md` et `DESIGN/_contexte/signals.md` avec les
-  validations déjà réalisées (phases 2 à 5 et rendu des ronces).
-- [ ] Actualiser la synthèse projet, devenue historique, sans effacer les archives.
+  sur les mécaniques expérimentales. Décision du 2026-08-24 : cadre non historique (île
+  isolée) — voir `DOCUMENTATION/orientation_contexte.md`.
+- [x] Réconcilier `DESIGN/roadmap_graphisme.md` et `DESIGN/_contexte/signals.md` avec les
+  validations déjà réalisées (phases 2 à 5 et rendu des ronces). Fait le 2026-08-24 : Phases
+  2-5 marquées [FAIT], actions obsolètes retirées de `DESIGN/_contexte/signals.md`.
+- [x] Actualiser la synthèse projet, devenue historique, sans effacer les archives. Fait le
+  2026-08-24 : `_docs/2026-08-24_16h11_synthese-projet.md`, ancienne version archivée.
 - [x] Établir une commande de smoke test reproductible : lancement headless, contrôles
   automatisés existants et vérification de création de log avec
   `python tools/run_smoke_tests.py`.
@@ -66,7 +69,7 @@ modifiés dans `DESIGN/` doivent être relus et préservés avant toute modifica
   et comportements ; Idle, Walk et Death sont validés sans glissement prolongé.
 - Le smoke test est vert et une session produit un log exploitable.
 
-## Phase 1 — Contrat d'expérience et registre de variables [À FAIRE]
+## Phase 1 — Contrat d'expérience et registre de variables [EN COURS — actions closes, reproductibilité seed-à-seed à vérifier]
 
 ### But
 
@@ -77,12 +80,16 @@ l'UI et du mode d'exécution.
 
 - [x] Définir un format versionné `ExperimentConfig` (JSON) : `experiment_id`,
   `seed`, `environment`, `agents`, `simulation`, `events` et métadonnées de version.
-- [ ] Ajouter `VariableDef` et `VariableRegistry` : identifiant, libellé, description,
+- [x] Ajouter `VariableDef` et `VariableRegistry` : identifiant, libellé, description,
   portée (globale/individuelle), catégorie, type, bornes, défaut, caractère dynamique et
-  modification live autorisée.
-- [ ] Migrer sans changement fonctionnel les variables existantes de `GameConfig` et
+  modification live autorisée. Fait le 2026-08-24 : `scripts/variable_registry.gd` enrichi
+  (`label`, `description`, `scope`, `category`, `default`, `dynamic`, `live_editable`) pour
+  les 7 variables de `GameConfig` et les 11 variables de `Character` déjà validées.
+- [x] Migrer sans changement fonctionnel les variables existantes de `GameConfig` et
   `Character` dans le registre : vitesse, exploration, faim, vieillissement, capacité de
-  nourriture, mémoire et paramètres des ronces.
+  nourriture, mémoire et paramètres des ronces. Fait le 2026-08-24 : `game_config.gd` et
+  `character.gd` lisent désormais leur valeur par défaut depuis `VariableRegistry` (valeurs
+  numériques inchangées) ; smoke test vert après migration.
 - [x] Valider les overrides entrants à partir du registre et rejeter les clés, types ou
   valeurs hors bornes avec une erreur exploitable.
 - [x] Charger une configuration complète avant la construction de la scène ; appliquer

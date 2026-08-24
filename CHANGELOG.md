@@ -1,3 +1,22 @@
+## v0.12 — 2026-08-24
+
+### Ajouté
+- Launcher `run_rl.py` pour le mode RL (`IA_LIFE_RL_MODE`) ; premier épisode complet validé
+  via `rl/client_random.py`.
+- Tests automatisés `ExperimentConfig` (défauts, overrides, validation) dans
+  `tools/run_manual_checks.gd`.
+
+### Modifié
+- `VariableRegistry` enrichi (libellé, description, portée, catégorie, défaut, dynamique,
+  live_editable) ; `GameConfig` et `Character` lisent leurs valeurs par défaut depuis le
+  registre.
+- `DESIGN/roadmap_graphisme.md` et son contexte réconciliés avec l'état réel (Phases 2-5
+  closes).
+
+### Décidé
+- Cadre non historique (île isolée) retenu pour l'identité du jeu — voir
+  `DOCUMENTATION/orientation_contexte.md`.
+
 ## v0.11 — 2026-08-23
 
 ### Ajouté

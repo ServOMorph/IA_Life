@@ -4,13 +4,13 @@ const SAVE_PATH := "res://logs/game_config.json"
 const PERSISTED_KEYS := ["max_berries_carried", "pickup_hunger_threshold", "eat_hunger_threshold",
 	"full_life_berries", "ronce_count", "berries_per_ronce", "light_energy"]
 
-var max_berries_carried: int = 3
-var pickup_hunger_threshold: float = 90.0
-var eat_hunger_threshold: float = 50.0
-var full_life_berries: float = 6.0
-var ronce_count: int = 24
-var berries_per_ronce: int = 3
-var light_energy: float = 3.0
+var max_berries_carried: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["max_berries_carried"])
+var pickup_hunger_threshold: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["pickup_hunger_threshold"])
+var eat_hunger_threshold: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["eat_hunger_threshold"])
+var full_life_berries: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["full_life_berries"])
+var ronce_count: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["ronce_count"])
+var berries_per_ronce: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["berries_per_ronce"])
+var light_energy: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["light_energy"])
 
 func _ready() -> void:
 	load_from_disk()

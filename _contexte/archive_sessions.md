@@ -101,3 +101,25 @@ du rig aux 4 personnages normaux.
 
 ## Question bloquante pour la session suivante
 Aucune
+
+---
+
+# Session du 2026-08-23
+
+## Décisions prises
+- Les bridges tiers sont écartés selon le coupe-circuit ; le bridge TCP/JSONL maison devient le chemin actif.
+
+## Livrables produits ou modifiés
+- DOCUMENTATION/RL/01_voie_rapide_PPO_partage.md : voie PPO corrigée et renommée.
+- scripts/rl_bridge.gd, scripts/main.gd, scripts/character.gd, rl/client_random.py : première intégration TCP/JSONL, non validée en épisode.
+
+## Hypothèses validées / invalidées
+- VALIDE : les scripts RL sont analysés sans erreur par Godot après correction des erreurs de typage et de nom de méthode.
+- INVALIDE : les bridges tiers sont exploitables immédiatement sur cette machine ; pivot TCP/JSONL maison.
+- EN ATTENTE : démarrage effectif du serveur et épisode random complet.
+
+## Prochaine étape exacte
+Lancer Godot en mode RL au premier plan, identifier pourquoi `RLBridge.start()` n'est pas atteint, puis relancer deux fois `python rl/client_random.py --max-steps 12` avec la même seed.
+
+## Question bloquante pour la session suivante
+Aucune

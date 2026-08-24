@@ -4,20 +4,20 @@ const BaselineDeciderScript = preload("res://scripts/baseline_decider.gd")
 
 @export var map_half_x: float = 18.0
 @export var map_half_z: float = 18.0
-@export var move_speed: float = 2.5
+@export var move_speed: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["move_speed"])
 @export var gravity: float = 9.8
-@export var hunger: float = 100.0
-@export var hunger_depletion_rate: float = 0.6
-@export var aging_factor: float = 1.0
-@export var feeding_capacity: float = 1.0
-@export var memory_capacity: int = 5
-@export var memory_decay_rate: float = 0.15
+@export var hunger: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["hunger"])
+@export var hunger_depletion_rate: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["hunger_depletion_rate"])
+@export var aging_factor: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["aging_factor"])
+@export var feeding_capacity: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["feeding_capacity"])
+@export var memory_capacity: int = VariableRegistry.default_value(VariableRegistry.CHARACTER["memory_capacity"])
+@export var memory_decay_rate: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["memory_decay_rate"])
 # 0.5 est neutre : une valeur élevée raccourcit les phases d'errance et augmente
 # la fréquence des changements de direction.
-@export_range(0.0, 1.0, 0.01) var exploration_tendency: float = 0.5
-@export var social_radius: float = 0.0
-@export_range(0.0, 1.0, 0.01) var follow_probability: float = 0.0
-@export_range(0.0, 1.0, 0.01) var avoid_probability: float = 0.0
+@export_range(0.0, 1.0, 0.01) var exploration_tendency: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["exploration_tendency"])
+@export var social_radius: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["social_radius"])
+@export_range(0.0, 1.0, 0.01) var follow_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["follow_probability"])
+@export_range(0.0, 1.0, 0.01) var avoid_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["avoid_probability"])
 @export var display_name: String = ""
 @export var manual_control: bool = false
 @export var immortal: bool = false

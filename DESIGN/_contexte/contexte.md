@@ -15,11 +15,12 @@ l'objectif d'étude comportementale des IA pilotées par LLM.
 - Architecture pensée pour évoluer fortement — ne pas figer le design prématurément.
 
 ## État actuel (réécrit intégralement à chaque /close)
-Roadmap graphisme (roadmap_graphisme.md, 6 phases) : Phase 1 validée [FAIT]. Phases 2 (PBR +
-ronces), 3 (animation procédurale) et 4 (terrain/décor procédural) codées, sans erreur en
-headless, mais aucune validation manuelle en jeu reçue -> marquées [EN COURS] en attente.
-Cycle caméra 3 clics (3e/1re personne/retour) ajouté ad hoc, hors séquence roadmap. Bug
-connu non résolu : clignotement texture herbe (tests_manuels.md).
+Roadmap graphisme (roadmap_graphisme.md, 6 phases) : Phases 1 à 5 [FAIT] (PBR + ronces,
+animation procédurale, terrain/décor procédural, rig Blender limité au personnage de
+développement — décision 2026-08-23). Ronces refondues visuellement le 2026-08-22 (buisson
+vert + mûres visibles). Cycle caméra 3 clics ajouté ad hoc, hors séquence roadmap. Bug
+clignotement texture herbe résolu (confirmé CHANGELOG v0.6). Reste : Phase 6 (bilan +
+rédaction de la roadmap graphisme suivante).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-17 : Initialisation du protocole vibecoding.
@@ -27,3 +28,6 @@ connu non résolu : clignotement texture herbe (tests_manuels.md).
 - 2026-08-17 : Roadmap graphisme créée, trajectoire validée A → B+E → D1 → C → D2 → écriture de la roadmap suivante.
 - 2026-08-17 : Relief procédural par code (Phase 4) plutôt que le plugin Terrain3D — cohérence avec l'approche "tout par code" du projet.
 - 2026-08-17 : Cycle caméra 3 clics sur le nom (3e personne/1re personne contrainte/retour) ajouté, hors séquence formelle de la roadmap.
+- 2026-08-18 : Rig Blender custom (`tools/blender/build_character.py`) intégré, limité au personnage de test.
+- 2026-08-22 : Ronces refondues visuellement (buisson vert + mûres noires visibles).
+- 2026-08-23 : Rig Blender confirmé réservé au personnage de développement (les 4 agents normaux gardent la géométrie boîte).

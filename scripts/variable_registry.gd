@@ -2,29 +2,37 @@ class_name VariableRegistry
 extends RefCounted
 
 ## Source de vérité des variables expérimentales disponibles dans le prototype.
+## Chaque définition : identifiant (clé), libellé, description, portée, catégorie,
+## type, bornes, valeur par défaut, caractère dynamique (change pendant un run sans
+## intervention utilisateur) et modification live autorisée (slider UI existant).
 const GAME_CONFIG: Dictionary = {
-	"max_berries_carried": {"type": "int", "min": 1, "max": 20},
-	"pickup_hunger_threshold": {"type": "float", "min": 0.0, "max": 100.0},
-	"eat_hunger_threshold": {"type": "float", "min": 0.0, "max": 100.0},
-	"full_life_berries": {"type": "float", "min": 0.1, "max": 100.0},
-	"ronce_count": {"type": "int", "min": 0, "max": 500},
-	"berries_per_ronce": {"type": "int", "min": 0, "max": 100},
-	"light_energy": {"type": "float", "min": 0.0, "max": 20.0},
+	"max_berries_carried": {"label": "Mûres max portées", "description": "Nombre maximal de mûres qu'un agent peut porter avant de devoir les consommer.", "scope": "globale", "category": "alimentation", "type": "int", "min": 1, "max": 20, "default": 3, "dynamic": false, "live_editable": true},
+	"pickup_hunger_threshold": {"label": "Seuil cueillette (faim)", "description": "Niveau de faim en dessous duquel un agent cherche à cueillir des mûres.", "scope": "globale", "category": "alimentation", "type": "float", "min": 0.0, "max": 100.0, "default": 90.0, "dynamic": false, "live_editable": true},
+	"eat_hunger_threshold": {"label": "Seuil consommation (faim)", "description": "Niveau de faim en dessous duquel un agent consomme une mûre portée.", "scope": "globale", "category": "alimentation", "type": "float", "min": 0.0, "max": 100.0, "default": 50.0, "dynamic": false, "live_editable": true},
+	"full_life_berries": {"label": "Mûres pour vie complète", "description": "Nombre de mûres nécessaires pour restaurer la faim de 0 à 100.", "scope": "globale", "category": "alimentation", "type": "float", "min": 0.1, "max": 100.0, "default": 6.0, "dynamic": false, "live_editable": true},
+	"ronce_count": {"label": "Nombre de ronces", "description": "Nombre de ronciers générés sur la map, répartis par quadrant.", "scope": "globale", "category": "environnement", "type": "int", "min": 0, "max": 500, "default": 24, "dynamic": false, "live_editable": true},
+	"berries_per_ronce": {"label": "Mûres par ronce", "description": "Nombre de mûres portées par chaque roncier généré.", "scope": "globale", "category": "environnement", "type": "int", "min": 0, "max": 100, "default": 3, "dynamic": false, "live_editable": true},
+	"light_energy": {"label": "Intensité lumineuse", "description": "Énergie de la lumière directionnelle de la scène.", "scope": "globale", "category": "rendu", "type": "float", "min": 0.0, "max": 20.0, "default": 3.0, "dynamic": false, "live_editable": true},
 }
 
 const CHARACTER: Dictionary = {
-	"move_speed": {"type": "float", "min": 0.0, "max": 20.0},
-	"hunger": {"type": "float", "min": 0.0, "max": 100.0},
-	"hunger_depletion_rate": {"type": "float", "min": 0.0, "max": 20.0},
-	"aging_factor": {"type": "float", "min": 0.0, "max": 10.0},
-	"feeding_capacity": {"type": "float", "min": 0.0, "max": 10.0},
-	"memory_capacity": {"type": "int", "min": 0, "max": 100},
-	"memory_decay_rate": {"type": "float", "min": 0.0, "max": 10.0},
-	"exploration_tendency": {"type": "float", "min": 0.0, "max": 1.0},
-	"social_radius": {"type": "float", "min": 0.0, "max": 250.0},
-	"follow_probability": {"type": "float", "min": 0.0, "max": 1.0},
-	"avoid_probability": {"type": "float", "min": 0.0, "max": 1.0},
+	"move_speed": {"label": "Vitesse de déplacement", "description": "Vitesse de déplacement horizontale de l'agent.", "scope": "individuelle", "category": "déplacement", "type": "float", "min": 0.0, "max": 20.0, "default": 2.5, "dynamic": false, "live_editable": true},
+	"hunger": {"label": "Faim initiale", "description": "Niveau de faim de l'agent au démarrage (0 = mort, 100 = rassasié).", "scope": "individuelle", "category": "alimentation", "type": "float", "min": 0.0, "max": 100.0, "default": 100.0, "dynamic": true, "live_editable": false},
+	"hunger_depletion_rate": {"label": "Taux de déplétion de la faim", "description": "Vitesse à laquelle la faim diminue au fil du temps.", "scope": "individuelle", "category": "alimentation", "type": "float", "min": 0.0, "max": 20.0, "default": 0.6, "dynamic": false, "live_editable": false},
+	"aging_factor": {"label": "Facteur de vieillissement", "description": "Multiplicateur de la vitesse de vieillissement de l'agent.", "scope": "individuelle", "category": "vieillissement", "type": "float", "min": 0.0, "max": 10.0, "default": 1.0, "dynamic": false, "live_editable": true},
+	"feeding_capacity": {"label": "Capacité à se nourrir", "description": "Multiplicateur de la restauration de faim par mûre consommée.", "scope": "individuelle", "category": "alimentation", "type": "float", "min": 0.0, "max": 10.0, "default": 1.0, "dynamic": false, "live_editable": true},
+	"memory_capacity": {"label": "Capacité de mémoire", "description": "Nombre maximal de ronciers mémorisés simultanément.", "scope": "individuelle", "category": "mémoire", "type": "int", "min": 0, "max": 100, "default": 5, "dynamic": false, "live_editable": true},
+	"memory_decay_rate": {"label": "Taux de décroissance de la mémoire", "description": "Vitesse à laquelle un souvenir de roncier perd en force avant d'être oublié.", "scope": "individuelle", "category": "mémoire", "type": "float", "min": 0.0, "max": 10.0, "default": 0.15, "dynamic": false, "live_editable": false},
+	"exploration_tendency": {"label": "Tendance à l'exploration", "description": "0,5 est neutre ; une valeur élevée raccourcit les phases d'errance et augmente la fréquence des changements de direction.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.5, "dynamic": false, "live_editable": false},
+	"social_radius": {"label": "Rayon social", "description": "Distance à laquelle un agent perçoit un autre agent.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 250.0, "default": 0.0, "dynamic": false, "live_editable": false},
+	"follow_probability": {"label": "Probabilité de suivi", "description": "Probabilité qu'un agent suive un autre agent perçu dans son rayon social.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
+	"avoid_probability": {"label": "Probabilité d'évitement", "description": "Probabilité qu'un agent évite un autre agent perçu dans son rayon social.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
 }
+
+static func default_value(definition: Dictionary):
+	if definition["type"] == "int":
+		return int(definition["default"])
+	return float(definition["default"])
 
 static func validate_values(values: Dictionary, definitions: Dictionary, scope: String) -> PackedStringArray:
 	var errors := PackedStringArray()

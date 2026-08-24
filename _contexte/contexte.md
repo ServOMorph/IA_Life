@@ -8,15 +8,12 @@ Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
 Le prototype est un laboratoire headless reproductible : configurations versionnées, logs JSONL,
-résumés et campagnes. Le baseline couvre exploration, mémoire, événements, perception et social.
-Les bridges RL tiers sont écartés ; un bridge TCP/JSONL maison et un client random sont intégrés,
-mais l'épisode n'est pas encore validé. Le rig reste limité au personnage de développement ; le
-contexte historique demeure une piste non intégrée.
+résumés et campagnes. Le bridge RL TCP/JSONL maison est validé (épisode complet sans NaN via
+`rl/client_random.py`). `VariableRegistry` est la source unique des défauts/bornes de `GameConfig`
+et `Character` (Phases 0-1 de `roadmap_experimentation.md` closes). Contexte du jeu tranché : cadre
+non historique (île isolée) ; le rig reste limité au personnage de développement.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-17 : Vitesse de simulation globale, faim/vieillissement/mort, reset complet.
-- 2026-08-17 : Cueillette de mûres (ronces), consommation auto, modale "Données du jeu".
-- 2026-08-17 : Mode headless + skills `analyse-partie`/`experimentation-headless`.
 - 2026-08-17 : Mémoire spatiale des ronciers par personnage + collision physique des ronces.
 - 2026-08-17 : Correctif bug terrain invisible (culling) + relief escarpé + cuvettes de
   spawn + capture d'écran automatisée (`run_screenshot.py`) + skill `synthese-projet`.
@@ -35,3 +32,7 @@ contexte historique demeure une piste non intégrée.
   agents normaux conservent un rendu léger afin de préserver la priorité expérimentale.
 - 2026-08-23 : Après échec des bridges tiers, le projet retient provisoirement un bridge
   TCP/JSONL maison pour le premier RL.
+- 2026-08-24 : Cadre non historique (île isolée) retenu pour l'identité du jeu, sans ancrage
+  temporel — voir `DOCUMENTATION/orientation_contexte.md`.
+- 2026-08-24 : `VariableRegistry` devient la source unique des valeurs par défaut/bornes de
+  `GameConfig` et `Character` ; bridge RL TCP/JSONL maison validé (épisode complet).

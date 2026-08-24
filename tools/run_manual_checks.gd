@@ -26,8 +26,11 @@ func _run() -> void:
 	_test_memory_decay()
 	_test_memory_replacement()
 	_test_memory_slider()
+	_test_experiment_config_defaults()
+	_test_experiment_config_overrides()
+	_test_experiment_config_validation()
 	if _failures.is_empty():
-		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11 validés automatiquement.")
+		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, et ExperimentConfig validés automatiquement.")
 		get_tree().quit(0)
 	else:
 		for failure in _failures:
@@ -173,6 +176,42 @@ func _test_memory_decay() -> void:
 	_expect(character.memorized_ronces_count() == 0, "Test 9 : un souvenir à force nulle ne disparaît pas.")
 	character.queue_free()
 	ronce.queue_free()
+
+func _test_experiment_config_defaults() -> void:
+	var config := ExperimentConfig.from_raw({})
+	_expect(config.is_valid(), "ExperimentConfig défauts : une config vide devrait être valide.")
+	_expect(config.normalized["seed"] == 1337, "ExperimentConfig défauts : la seed par défaut est incorrecte.")
+	_expect(is_equal_approx(config.normalized["simulation"]["game_speed"], 1.0), "ExperimentConfig défauts : game_speed par défaut incorrect.")
+	_expect(config.normalized["agents"]["defaults"].is_empty(), "ExperimentConfig défauts : agents.defaults devrait rester vide sans override.")
+
+	var character := _make_character()
+	var move_speed_default: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["move_speed"])
+	_expect(is_equal_approx(character.move_speed, move_speed_default), "VariableRegistry défauts : Character.move_speed ne correspond pas au registre.")
+	character.queue_free()
+
+func _test_experiment_config_overrides() -> void:
+	var raw := {
+		"environment": {"game_config": {"ronce_count": 10}},
+		"agents": {
+			"defaults": {"move_speed": 5.0},
+			"individual": {"A": {"move_speed": 7.0}},
+		},
+	}
+	var config := ExperimentConfig.from_raw(raw)
+	_expect(config.is_valid(), "ExperimentConfig overrides : une config valide a été rejetée.")
+	_expect(config.normalized["environment"]["game_config"]["ronce_count"] == 10, "ExperimentConfig overrides : override global.game_config non appliqué.")
+	_expect(is_equal_approx(config.normalized["agents"]["defaults"]["move_speed"], 5.0), "ExperimentConfig overrides : override agents.defaults non appliqué.")
+	_expect(is_equal_approx(config.normalized["agents"]["individual"]["A"]["move_speed"], 7.0), "ExperimentConfig overrides : override agents.individual non appliqué.")
+
+func _test_experiment_config_validation() -> void:
+	var out_of_bounds := ExperimentConfig.from_raw({"agents": {"defaults": {"move_speed": 999.0}}})
+	_expect(not out_of_bounds.is_valid(), "ExperimentConfig validation : une valeur hors bornes a été acceptée.")
+
+	var unknown_key := ExperimentConfig.from_raw({"agents": {"defaults": {"variable_inexistante": 1.0}}})
+	_expect(not unknown_key.is_valid(), "ExperimentConfig validation : une clé inconnue a été acceptée.")
+
+	var probabilities_over_one := ExperimentConfig.from_raw({"agents": {"defaults": {"follow_probability": 0.7, "avoid_probability": 0.6}}})
+	_expect(not probabilities_over_one.is_valid(), "ExperimentConfig validation : follow_probability + avoid_probability > 1 a été accepté.")
 
 func _find_memory_slider(node: Node) -> HSlider:
 	if node is HBoxContainer and node.get_child_count() >= 2:
