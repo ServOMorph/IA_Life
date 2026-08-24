@@ -1,3 +1,13 @@
+## v0.13 — 2026-08-24
+
+### Ajouté
+- Contrôles automatisés de reproductibilité et de cohérence entre télémétrie JSONL et summary.
+- Scénarios de comparaison pour `goal_persistence`, `known_zone_preference` et `curiosity`.
+
+### Modifié
+- Les expériences sont bornées par `max_simulation_seconds` ; `max_wall_seconds` reste un alias de migration.
+- Configuration fixe et état initial dynamique sont distingués dans `ExperimentConfig`.
+
 ## v0.12 — 2026-08-24
 
 ### Ajouté

@@ -3,19 +3,24 @@
 `smoke_config_v1.json` est un exemple minimal du format `ExperimentConfig` v1.
 Il est compatible avec l'ancien format d'overrides : les clés historiques
 `game_config`, `game_speed`, `character_defaults`, `quit_on_all_dead` et
-`max_wall_seconds` restent acceptées.
+`max_wall_seconds` restent acceptées comme alias de migration de
+`max_simulation_seconds`.
 
 Le nouveau format sépare explicitement :
 
 - `experiment_id`, `seed`, `metadata` et `events` ;
 - `environment.game_config` pour les règles globales ;
 - `agents.defaults` et `agents.individual.<Nom>` pour les paramètres des agents ;
-- `simulation` pour vitesse et limites d'exécution.
+- `agents.initial_state.defaults` et `agents.initial_state.individual.<Nom>` pour les
+  états dynamiques au démarrage (actuellement `hunger`) ;
+- `simulation` pour vitesse et limites d'exécution ; `max_simulation_seconds` fixe
+  la durée simulée, indépendamment de la charge de la machine.
 
 Lancer l'exemple sous Windows :
 
 ```powershell
 python run_headless.py experiments/smoke_config_v1.json 20
+python tools/check_reproducibility.py experiments/telemetry_smoke_v1.json
 ```
 
 Le jeu refuse une variable inconnue, un type incompatible ou une valeur hors bornes.
@@ -45,6 +50,10 @@ Valider tous les résumés d'un dossier :
 ```powershell
 python tools/aggregate_results.py logs --validate-only
 ```
+
+Les summaries antérieurs au contrat normalisé (sans `config_sha256`) sont signalés comme
+archives et exclus de l'agrégation ; les erreurs d'un résultat au format actuel restent
+bloquantes.
 
 Créer un CSV par agent et un rapport agrégé par expérience :
 
@@ -93,3 +102,15 @@ et d'évitement ; l'agrégateur en calcule les moyennes par groupe.
 `Rouge` (0.0) conserve une direction plus longtemps que `Bleu` (1.0). Les événements
 `decision` permettent de comparer le nombre de réorientations sans interpréter les logs
 narratifs.
+
+`goal_persistence_profiles_v1.json` compare l'effet inverse à exploration : `Rouge` (0.0)
+réoriente plus vite son errance que `Bleu` (1.0). La métrique associée est
+`wander_reorientations_total`, déjà journalisée dans les événements `decision`.
+
+`known_zone_preference_profiles_v1.json` compare l'errance sans biais de `Rouge` (0.0)
+à celle de `Bleu` (1.0), attirée vers sa zone visitée la plus proche. Les métriques sont
+`zone_discoveries_total` et `zone_revisits_total`.
+
+`curiosity_profiles_v1.json` compare `Rouge` (0.0) à `Bleu` (1.0), qui privilégie les
+directions candidates projetées vers une zone inconnue. Les métriques sont
+`zone_discoveries_total` et `zone_revisits_total`.

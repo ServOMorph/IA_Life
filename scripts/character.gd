@@ -15,6 +15,9 @@ const BaselineDeciderScript = preload("res://scripts/baseline_decider.gd")
 # 0.5 est neutre : une valeur élevée raccourcit les phases d'errance et augmente
 # la fréquence des changements de direction.
 @export_range(0.0, 1.0, 0.01) var exploration_tendency: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["exploration_tendency"])
+@export_range(0.0, 1.0, 0.01) var goal_persistence: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["goal_persistence"])
+@export_range(0.0, 1.0, 0.01) var known_zone_preference: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["known_zone_preference"])
+@export_range(0.0, 1.0, 0.01) var curiosity: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["curiosity"])
 @export var social_radius: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["social_radius"])
 @export_range(0.0, 1.0, 0.01) var follow_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["follow_probability"])
 @export_range(0.0, 1.0, 0.01) var avoid_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["avoid_probability"])
@@ -35,6 +38,7 @@ var current_goal: String = ""
 var wander_reorientations_total: int = 0
 var distance_travelled_total: float = 0.0
 var death_elapsed_seconds: float = -1.0
+var simulation_elapsed_seconds: float = -1.0
 var visited_zones_total: int = 0
 var zone_discoveries_total: int = 0
 var zone_revisits_total: int = 0
@@ -233,7 +237,7 @@ func kill() -> void:
 
 func _die() -> void:
 	is_dead = true
-	death_elapsed_seconds = GameLogger.get_elapsed_seconds()
+	death_elapsed_seconds = simulation_elapsed_seconds if simulation_elapsed_seconds >= 0.0 else GameLogger.get_elapsed_seconds()
 	velocity = Vector3.ZERO
 	GameLogger.log_event_data("mort", "%s meurt de faim en (%.1f, %.1f) — mûres ramassées: %d, mangées: %d" % [display_name, position.x, position.z, berries_picked_total, berries_eaten_total], {
 		"agent": display_name,
@@ -252,6 +256,14 @@ func _die() -> void:
 func _pick_new_direction(count_as_reorientation: bool = true) -> void:
 	var angle := randf_range(0.0, TAU)
 	_direction = Vector3(cos(angle), 0.0, sin(angle))
+	if curiosity > 0.0 and not _visited_zone_ids.is_empty():
+		var curious_direction := _direction_to_unknown_zone_candidate(_direction)
+		if curious_direction.length_squared() > 0.01:
+			_direction = _direction.lerp(curious_direction, curiosity).normalized()
+	if known_zone_preference > 0.0:
+		var known_direction := _direction_to_nearest_known_zone()
+		if known_direction.length_squared() > 0.01:
+			_direction = _direction.lerp(known_direction, known_zone_preference).normalized()
 	_timer = randf_range(1.5, 4.0) * _wander_interval_factor()
 	if count_as_reorientation:
 		wander_reorientations_total += 1
@@ -268,7 +280,7 @@ func _bounce_back() -> void:
 
 func _wander_interval_factor() -> float:
 	# À 0.5, le facteur vaut exactement 1.0 : le baseline reste inchangé.
-	return lerpf(1.5, 0.5, exploration_tendency)
+	return lerpf(1.5, 0.5, exploration_tendency) * lerpf(0.7, 1.3, goal_persistence)
 
 func _clamp_to_map() -> void:
 	position.x = clamp(position.x, -map_half_x, map_half_x)
@@ -315,6 +327,32 @@ func _zone_id_for_position(world_position: Vector3) -> String:
 	var x_index := floori(world_position.x / VISITED_ZONE_SIZE)
 	var z_index := floori(world_position.z / VISITED_ZONE_SIZE)
 	return "%d:%d" % [x_index, z_index]
+
+func _direction_to_nearest_known_zone() -> Vector3:
+	var nearest_distance := INF
+	var nearest_center := Vector3.ZERO
+	for zone_id_variant in _visited_zone_ids:
+		var parts := String(zone_id_variant).split(":")
+		if parts.size() != 2:
+			continue
+		var center := Vector3((float(parts[0]) + 0.5) * VISITED_ZONE_SIZE, position.y, (float(parts[1]) + 0.5) * VISITED_ZONE_SIZE)
+		var distance := position.distance_squared_to(center)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_center = center
+	var direction := nearest_center - position
+	direction.y = 0.0
+	return direction.normalized() if nearest_distance < INF and direction.length_squared() > 0.01 else Vector3.ZERO
+
+func _direction_to_unknown_zone_candidate(base_direction: Vector3) -> Vector3:
+	# Trois directions déterministes évitent de consommer un aléa supplémentaire : ce trait
+	# ne modifie donc pas la séquence aléatoire des autres agents.
+	var candidates: Array[Vector3] = [base_direction, Vector3(-base_direction.z, 0.0, base_direction.x), Vector3(base_direction.z, 0.0, -base_direction.x)]
+	for candidate: Vector3 in candidates:
+		var projected_position := position + candidate.normalized() * VISITED_ZONE_SIZE * 1.5
+		if not _visited_zone_ids.has(_zone_id_for_position(projected_position)):
+			return candidate.normalized()
+	return Vector3.ZERO
 
 func _update_social_perception(scaled_delta: float) -> void:
 	if social_radius <= 0.0:

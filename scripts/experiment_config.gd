@@ -42,6 +42,7 @@ func _normalize(raw: Dictionary) -> void:
 	var game_config: Dictionary = raw.get("game_config", environment.get("game_config", environment.get("variables", {})))
 	var character_defaults: Dictionary = raw.get("character_defaults", agents.get("defaults", {}))
 	var character_overrides: Dictionary = agents.get("individual", agents.get("overrides", {}))
+	var initial_state: Dictionary = agents.get("initial_state", {})
 	if not game_config is Dictionary:
 		errors.append("environment.game_config doit être un objet JSON")
 		game_config = {}
@@ -51,9 +52,20 @@ func _normalize(raw: Dictionary) -> void:
 	if not character_overrides is Dictionary:
 		errors.append("agents.individual doit être un objet JSON")
 		character_overrides = {}
+	if not initial_state is Dictionary:
+		errors.append("agents.initial_state doit être un objet JSON")
+		initial_state = {}
+	var initial_defaults: Dictionary = initial_state.get("defaults", {})
+	var initial_overrides: Dictionary = initial_state.get("individual", {})
+	if not initial_defaults is Dictionary:
+		errors.append("agents.initial_state.defaults doit être un objet JSON")
+		initial_defaults = {}
+	if not initial_overrides is Dictionary:
+		errors.append("agents.initial_state.individual doit être un objet JSON")
+		initial_overrides = {}
 
 	errors.append_array(VariableRegistry.validate_values(game_config, VariableRegistry.GAME_CONFIG, "environment.game_config"))
-	errors.append_array(VariableRegistry.validate_values(character_defaults, VariableRegistry.CHARACTER, "agents.defaults"))
+	errors.append_array(VariableRegistry.validate_fixed_values(character_defaults, VariableRegistry.CHARACTER, "agents.defaults"))
 	errors.append_array(_validate_social_probabilities(character_defaults, "agents.defaults"))
 	for agent_name_variant in character_overrides:
 		var agent_name := String(agent_name_variant)
@@ -61,19 +73,30 @@ func _normalize(raw: Dictionary) -> void:
 		if not values is Dictionary:
 			errors.append("agents.individual.%s doit être un objet JSON" % agent_name)
 			continue
-		errors.append_array(VariableRegistry.validate_values(values, VariableRegistry.CHARACTER, "agents.individual.%s" % agent_name))
+		errors.append_array(VariableRegistry.validate_fixed_values(values, VariableRegistry.CHARACTER, "agents.individual.%s" % agent_name))
 		var effective_values := character_defaults.duplicate()
 		effective_values.merge(values, true)
 		errors.append_array(_validate_social_probabilities(effective_values, "agents.individual.%s" % agent_name))
+	errors.append_array(VariableRegistry.validate_initial_state_values(initial_defaults, VariableRegistry.CHARACTER, "agents.initial_state.defaults"))
+	for agent_name_variant in initial_overrides:
+		var initial_agent_name := String(agent_name_variant)
+		var values = initial_overrides[agent_name_variant]
+		if not values is Dictionary:
+			errors.append("agents.initial_state.individual.%s doit être un objet JSON" % initial_agent_name)
+			continue
+		errors.append_array(VariableRegistry.validate_initial_state_values(values, VariableRegistry.CHARACTER, "agents.initial_state.individual.%s" % initial_agent_name))
 
 	var game_speed = simulation.get("game_speed", raw.get("game_speed", 1.0))
 	if not (typeof(game_speed) == TYPE_INT or typeof(game_speed) == TYPE_FLOAT) or game_speed < 0.0 or game_speed > 80.0:
 		errors.append("simulation.game_speed doit être compris entre 0 et 80")
 		game_speed = 1.0
-	var max_wall_seconds = simulation.get("max_wall_seconds", raw.get("max_wall_seconds", 120.0))
-	if not (typeof(max_wall_seconds) == TYPE_INT or typeof(max_wall_seconds) == TYPE_FLOAT) or max_wall_seconds <= 0.0:
-		errors.append("simulation.max_wall_seconds doit être positif")
-		max_wall_seconds = 120.0
+	# La durée d'une expérience est exprimée en temps simulé : une limite murale
+	# dépendrait de la charge de la machine et rendrait les résultats incomparables.
+	# max_wall_seconds reste accepté comme alias de migration des anciens fichiers.
+	var max_simulation_seconds = simulation.get("max_simulation_seconds", simulation.get("max_wall_seconds", raw.get("max_simulation_seconds", raw.get("max_wall_seconds", 120.0))))
+	if not (typeof(max_simulation_seconds) == TYPE_INT or typeof(max_simulation_seconds) == TYPE_FLOAT) or max_simulation_seconds <= 0.0:
+		errors.append("simulation.max_simulation_seconds doit être positif")
+		max_simulation_seconds = 120.0
 	var events := _normalize_events(raw_events)
 
 	normalized = {
@@ -81,8 +104,8 @@ func _normalize(raw: Dictionary) -> void:
 		"experiment_id": String(raw.get("experiment_id", "unnamed")),
 		"seed": seed_value,
 		"environment": {"game_config": game_config},
-		"agents": {"defaults": character_defaults, "individual": character_overrides},
-		"simulation": {"game_speed": float(game_speed), "quit_on_all_dead": bool(simulation.get("quit_on_all_dead", raw.get("quit_on_all_dead", true))), "max_wall_seconds": float(max_wall_seconds)},
+		"agents": {"defaults": character_defaults, "individual": character_overrides, "initial_state": {"defaults": initial_defaults, "individual": initial_overrides}},
+		"simulation": {"game_speed": float(game_speed), "quit_on_all_dead": bool(simulation.get("quit_on_all_dead", raw.get("quit_on_all_dead", true))), "max_simulation_seconds": float(max_simulation_seconds)},
 		"events": events,
 		"metadata": raw.get("metadata", {}),
 	}

@@ -21,6 +21,8 @@ const DEV_INTERACTION_RADIUS := 2.4
 
 var _character_defaults: Dictionary = {}
 var _character_overrides: Dictionary = {}
+var _character_initial_state_defaults: Dictionary = {}
+var _character_initial_state_overrides: Dictionary = {}
 var _experiment_seed: int = DEFAULT_EXPERIMENT_SEED
 var _normalized_experiment_config: Dictionary = {}
 var _headless_run: bool = false
@@ -30,8 +32,7 @@ var _executed_events: Array = []
 var _next_event_index: int = 0
 var _simulation_clock: float = 0.0
 var _quit_on_all_dead: bool = false
-var _max_wall_seconds: float = 0.0
-var _wall_clock: float = 0.0
+var _max_simulation_seconds: float = 0.0
 var _characters: Array = []
 var _terrain_noise: FastNoiseLite
 var _screenshot_path: String = ""
@@ -86,6 +87,17 @@ func _ready() -> void:
 		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), G: forcer faim haute (déclenche cueillette), E: ramasser une mûre proche, K: tuer le personnage de test (teste l'animation Death), F1-F4: téléporter le personnage au centre de la map (caméra suit), Shift+F1-F4: téléporter le personnage au contact de la ronce la plus proche (caméra suit), F5: activer/désactiver le contrôle du personnage de test, T: checklist de tests")
 
 func _physics_process(_delta: float) -> void:
+	if _headless_run and not _run_finished:
+		var scaled_delta := _delta * GameSpeed.time_scale
+		_simulation_clock += scaled_delta
+		for character in _characters:
+			if is_instance_valid(character):
+				character.simulation_elapsed_seconds = _simulation_clock
+		_process_scheduled_events()
+		if _max_simulation_seconds > 0.0 and _simulation_clock + 0.000001 >= _max_simulation_seconds:
+			GameLogger.log_event("headless", "Durée simulée atteinte (%.2fs) — arrêt automatique" % _max_simulation_seconds)
+			_finish_headless_run("simulation_duration_reached")
+			return
 	if _dev_frozen_scale >= 0.0:
 		if _dev_step_frames > 0:
 			GameSpeed.time_scale = _dev_frozen_scale
@@ -264,8 +276,6 @@ func _process(delta: float) -> void:
 		if _screenshot_clock >= _screenshot_delay:
 			_take_screenshot()
 			return
-	_process_scheduled_events(delta * GameSpeed.time_scale)
-
 	if _quit_on_all_dead and _characters.size() > 0:
 		var all_dead := true
 		for c in _characters:
@@ -276,12 +286,6 @@ func _process(delta: float) -> void:
 			GameLogger.log_event("headless", "Tous les personnages sont morts — arrêt automatique")
 			_finish_headless_run("all_agents_dead")
 			return
-
-	if _max_wall_seconds > 0.0:
-		_wall_clock += delta
-		if _wall_clock >= _max_wall_seconds:
-			GameLogger.log_event("headless", "Timeout atteint (%.0fs) — arrêt automatique" % _max_wall_seconds)
-			_finish_headless_run("timeout")
 
 func _load_headless_overrides() -> void:
 	var path := OS.get_environment(HEADLESS_ENV_VAR)
@@ -313,11 +317,13 @@ func _load_headless_overrides() -> void:
 	GameSpeed.time_scale = float(simulation["game_speed"])
 	_character_defaults = agents["defaults"]
 	_character_overrides = agents["individual"]
+	_character_initial_state_defaults = agents["initial_state"]["defaults"]
+	_character_initial_state_overrides = agents["initial_state"]["individual"]
 	_normalized_experiment_config = normalized
 	_headless_run = true
 	_scheduled_events = normalized["events"]
 	_quit_on_all_dead = simulation["quit_on_all_dead"]
-	_max_wall_seconds = float(simulation["max_wall_seconds"])
+	_max_simulation_seconds = float(simulation["max_simulation_seconds"])
 
 	if normalized.has("screenshot") and normalized["screenshot"] is Dictionary:
 		var shot: Dictionary = normalized["screenshot"]
@@ -433,7 +439,7 @@ func _finish_headless_run(reason: String) -> void:
 				parameters.merge(_character_overrides[character.display_name], true)
 			var lifetime: float = character.death_elapsed_seconds
 			if lifetime < 0.0:
-				lifetime = GameLogger.get_elapsed_seconds()
+				lifetime = _simulation_clock
 			agents.append({
 				"name": character.display_name,
 				"parameters": parameters,
@@ -459,14 +465,14 @@ func _finish_headless_run(reason: String) -> void:
 		GameLogger.write_summary({
 			"status": "completed",
 			"reason": reason,
+			"elapsed_seconds": _simulation_clock,
 			"experiment": _normalized_experiment_config,
 			"executed_events": _executed_events,
 			"agents": agents,
 		})
 	get_tree().quit()
 
-func _process_scheduled_events(scaled_delta: float) -> void:
-	_simulation_clock += scaled_delta
+func _process_scheduled_events() -> void:
 	while _next_event_index < _scheduled_events.size():
 		var event: Dictionary = _scheduled_events[_next_event_index]
 		if float(event["at_seconds"]) > _simulation_clock:
@@ -796,6 +802,11 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 	if _character_overrides.has(char_name):
 		for key in _character_overrides[char_name]:
 			character.set(key, _character_overrides[char_name][key])
+	for key in _character_initial_state_defaults:
+		character.set(key, _character_initial_state_defaults[key])
+	if _character_initial_state_overrides.has(char_name):
+		for key in _character_initial_state_overrides[char_name]:
+			character.set(key, _character_initial_state_overrides[char_name][key])
 
 	var collision := CollisionShape3D.new()
 	var shape := CapsuleShape3D.new()

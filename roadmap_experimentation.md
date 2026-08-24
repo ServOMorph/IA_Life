@@ -69,7 +69,7 @@ modifiés dans `DESIGN/` doivent être relus et préservés avant toute modifica
   et comportements ; Idle, Walk et Death sont validés sans glissement prolongé.
 - Le smoke test est vert et une session produit un log exploitable.
 
-## Phase 1 — Contrat d'expérience et registre de variables [EN COURS — actions closes, reproductibilité seed-à-seed à vérifier]
+## Phase 1 — Contrat d'expérience et registre de variables [FAIT]
 
 ### But
 
@@ -96,6 +96,10 @@ l'UI et du mode d'exécution.
   d'abord les valeurs globales, puis les valeurs individuelles par nom d'agent.
 - [x] Journaliser, au démarrage, la configuration normalisée complète, la seed, l'ID,
   le hash/commit du projet si disponible et les options d'exécution.
+- [x] Vérifier la reproductibilité seed-à-seed sur deux runs headless identiques. Fait le
+  2026-08-24 : `tools/check_reproducibility.py` compare deux summaries (hors `session_id`).
+  La limite d'arrêt est désormais `max_simulation_seconds`, comptée sur les ticks physiques ;
+  l'ancien `max_wall_seconds` reste un alias de migration.
 
 ### Critères d'acceptation
 
@@ -104,7 +108,7 @@ l'UI et du mode d'exécution.
 - Une variable migrée n'est définie qu'une fois pour ses bornes et sa valeur par défaut.
 - Des tests couvrent chargement, validation, valeurs par défaut et overrides par agent.
 
-## Phase 2 — Baseline comportemental et perception [À FAIRE]
+## Phase 2 — Baseline comportemental et perception [FAIT]
 
 ### But
 
@@ -117,16 +121,24 @@ nouveaux traits.
   état interne, décision, action.
 - [x] Exposer l'objectif courant de chaque agent (errance, ressource mémorisée,
   cueillette, consommation) et le journaliser lors de chaque changement.
-- [~] Ajouter les premières variables à fort pouvoir discriminant : `exploration_tendency`
-  est disponible ; `curiosity`, `goal_persistence`, `risk_tolerance` et préférence pour
-  zones connues restent à concevoir.
-- [~] Ne relier chaque trait qu'à des règles locales documentées et testées ;
+- [x] Ajouter les premières variables à fort pouvoir discriminant : `exploration_tendency`,
+  `goal_persistence`, `known_zone_preference` et `curiosity` sont disponibles.
+  `risk_tolerance` est reportée jusqu'à l'introduction d'un danger environnemental mesurable.
+  Fait le 2026-08-24 : `goal_persistence` prolonge
+  localement la direction d'errance (0,5 neutre), tandis que `known_zone_preference`
+  attire l'errance vers la zone déjà visitée la plus proche et `curiosity` favorise une
+  direction candidate vers une cellule inconnue ; scénarios associés dans `experiments/`.
+- [x] Ne relier chaque trait qu'à des règles locales documentées et testées ;
   `exploration_tendency` réduit linéairement l'intervalle entre réorientations d'errance
-  (0,5 est neutre). La métrique associée est `wander_reorientations_total`, également
-  journalisée dans les événements `decision`. Aucun profil nommé (« explorateur »,
+  (0,5 est neutre), tandis que `goal_persistence` l'allonge linéairement (0,5 est neutre).
+  La métrique associée est `wander_reorientations_total`, également journalisée dans les
+  événements `decision`, tandis que `curiosity` favorise une cellule inconnue et
+  `known_zone_preference` favorise une cellule connue. Aucun profil nommé (« explorateur »,
   « prudent ») n'est codé en dur.
-- [ ] Distinguer configuration fixe et état dynamique (fatigue, confiance ou peur futurs)
-  afin que seules les premières soient modifiables pendant un run comparable.
+- [x] Distinguer configuration fixe et état dynamique (fatigue, confiance ou peur futurs)
+  afin que seules les premières soient modifiables pendant un run comparable. Fait le
+  2026-08-24 : `agents.initial_state` porte les états dynamiques au démarrage (faim) ;
+  les validateurs refusent leur présence dans `agents.defaults` ou `agents.individual`.
 
 ### Critères d'acceptation
 
@@ -135,7 +147,7 @@ nouveaux traits.
   contrôlée, sans rendre l'exécution non déterministe à seed fixe.
 - Les mécaniques actuelles de faim, mémoire, cueillette et mort restent validées.
 
-## Phase 3 — Télémétrie et résultats normalisés [À FAIRE]
+## Phase 3 — Télémétrie et résultats normalisés [FAIT]
 
 ### But
 
@@ -154,6 +166,8 @@ Passer de logs narratifs à des données analysables automatiquement.
   découverte = première entrée, revisite = retour après sortie, regroupement = durée avec
   au moins un voisin dans le rayon social.
 - [x] Créer un outil de validation de schéma et un outil d'agrégation des résumés.
+  Fait le 2026-08-24 : `tools/check_telemetry.py` vérifie aussi la cohérence entre les
+  compteurs de zones du summary et les événements JSONL.
 
 ### Critères d'acceptation
 
@@ -278,9 +292,7 @@ Comparer équitablement automate, comportement paramétrable et LLM dans le mêm
 
 ## Prochain sprint recommandé
 
-1. Prendre et documenter la décision sur le rig (Phase 0, en parallèle du code).
-2. Écrire le schéma `ExperimentConfig` v1 et les tests de validation.
-3. Créer `VariableRegistry`, migrer les variables existantes sans changer l'UI.
-4. Journaliser configuration normalisée, seed et version de projet dans chaque session.
-5. Lancer deux fois la même expérience puis comparer automatiquement les résultats pour
-   démontrer la reproductibilité avant d'ajouter la moindre nouvelle variable.
+1. Finaliser la Phase 4 : formaliser les campagnes mémoire, rareté des ressources et profils
+   contrastés sur plusieurs seeds.
+2. Produire le tableau de synthèse et les graphiques simples associés, puis demander la revue
+   utilisateur du format de résultats avant d'ouvrir la Phase 5.

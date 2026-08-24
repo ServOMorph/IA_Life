@@ -8,13 +8,11 @@ Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
 Le prototype est un laboratoire headless reproductible : configurations versionnées, logs JSONL,
-résumés et campagnes. Le bridge RL TCP/JSONL maison est validé (épisode complet sans NaN via
-`rl/client_random.py`). `VariableRegistry` est la source unique des défauts/bornes de `GameConfig`
-et `Character` (Phases 0-1 de `roadmap_experimentation.md` closes). Contexte du jeu tranché : cadre
-non historique (île isolée) ; le rig reste limité au personnage de développement.
+résumés et campagnes. Les Phases 1 à 3 sont closes : le temps simulé est déterministe,
+la configuration fixe est distincte de l'état initial dynamique, et les traits comportementaux
+sont mesurés. La Phase 4 reste à finaliser avec les trois campagnes de référence et leurs graphiques.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-17 : Mémoire spatiale des ronciers par personnage + collision physique des ronces.
 - 2026-08-17 : Correctif bug terrain invisible (culling) + relief escarpé + cuvettes de
   spawn + capture d'écran automatisée (`run_screenshot.py`) + skill `synthese-projet`.
 - 2026-08-17 : Validation manuelle terrain/relief/faim-mort + correctif luminosité (scène
@@ -36,3 +34,5 @@ non historique (île isolée) ; le rig reste limité au personnage de développe
   temporel — voir `DOCUMENTATION/orientation_contexte.md`.
 - 2026-08-24 : `VariableRegistry` devient la source unique des valeurs par défaut/bornes de
   `GameConfig` et `Character` ; bridge RL TCP/JSONL maison validé (épisode complet).
+- 2026-08-24 : Les expériences comparables sont bornées par `max_simulation_seconds` et non
+  par le temps mural ; la configuration fixe est séparée de `agents.initial_state`.

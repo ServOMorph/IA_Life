@@ -94,6 +94,10 @@ def load_valid_summaries(source: Path) -> list[dict[str, Any]]:
         except (OSError, json.JSONDecodeError) as error:
             failures.append(f"{path}: JSON illisible ({error})")
             continue
+        experiment = payload.get("experiment") if isinstance(payload, dict) else None
+        if isinstance(experiment, dict) and "config_sha256" not in experiment:
+            print(f"Archive ignorée (contrat de résultats antérieur) : {path}", file=sys.stderr)
+            continue
         errors = validate_summary(payload)
         if errors:
             failures.extend(f"{path}: {error}" for error in errors)

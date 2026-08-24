@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "experiment_id": "curiosity-profiles-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {"ronce_count": 0}
+  },
+  "agents": {
+    "defaults": {"exploration_tendency": 0.5},
+    "individual": {
+      "Rouge": {"curiosity": 0.0},
+      "Bleu": {"curiosity": 1.0}
+    }
+  },
+  "simulation": {
+    "game_speed": 10.0,
+    "max_simulation_seconds": 30.0,
+    "quit_on_all_dead": false
+  }
+}

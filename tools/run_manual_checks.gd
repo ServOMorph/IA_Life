@@ -182,6 +182,7 @@ func _test_experiment_config_defaults() -> void:
 	_expect(config.is_valid(), "ExperimentConfig défauts : une config vide devrait être valide.")
 	_expect(config.normalized["seed"] == 1337, "ExperimentConfig défauts : la seed par défaut est incorrecte.")
 	_expect(is_equal_approx(config.normalized["simulation"]["game_speed"], 1.0), "ExperimentConfig défauts : game_speed par défaut incorrect.")
+	_expect(is_equal_approx(config.normalized["simulation"]["max_simulation_seconds"], 120.0), "ExperimentConfig défauts : durée simulée par défaut incorrecte.")
 	_expect(config.normalized["agents"]["defaults"].is_empty(), "ExperimentConfig défauts : agents.defaults devrait rester vide sans override.")
 
 	var character := _make_character()
@@ -202,6 +203,12 @@ func _test_experiment_config_overrides() -> void:
 	_expect(config.normalized["environment"]["game_config"]["ronce_count"] == 10, "ExperimentConfig overrides : override global.game_config non appliqué.")
 	_expect(is_equal_approx(config.normalized["agents"]["defaults"]["move_speed"], 5.0), "ExperimentConfig overrides : override agents.defaults non appliqué.")
 	_expect(is_equal_approx(config.normalized["agents"]["individual"]["A"]["move_speed"], 7.0), "ExperimentConfig overrides : override agents.individual non appliqué.")
+	var initial_state := ExperimentConfig.from_raw({"agents": {"initial_state": {"defaults": {"hunger": 80.0}}}})
+	_expect(initial_state.is_valid() and is_equal_approx(initial_state.normalized["agents"]["initial_state"]["defaults"]["hunger"], 80.0), "ExperimentConfig état initial : la faim dynamique doit être distincte et valide.")
+	var dynamic_as_fixed := ExperimentConfig.from_raw({"agents": {"defaults": {"hunger": 80.0}}})
+	_expect(not dynamic_as_fixed.is_valid(), "ExperimentConfig état initial : une variable dynamique ne doit pas être acceptée comme configuration fixe.")
+	var legacy_duration := ExperimentConfig.from_raw({"simulation": {"max_wall_seconds": 12.0}})
+	_expect(legacy_duration.is_valid() and is_equal_approx(legacy_duration.normalized["simulation"]["max_simulation_seconds"], 12.0), "ExperimentConfig migration : max_wall_seconds doit rester accepté.")
 
 func _test_experiment_config_validation() -> void:
 	var out_of_bounds := ExperimentConfig.from_raw({"agents": {"defaults": {"move_speed": 999.0}}})

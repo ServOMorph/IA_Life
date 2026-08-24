@@ -14,7 +14,7 @@
   },
   "simulation": {
     "game_speed": 1.0,
-    "max_wall_seconds": 2.0,
+    "max_simulation_seconds": 2.0,
     "quit_on_all_dead": false
   }
 }

@@ -61,7 +61,7 @@ func write_summary(summary: Dictionary) -> String:
 	var payload := summary.duplicate(true)
 	payload["schema_version"] = EVENT_SCHEMA_VERSION
 	payload["session_id"] = _session_id
-	payload["elapsed_seconds"] = _elapsed_seconds()
+	payload["elapsed_seconds"] = payload.get("elapsed_seconds", _elapsed_seconds())
 	var path := LOG_DIR + _session_id + ".summary.json"
 	var summary_file := FileAccess.open(path, FileAccess.WRITE)
 	if summary_file == null:

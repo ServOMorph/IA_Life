@@ -50,8 +50,7 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 
 ## État actuel
 Le prototype est un laboratoire reproductible : configurations versionnées et hashées,
-logs JSONL, résumés par run, agrégation et campagnes headless. Le bridge RL TCP/JSONL
-maison est validé (épisode complet sans NaN via `rl/client_random.py`). `VariableRegistry`
-est la source unique des valeurs par défaut et des bornes de `GameConfig` et `Character`.
-Le personnage riggé reste limité au mode dev ; le contexte du jeu est un cadre non
-historique (île isolée) — voir `DOCUMENTATION/orientation_contexte.md`.
+logs JSONL, résumés par run, agrégation et campagnes headless. Les expériences utilisent
+une durée simulée déterministe et distinguent configuration fixe et état initial dynamique.
+Les Phases 1 à 3 du laboratoire sont closes ; la Phase 4 doit encore formaliser ses trois
+campagnes de référence et leurs graphiques.

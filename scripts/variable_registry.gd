@@ -24,6 +24,9 @@ const CHARACTER: Dictionary = {
 	"memory_capacity": {"label": "Capacité de mémoire", "description": "Nombre maximal de ronciers mémorisés simultanément.", "scope": "individuelle", "category": "mémoire", "type": "int", "min": 0, "max": 100, "default": 5, "dynamic": false, "live_editable": true},
 	"memory_decay_rate": {"label": "Taux de décroissance de la mémoire", "description": "Vitesse à laquelle un souvenir de roncier perd en force avant d'être oublié.", "scope": "individuelle", "category": "mémoire", "type": "float", "min": 0.0, "max": 10.0, "default": 0.15, "dynamic": false, "live_editable": false},
 	"exploration_tendency": {"label": "Tendance à l'exploration", "description": "0,5 est neutre ; une valeur élevée raccourcit les phases d'errance et augmente la fréquence des changements de direction.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.5, "dynamic": false, "live_editable": false},
+	"goal_persistence": {"label": "Persistance d'objectif", "description": "0,5 est neutre ; une valeur élevée prolonge localement l'errance dans la direction actuelle avant une réorientation.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.5, "dynamic": false, "live_editable": false},
+	"known_zone_preference": {"label": "Préférence zones connues", "description": "Attire l'errance vers le centre de la zone déjà visitée la plus proche. 0 n'applique aucun biais ; 1 applique le biais maximal.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
+	"curiosity": {"label": "Curiosité", "description": "Favorise localement, lors d'une réorientation, une direction candidate menant vers une zone encore inconnue.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"social_radius": {"label": "Rayon social", "description": "Distance à laquelle un agent perçoit un autre agent.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 250.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"follow_probability": {"label": "Probabilité de suivi", "description": "Probabilité qu'un agent suive un autre agent perçu dans son rayon social.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"avoid_probability": {"label": "Probabilité d'évitement", "description": "Probabilité qu'un agent évite un autre agent perçu dans son rayon social.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
@@ -52,4 +55,20 @@ static func validate_values(values: Dictionary, definitions: Dictionary, scope: 
 		var numeric_value := float(value)
 		if numeric_value < float(definition["min"]) or numeric_value > float(definition["max"]):
 			errors.append("%s.%s : valeur %s hors bornes [%s, %s]" % [scope, key, value, definition["min"], definition["max"]])
+	return errors
+
+static func validate_fixed_values(values: Dictionary, definitions: Dictionary, scope: String) -> PackedStringArray:
+	var errors := validate_values(values, definitions, scope)
+	for key_variant in values:
+		var key := String(key_variant)
+		if definitions.has(key) and bool(definitions[key].get("dynamic", false)):
+			errors.append("%s.%s : état dynamique attendu dans agents.initial_state" % [scope, key])
+	return errors
+
+static func validate_initial_state_values(values: Dictionary, definitions: Dictionary, scope: String) -> PackedStringArray:
+	var errors := validate_values(values, definitions, scope)
+	for key_variant in values:
+		var key := String(key_variant)
+		if definitions.has(key) and not bool(definitions[key].get("dynamic", false)):
+			errors.append("%s.%s : seule une variable dynamique peut appartenir à l'état initial" % [scope, key])
 	return errors

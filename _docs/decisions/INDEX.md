@@ -19,3 +19,4 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 | 2026-08-18 | Personnage riggé (Phase 5, Blender custom) branché uniquement sur le personnage de test | validé | [detail](2026-08-18_personnage-rigge-perso-test.md) |
 | 2026-08-22 | Refonte visuelle des ronces : buisson vert fixe + mûres noires visibles (retrait à la cueillette) | validé | [detail](2026-08-22_ronces-mures-visuelles.md) |
 | 2026-08-23 | Le rig Blender reste limité au personnage de développement | validé | [detail](2026-08-23_rig-limite-personnage-dev.md) |
+| 2026-08-24 | Durée simulée déterministe et état initial séparé | validé | [detail](2026-08-24_experiment-config-deterministe.md) |
