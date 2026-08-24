@@ -177,3 +177,13 @@
 
 ### Modifié
 - Roadmap du mode dev clôturée et archivée dans `_docs/archives/2026-08-23_roadmap_mode-dev.md`.
+## v0.12 — 2026-08-24
+
+### Ajouté
+- Documentation de la voie RL rapide et premier bridge TCP/JSONL avec client random.
+
+### Modifié
+- Le personnage Rouge peut recevoir une action RL `Discrete(7)` en mode `IA_LIFE_RL_MODE`.
+
+### Corrigé
+- Contrat RL : pas de décision de 0,25 s simulée et récompense de survie à +0,005/s.

@@ -21,6 +21,7 @@ const BaselineDeciderScript = preload("res://scripts/baseline_decider.gd")
 @export var display_name: String = ""
 @export var manual_control: bool = false
 @export var immortal: bool = false
+@export var rl_controlled: bool = false
 
 const MEMORY_MAX_STRENGTH := 10.0
 const POSITION_SAMPLE_INTERVAL_SECONDS := 1.0
@@ -64,6 +65,7 @@ var _walk_time: float = 0.0
 
 var _anim_player: AnimationPlayer = null
 var _current_anim: String = ""
+var _rl_direction := Vector3.ZERO
 
 func _ready() -> void:
 	_pick_new_direction(false)
@@ -87,6 +89,27 @@ func setup_rigged_visual(anim_player: AnimationPlayer) -> void:
 
 func set_manual_direction(dir: Vector3) -> void:
 	_manual_direction = dir
+
+func set_rl_action(action: int) -> void:
+	var directions := [Vector3.FORWARD, Vector3(-1, 0, -1), Vector3.LEFT, Vector3(-1, 0, 1), Vector3.BACK, Vector3(1, 0, 1), Vector3.RIGHT]
+	_rl_direction = directions[clamp(action, 0, directions.size() - 1)].normalized()
+
+func reset_for_rl(spawn_position: Vector3) -> void:
+	position = spawn_position
+	velocity = Vector3.ZERO
+	hunger = 100.0
+	is_dead = false
+	berries_carried = 0
+	berries_picked_total = 0
+	berries_eaten_total = 0
+	distance_travelled_total = 0.0
+	death_elapsed_seconds = -1.0
+	_memories.clear()
+	_visited_zone_ids.clear()
+	_current_zone_id = ""
+	_last_position = position
+	_rl_direction = Vector3.ZERO
+	_set_goal("rl")
 
 func _physics_process(delta: float) -> void:
 	var scaled_delta := delta * GameSpeed.time_scale
@@ -134,6 +157,10 @@ func _physics_process(delta: float) -> void:
 	_update_walk_animation(scaled_delta)
 
 func _apply_decision(scaled_delta: float) -> void:
+	if rl_controlled:
+		_direction = _rl_direction
+		_set_goal("rl")
+		return
 	var action := _decider.decide({
 		"manual_control": manual_control,
 		"manual_direction": _manual_direction,

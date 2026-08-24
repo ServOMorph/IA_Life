@@ -50,8 +50,7 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 
 ## État actuel
 Le prototype est un laboratoire reproductible : configurations versionnées et hashées,
-logs JSONL, résumés par run, agrégation et campagnes headless. Le baseline couvre
-exploration, mémoire, événements de ressources, perception, suivi et évitement.
-Lancer `python tools/run_smoke_tests.py` pour le contrôle minimal automatisé.
-Le personnage riggé reste limité au mode dev ; les quatre agents normaux restent légers.
-Un contexte historique est envisagé, mais aucune période n'est encore intégrée au jeu.
+logs JSONL, résumés par run, agrégation et campagnes headless. Un bridge RL TCP/JSONL
+maison et un client random sont intégrés, mais le premier épisode n'est pas encore validé.
+Les bridges tiers ont été écartés après smoke-test ; le baseline reste la référence active.
+Le personnage riggé reste limité au mode dev ; le contexte historique reste à décider.

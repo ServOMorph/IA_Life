@@ -7,12 +7,11 @@ Créer un environnement Godot avec 2 personnages lowpoly pilotés chacun par un 
 Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
-Le prototype est désormais un laboratoire headless reproductible : configurations versionnées,
-hashées, journalisées et agrégées par campagne.
-Le baseline inclut exploration, mémoire, événements de ressources, perception, suivi et évitement.
-Le smoke test reproductible est python tools/run_smoke_tests.py.
-Le rig reste limité au personnage de développement ; les quatre agents de simulation restent légers.
-Le contexte historique est une piste documentée, mais aucune période n'est encore intégrée au jeu.
+Le prototype est un laboratoire headless reproductible : configurations versionnées, logs JSONL,
+résumés et campagnes. Le baseline couvre exploration, mémoire, événements, perception et social.
+Les bridges RL tiers sont écartés ; un bridge TCP/JSONL maison et un client random sont intégrés,
+mais l'épisode n'est pas encore validé. Le rig reste limité au personnage de développement ; le
+contexte historique demeure une piste non intégrée.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-17 : Vitesse de simulation globale, faim/vieillissement/mort, reset complet.
@@ -34,3 +33,5 @@ Le contexte historique est une piste documentée, mais aucune période n'est enc
   `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.
 - 2026-08-23 : Le rig Blender reste un outil du personnage de développement ; les quatre
   agents normaux conservent un rendu léger afin de préserver la priorité expérimentale.
+- 2026-08-23 : Après échec des bridges tiers, le projet retient provisoirement un bridge
+  TCP/JSONL maison pour le premier RL.

@@ -6,6 +6,7 @@ const WALL_THICKNESS := 1.0
 const HEADLESS_ENV_VAR := "IA_LIFE_HEADLESS_CONFIG"
 const PROJECT_REVISION_ENV_VAR := "IA_LIFE_PROJECT_REVISION"
 const DEV_MODE_ENV_VAR := "IA_LIFE_DEV_MODE"
+const RL_MODE_ENV_VAR := "IA_LIFE_RL_MODE"
 const TERRAIN_RESOLUTION := 80
 const TERRAIN_AMPLITUDE := 5.0
 const TERRAIN_NOISE_FREQUENCY := 0.045
@@ -44,6 +45,14 @@ var _ui: CanvasLayer
 var _camera: Camera3D
 var _test_character: CharacterBody3D = null
 var _test_control_active: bool = false
+var _rl_mode := false
+var _rl_bridge: RLBridge
+var _rl_agent: CharacterBody3D
+var _rl_spawn := Vector3.ZERO
+var _rl_simulation_clock := 0.0
+var _rl_steps := 0
+var _rl_max_steps := 40
+var _rl_waiting := true
 
 func _ready() -> void:
 	_dev_mode = OS.get_environment(DEV_MODE_ENV_VAR) != ""
@@ -67,6 +76,7 @@ func _ready() -> void:
 	_build_ui(characters, camera, light)
 	for c in characters:
 		_characters.append(c.node)
+	_setup_rl_mode(characters)
 
 	if _dev_mode:
 		_test_character = _spawn_test_character()
@@ -248,6 +258,7 @@ func _dev_teleport_to_nearest_ronce(index: int) -> void:
 	GameLogger.log_event("dev", "%s téléporté au contact d'une ronce (caméra en suivi)" % character.display_name)
 
 func _process(delta: float) -> void:
+	_process_rl(delta)
 	if _screenshot_path != "":
 		_screenshot_clock += delta
 		if _screenshot_clock >= _screenshot_delay:
@@ -321,6 +332,82 @@ func _fail_headless_config(message: String) -> void:
 	_run_finished = true
 	GameLogger.log_event("headless", message)
 	call_deferred("_quit_after_invalid_headless_config")
+
+func _setup_rl_mode(characters: Array) -> void:
+	_rl_mode = OS.get_environment(RL_MODE_ENV_VAR) != ""
+	if not _rl_mode:
+		return
+	_rl_agent = characters[0].node
+	_rl_agent.rl_controlled = true
+	_rl_spawn = _rl_agent.position
+	_rl_bridge = RLBridge.new()
+	add_child(_rl_bridge)
+	_rl_bridge.message_received.connect(_on_rl_message)
+	if _rl_bridge.start() != OK:
+		push_error("RL bridge: port 11008 indisponible")
+		_rl_mode = false
+		return
+	GameSpeed.time_scale = 0.0
+	GameLogger.log_event("rl", "Mode RL TCP actif : Rouge, Discrete(7), pas 0.25 s simulée")
+
+func _on_rl_message(message: Dictionary) -> void:
+	if not _rl_mode:
+		return
+	match String(message.get("type", "")):
+		"reset":
+			_rl_reset(int(message.get("seed", _experiment_seed)), int(message.get("max_steps", 40)))
+		"step":
+			if _rl_waiting:
+				_rl_agent.set_rl_action(int(message.get("action", 0)))
+				_rl_waiting = false
+				GameSpeed.time_scale = 1.0
+		"close":
+			_rl_bridge.send({"type": "closed"})
+			get_tree().quit()
+		_:
+			_rl_bridge.send({"type": "error", "message": "Commande attendue : reset, step ou close"})
+
+func _rl_reset(seed_value: int, max_steps: int) -> void:
+	_experiment_seed = max(seed_value, 0)
+	seed(_experiment_seed)
+	_rl_max_steps = clamp(max_steps, 1, 2400)
+	_rl_steps = 0
+	_rl_simulation_clock = 0.0
+	_rl_waiting = true
+	_rl_agent.reset_for_rl(_rl_spawn)
+	GameSpeed.time_scale = 0.0
+	_rl_bridge.send({"type": "observation", "observation": _rl_observation(), "reward": 0.0, "terminated": false, "truncated": false, "info": _rl_info()})
+
+func _process_rl(delta: float) -> void:
+	if not _rl_mode or _rl_waiting or _rl_agent == null:
+		return
+	_rl_simulation_clock += delta * GameSpeed.time_scale
+	if _rl_simulation_clock + 0.000001 < 0.25:
+		return
+	_rl_simulation_clock = fmod(_rl_simulation_clock, 0.25)
+	_rl_steps += 1
+	var terminated: bool = _rl_agent.is_dead
+	var truncated: bool = _rl_steps >= _rl_max_steps and not terminated
+	var reward := 0.005 * 0.25 - 0.001
+	if terminated:
+		reward -= 2.0
+	_rl_waiting = true
+	GameSpeed.time_scale = 0.0
+	_rl_bridge.send({"type": "observation", "observation": _rl_observation(), "reward": reward, "terminated": terminated, "truncated": truncated, "info": _rl_info()})
+
+func _rl_observation() -> Array:
+	var half := MAP_SIZE / 2.0
+	return [
+		_rl_agent.hunger / 100.0,
+		float(_rl_agent.berries_carried) / max(1.0, float(GameConfig.max_berries_carried)),
+		_rl_agent.position.x / half, _rl_agent.position.z / half,
+		_rl_agent.velocity.x / max(0.1, _rl_agent.move_speed), _rl_agent.velocity.z / max(0.1, _rl_agent.move_speed),
+		(half - _rl_agent.position.z) / (2.0 * half), (half + _rl_agent.position.z) / (2.0 * half),
+		(half - _rl_agent.position.x) / (2.0 * half), (half + _rl_agent.position.x) / (2.0 * half),
+	]
+
+func _rl_info() -> Dictionary:
+	return {"agent": _rl_agent.display_name, "step": _rl_steps, "simulated_seconds": _rl_steps * 0.25, "hunger": _rl_agent.hunger, "berries_picked": _rl_agent.berries_picked_total, "berries_eaten": _rl_agent.berries_eaten_total}
 
 func _quit_after_invalid_headless_config() -> void:
 	get_tree().quit(1)
