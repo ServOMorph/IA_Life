@@ -1,3 +1,10 @@
+## v0.14 — 2026-08-25
+
+### Corrigé
+- `ROBERTO/com_telephone/_commands/com_manager.md` : libération du port 5000 avant tout
+  démarrage/redémarrage de `node`, pour éviter l'échec EADDRINUSE causé par un process
+  orphelin non tracké.
+
 ## v0.13 — 2026-08-24
 
 ### Ajouté

@@ -13,8 +13,6 @@ la configuration fixe est distincte de l'état initial dynamique, et les traits 
 sont mesurés. La Phase 4 reste à finaliser avec les trois campagnes de référence et leurs graphiques.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-17 : Correctif bug terrain invisible (culling) + relief escarpé + cuvettes de
-  spawn + capture d'écran automatisée (`run_screenshot.py`) + skill `synthese-projet`.
 - 2026-08-17 : Validation manuelle terrain/relief/faim-mort + correctif luminosité (scène
   de jour) ; mode dev (roadmap depuis archivée dans
   `_docs/archives/2026-08-23_roadmap_mode-dev.md`) en cours de construction (Phases 1-2 faites).
@@ -36,3 +34,6 @@ sont mesurés. La Phase 4 reste à finaliser avec les trois campagnes de référ
   `GameConfig` et `Character` ; bridge RL TCP/JSONL maison validé (épisode complet).
 - 2026-08-24 : Les expériences comparables sont bornées par `max_simulation_seconds` et non
   par le temps mural ; la configuration fixe est séparée de `agents.initial_state`.
+- 2026-08-25 : `ROBERTO/com_telephone/_commands/com_manager.md` libère désormais le port 5000
+  (taskkill) avant tout démarrage/redémarrage de `node`, pour prévenir l'échec EADDRINUSE causé
+  par un process orphelin non tracké.

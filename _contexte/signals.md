@@ -1,4 +1,4 @@
-# Signals — ia_life (MAJ 2026-08-24)
+# Signals — ia_life (MAJ 2026-08-25)
 
 ## Actions ouvertes
 
@@ -14,30 +14,27 @@
   contrôlée par `tools/check_telemetry.py`. `risk_tolerance` reste reporté tant qu'aucun
   danger environnemental mesurable n'existe.
 - Reproductibilité headless validée : `python tools/check_reproducibility.py experiments/telemetry_smoke_v1.json` exécute deux runs identiques et compare leurs summaries hors `session_id`. `max_simulation_seconds` remplace la limite murale non déterministe ; `max_wall_seconds` reste accepté en migration.
-- Écart connu : `scripts/check_kit.py` est absent (contrôle d'intégrité de l’étape 10 de `/close` non exécutable).
+- Écart connu : `scripts/check_kit.py` est absent (contrôle d'intégrité de l'étape 10 de `/close` non exécutable) — reconfirmé le 2026-08-25.
 - `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) reste non tracké, origine non éclaircie : ne pas committer.
-- `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`, `.rl_godot_pid` : résidus des bridges RL tiers abandonnés (GDRL, godot-native-rl) et des lancements `run_rl.py` de cette session ; non trackés, à nettoyer manuellement si souhaité.
+- `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`, `.rl_godot_pid` : résidus des bridges RL tiers abandonnés (GDRL, godot-native-rl) ; non trackés, à nettoyer manuellement si souhaité.
+- `ROBERTO/com_telephone/` (assistant vocal `voice-code-bridge`, hors périmètre Phase 4) : dossier entièrement non tracké git (node_modules, `.env` avec secrets, voix, logs) — seul `_commands/com_manager.md` a été modifié et committé cette session. Les 3 process (node/stt/tts) et le Monitor sur `messages.log` sont actifs en fin de session (task_id dans `_commands/monitor.lock`), à revalider en début de session suivante.
 
-## Dernière session (2026-08-24)
+## Dernière session (2026-08-25)
 
-# Session du 2026-08-24
+# Session du 2026-08-25
 
 ## Décisions prises
-- La durée comparable d'une expérience est le temps simulé, non le temps mural.
-- Les états dynamiques de départ sont isolés dans `agents.initial_state`.
+- `com_manager.md` libère désormais le port 5000 (taskkill) avant tout démarrage/redémarrage de `node`, pour prévenir l'échec EADDRINUSE.
 
 ## Livrables produits ou modifiés
-- Contrat `ExperimentConfig`, moteur Godot et fixtures : exécution déterministe et état initial validés.
-- `scripts/character.gd`, registre et trois scénarios : nouveaux traits mesurables ajoutés.
-- `tools/check_reproducibility.py`, `tools/check_telemetry.py`, agrégateur : contrôles de résultats ajoutés.
+- `ROBERTO/com_telephone/_commands/com_manager.md` : nouvelle étape de libération du port 5000, procédure renumérotée.
+- Assistant vocal ROBERTO : relancé (node/stt/tts) après nettoyage d'un `node.exe` orphelin non tracké ; Monitor `messages.log` relancé.
 
 ## Hypothèses validées / invalidées
-- VALIDE : deux runs headless de même configuration et seed produisent le même summary hors identifiant de session.
-- VALIDE : les trois traits ajoutés produisent une différence mesurable à seed fixe.
-- EN ATTENTE : `risk_tolerance`, faute de danger environnemental mesurable.
+- VALIDE : l'échec de démarrage de `node` provenait d'un process orphelin occupant le port 5000, pas du script lui-même.
 
 ## Prochaine étape exacte
-Finaliser la Phase 4 : formaliser les campagnes mémoire, rareté et profils, puis produire leur tableau et leurs graphiques.
+Aucune action ia_life issue de cette session ; reprendre la Phase 4 (campagnes de référence) au prochain `/start`.
 
 ## Question bloquante pour la session suivante
 Aucune.
