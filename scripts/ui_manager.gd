@@ -2,14 +2,10 @@ extends CanvasLayer
 
 const MENU_HEIGHT := 56.0
 const MARGIN := 10.0
-const SPEED_MIN := 0.5
-const SPEED_MAX := 10.0
 const ZONE_MIN := 5.0
 const ZONE_MAX := 80.0
 const GAME_SPEED_MIN := 0.1
 const GAME_SPEED_MAX := 50.0
-const AGING_MIN := 0.1
-const AGING_MAX := 5.0
 const FEEDING_MIN := 0.1
 const FEEDING_MAX := 3.0
 const MEMORY_MIN := 0
@@ -42,6 +38,12 @@ var _test_control_active: bool = false
 var _test_character_node: Node = null
 var _test_stats_panel: PanelContainer = null
 var _test_stats_label: Label = null
+var _inspector_panel: PanelContainer = null
+var _inspector_content: VBoxContainer = null
+var _inspector_agent_index: int = 0
+var _inspector_category: String = "Toutes"
+var _inspector_fields: Array = []
+var _reset_confirm: ConfirmationDialog = null
 
 func setup(characters: Array, camera: Camera3D, dev_mode: bool = false, light: DirectionalLight3D = null) -> void:
 	_camera = camera
@@ -97,6 +99,7 @@ func _build_menu_bar() -> void:
 	row.add_child(spacer2)
 
 	row.add_child(_build_game_data_button())
+	row.add_child(_build_inspector_button())
 	row.add_child(_build_large_view_button())
 	row.add_child(_build_reset_button())
 
@@ -418,8 +421,16 @@ func _build_checklist_panel() -> void:
 func _build_reset_button() -> Button:
 	var button := Button.new()
 	button.text = "Relancer"
-	button.pressed.connect(_on_reset_pressed)
+	button.pressed.connect(_on_reset_requested)
 	return button
+
+func _on_reset_requested() -> void:
+	if _reset_confirm == null:
+		_reset_confirm = ConfirmationDialog.new()
+		_reset_confirm.dialog_text = "Relancer l'expérience ? Comportement déterministe tant qu'aucun module LLM n'est actif."
+		_reset_confirm.confirmed.connect(_on_reset_pressed)
+		_root.add_child(_reset_confirm)
+	_reset_confirm.popup_centered()
 
 func _on_reset_pressed() -> void:
 	GameSpeed.time_scale = 1.0
@@ -538,6 +549,163 @@ func _build_game_data_panel() -> PanelContainer:
 
 	return panel
 
+func _character_categories() -> Array:
+	var seen: Dictionary = {}
+	var categories: Array = []
+	for key in VariableRegistry.CHARACTER:
+		var category: String = VariableRegistry.CHARACTER[key]["category"]
+		if not seen.has(category):
+			seen[category] = true
+			categories.append(category)
+	return categories
+
+func _build_variable_field(definition: Dictionary, value, on_change: Callable) -> Dictionary:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+
+	var label := Label.new()
+	label.text = definition["label"]
+	label.tooltip_text = definition["description"]
+	label.custom_minimum_size = Vector2(180, 0)
+	row.add_child(label)
+
+	var dynamic: bool = definition.get("dynamic", false)
+	var live_editable: bool = definition.get("live_editable", false)
+	var decimals := 0 if definition["type"] == "int" else 2
+	var value_label := Label.new()
+	value_label.custom_minimum_size = Vector2(50, 0)
+	value_label.text = "%.*f" % [decimals, float(value)]
+
+	if live_editable:
+		var slider := HSlider.new()
+		slider.min_value = float(definition["min"])
+		slider.max_value = float(definition["max"])
+		slider.step = 1.0 if definition["type"] == "int" else 0.05
+		slider.value = float(value)
+		slider.custom_minimum_size = Vector2(120, 0)
+		row.add_child(slider)
+		row.add_child(value_label)
+		slider.value_changed.connect(func(v: float) -> void:
+			on_change.call(v)
+			value_label.text = "%.*f" % [decimals, v]
+			GameLogger.log_event("config", "%s -> %.*f" % [definition["label"], decimals, v])
+		)
+	else:
+		row.add_child(value_label)
+
+	var tag := Label.new()
+	if dynamic:
+		tag.text = "dynamique"
+		tag.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+	elif live_editable:
+		tag.text = "live"
+		tag.add_theme_color_override("font_color", Color(0.3, 0.85, 0.3))
+	else:
+		tag.text = "nécessite Relancer"
+		tag.add_theme_color_override("font_color", Color(0.95, 0.6, 0.1))
+	row.add_child(tag)
+
+	return {"row": row, "value_label": value_label}
+
+func _build_inspector_button() -> Button:
+	var button := Button.new()
+	button.text = "Inspecteur"
+	button.pressed.connect(_on_inspector_pressed)
+	return button
+
+func _on_inspector_pressed() -> void:
+	if _inspector_panel != null:
+		_inspector_panel.queue_free()
+		_inspector_panel = null
+		_inspector_content = null
+		_inspector_fields = []
+		return
+	if _entries.is_empty():
+		return
+	_inspector_panel = _build_inspector_panel()
+	_root.add_child(_inspector_panel)
+
+func _build_inspector_panel() -> PanelContainer:
+	var panel := PanelContainer.new()
+	panel.custom_minimum_size = Vector2(440, 0)
+
+	var vbox := VBoxContainer.new()
+	panel.add_child(vbox)
+
+	var title := Label.new()
+	title.text = "Inspecteur"
+	title.add_theme_font_size_override("font_size", 20)
+	vbox.add_child(title)
+	vbox.add_child(HSeparator.new())
+
+	var selectors := HBoxContainer.new()
+	selectors.add_theme_constant_override("separation", 8)
+	vbox.add_child(selectors)
+
+	var agent_select := OptionButton.new()
+	for entry in _entries:
+		agent_select.add_item(entry.name)
+	agent_select.selected = _inspector_agent_index
+	agent_select.item_selected.connect(func(index: int) -> void:
+		_inspector_agent_index = index
+		_refresh_inspector_content()
+	)
+	selectors.add_child(agent_select)
+
+	var category_select := OptionButton.new()
+	category_select.add_item("Toutes")
+	for category in _character_categories():
+		category_select.add_item(category)
+	category_select.selected = 0
+	category_select.item_selected.connect(func(index: int) -> void:
+		_inspector_category = category_select.get_item_text(index)
+		_refresh_inspector_content()
+	)
+	selectors.add_child(category_select)
+
+	_inspector_content = VBoxContainer.new()
+	vbox.add_child(_inspector_content)
+	vbox.add_child(HSeparator.new())
+
+	var note := Label.new()
+	note.text = "Comportement déterministe tant qu'aucun module LLM n'est actif."
+	note.autowrap_mode = TextServer.AUTOWRAP_WORD
+	vbox.add_child(note)
+
+	var close_button := Button.new()
+	close_button.text = "Fermer"
+	close_button.pressed.connect(_on_inspector_pressed)
+	vbox.add_child(close_button)
+
+	_refresh_inspector_content()
+
+	return panel
+
+func _refresh_inspector_content() -> void:
+	if _inspector_content == null:
+		return
+	for child in _inspector_content.get_children():
+		child.queue_free()
+	_inspector_fields = []
+	if _inspector_agent_index >= _entries.size():
+		return
+	var node = _entries[_inspector_agent_index].node
+	for key in VariableRegistry.CHARACTER:
+		var definition: Dictionary = VariableRegistry.CHARACTER[key]
+		if _inspector_category != "Toutes" and definition["category"] != _inspector_category:
+			continue
+		var value = node.get(key)
+		var built := _build_variable_field(definition, value, func(v: float) -> void:
+			node.set(key, int(v) if definition["type"] == "int" else v)
+		)
+		_inspector_content.add_child(built.row)
+		if definition.get("dynamic", false):
+			_inspector_fields.append({
+				"key": key,
+				"value_label": built.value_label,
+				"decimals": 0 if definition["type"] == "int" else 2,
+			})
+
 func _build_game_speed_control() -> HBoxContainer:
 	var box := HBoxContainer.new()
 	box.add_theme_constant_override("separation", 8)
@@ -647,23 +815,6 @@ func _build_character_panel(entry: Dictionary) -> PanelContainer:
 
 	var reglages_content := VBoxContainer.new()
 
-	var speed_row := HBoxContainer.new()
-	var speed_row_label := Label.new()
-	speed_row_label.text = "Vitesse"
-	var speed_slider := HSlider.new()
-	speed_slider.min_value = SPEED_MIN
-	speed_slider.max_value = SPEED_MAX
-	speed_slider.step = 0.1
-	speed_slider.custom_minimum_size = Vector2(120, 0)
-	speed_slider.value = entry.node.get("move_speed")
-	speed_slider.value_changed.connect(func(v: float) -> void:
-		entry.node.set("move_speed", v)
-		GameLogger.log_event("config", "%s vitesse -> %.1f" % [entry.name, v])
-	)
-	speed_row.add_child(speed_row_label)
-	speed_row.add_child(speed_slider)
-	reglages_content.add_child(speed_row)
-
 	var zone_row := HBoxContainer.new()
 	var zone_row_label := Label.new()
 	zone_row_label.text = "Exploration"
@@ -681,57 +832,6 @@ func _build_character_panel(entry: Dictionary) -> PanelContainer:
 	zone_row.add_child(zone_row_label)
 	zone_row.add_child(zone_slider)
 	reglages_content.add_child(zone_row)
-
-	var aging_row := HBoxContainer.new()
-	var aging_row_label := Label.new()
-	aging_row_label.text = "Vieillissement"
-	var aging_slider := HSlider.new()
-	aging_slider.min_value = AGING_MIN
-	aging_slider.max_value = AGING_MAX
-	aging_slider.step = 0.1
-	aging_slider.custom_minimum_size = Vector2(120, 0)
-	aging_slider.value = entry.node.get("aging_factor")
-	aging_slider.value_changed.connect(func(v: float) -> void:
-		entry.node.set("aging_factor", v)
-		GameLogger.log_event("config", "%s vieillissement -> %.1f" % [entry.name, v])
-	)
-	aging_row.add_child(aging_row_label)
-	aging_row.add_child(aging_slider)
-	reglages_content.add_child(aging_row)
-
-	var feeding_row := HBoxContainer.new()
-	var feeding_row_label := Label.new()
-	feeding_row_label.text = "Capacité à se nourrir"
-	var feeding_slider := HSlider.new()
-	feeding_slider.min_value = FEEDING_MIN
-	feeding_slider.max_value = FEEDING_MAX
-	feeding_slider.step = 0.1
-	feeding_slider.custom_minimum_size = Vector2(120, 0)
-	feeding_slider.value = entry.node.get("feeding_capacity")
-	feeding_slider.value_changed.connect(func(v: float) -> void:
-		entry.node.set("feeding_capacity", v)
-		GameLogger.log_event("config", "%s capacité à se nourrir -> %.1f" % [entry.name, v])
-	)
-	feeding_row.add_child(feeding_row_label)
-	feeding_row.add_child(feeding_slider)
-	reglages_content.add_child(feeding_row)
-
-	var memory_row := HBoxContainer.new()
-	var memory_row_label := Label.new()
-	memory_row_label.text = "Mémoire"
-	var memory_slider := HSlider.new()
-	memory_slider.min_value = MEMORY_MIN
-	memory_slider.max_value = MEMORY_MAX
-	memory_slider.step = 1
-	memory_slider.custom_minimum_size = Vector2(120, 0)
-	memory_slider.value = entry.node.get("memory_capacity")
-	memory_slider.value_changed.connect(func(v: float) -> void:
-		entry.node.set("memory_capacity", int(v))
-		GameLogger.log_event("config", "%s mémoire -> %d" % [entry.name, int(v)])
-	)
-	memory_row.add_child(memory_row_label)
-	memory_row.add_child(memory_slider)
-	reglages_content.add_child(memory_row)
 
 	live_vbox.add_child(_build_collapsible_section("Réglages", reglages_content, false))
 
@@ -781,6 +881,12 @@ func _process(_delta: float) -> void:
 		_position_panel(entry, viewport_size)
 	if _game_data_panel != null:
 		_game_data_panel.position = (viewport_size - _game_data_panel.size) / 2.0
+	if _inspector_panel != null:
+		_inspector_panel.position = (viewport_size - _inspector_panel.size) / 2.0
+		if _inspector_agent_index < _entries.size():
+			var node = _entries[_inspector_agent_index].node
+			for field in _inspector_fields:
+				field.value_label.text = "%.*f" % [field.decimals, float(node.get(field.key))]
 	if _dev_panel != null:
 		_dev_panel.position = Vector2((viewport_size.x - _dev_panel.size.x) / 2.0, MARGIN)
 	if _checklist_panel != null:

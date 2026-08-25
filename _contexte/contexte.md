@@ -8,16 +8,14 @@ Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
 Le prototype est un laboratoire headless reproductible : configurations versionnées, logs JSONL,
-résumés et campagnes. Les Phases 1 à 3 sont closes : le temps simulé est déterministe,
-la configuration fixe est distincte de l'état initial dynamique, et les traits comportementaux
-sont mesurés. La Phase 4 reste à finaliser avec les trois campagnes de référence et leurs graphiques.
+résumés et campagnes. Les Phases 1 à 5 sont closes : temps simulé déterministe, configuration
+fixe distincte de l'état initial dynamique, traits comportementaux mesurés, trois campagnes de
+référence (mémoire, rareté des ressources, profils contrastés) exécutées/agrégées/graphiques et
+validées par l'utilisateur, Inspecteur générique piloté par le registre en jeu. Phase 6 (social
+avancé : coopération/communication/agressivité) en attente de décision ; Phase 7 (LLM) bloquée
+tant que Phase 6 n'est pas close.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-17 : Validation manuelle terrain/relief/faim-mort + correctif luminosité (scène
-  de jour) ; mode dev (roadmap depuis archivée dans
-  `_docs/archives/2026-08-23_roadmap_mode-dev.md`) en cours de construction (Phases 1-2 faites).
-- 2026-08-18 : Checklist en jeu (Phase 3 mode dev) + pivot vers un personnage de test
-  contrôlable manuellement (remplace F1-F4 seul), voir `_docs/decisions/2026-08-18_*.md`.
 - 2026-08-18 : Personnage riggé (Phase 5 graphisme, Blender custom généré par script)
   branché uniquement sur le personnage de test, validé — voir
   `_docs/decisions/2026-08-18_personnage-rigge-perso-test.md`.
@@ -37,3 +35,15 @@ sont mesurés. La Phase 4 reste à finaliser avec les trois campagnes de référ
 - 2026-08-25 : `ROBERTO/com_telephone/_commands/com_manager.md` libère désormais le port 5000
   (taskkill) avant tout démarrage/redémarrage de `node`, pour prévenir l'échec EADDRINUSE causé
   par un process orphelin non tracké.
+- 2026-08-25 : Phase 4 close — 3 campagnes de référence (`memory_capacity`,
+  `resource_scarcity`, `contrasted_profiles`) formalisées, exécutées sur seeds 1/2/3,
+  agrégées (`tools/aggregate_results.py`) et graphiques (`tools/plot_campaign.py`, SVG sans
+  dépendance). Résultats documentés dans `experiments/README.md`, validés par l'utilisateur.
+- 2026-08-25 : Phase 5 close — Inspecteur générique dans `ui_manager.gd` piloté par
+  `VariableRegistry` (sélecteur agent/catégorie, tags live/dynamique/nécessite-relancer),
+  sliders dupliqués retirés des panneaux de coin, confirmation avant Relancer. Validé
+  manuellement par l'utilisateur (tests 15/16).
+- 2026-08-25 : ROBERTO (`voice-code-bridge`, hors git) — script de salutation automatique
+  retiré (le message "salut" remonte désormais normalement vers l'agent) ; bouton copier
+  ajouté sur les bulles de réponse de l'appli mobile. Les deux validés en direct par
+  l'utilisateur via le bridge.

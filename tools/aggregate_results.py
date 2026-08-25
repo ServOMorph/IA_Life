@@ -154,6 +154,9 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
         social_follow = [float(row["social_follow_decisions_total"]) for row in group]
         social_avoid = [float(row["social_avoid_decisions_total"]) for row in group]
         social_contacts = [float(row["social_contact_seconds"]) for row in group]
+        memorized = [float(row["memorized_ronces"]) for row in group]
+        berries_picked = [float(row["berries_picked_total"]) for row in group]
+        berries_eaten = [float(row["berries_eaten_total"]) for row in group]
         experiments[comparison_group] = {
             "campaign_id": group[0]["campaign_id"],
             "campaign_parameters": json.loads(group[0]["campaign_parameters"]),
@@ -166,6 +169,9 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "mean_social_contact_seconds": mean(social_contacts),
             "mean_social_follow_decisions": mean(social_follow),
             "mean_social_avoid_decisions": mean(social_avoid),
+            "mean_memorized_ronces": mean(memorized),
+            "mean_berries_picked": mean(berries_picked),
+            "mean_berries_eaten": mean(berries_eaten),
             "distance_standard_deviation": statistics.pstdev(distances) if len(distances) > 1 else 0.0,
         }
     return {"schema_version": 1, "experiments": experiments}

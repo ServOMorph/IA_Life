@@ -114,3 +114,35 @@ réoriente plus vite son errance que `Bleu` (1.0). La métrique associée est
 `curiosity_profiles_v1.json` compare `Rouge` (0.0) à `Bleu` (1.0), qui privilégie les
 directions candidates projetées vers une zone inconnue. Les métriques sont
 `zone_discoveries_total` et `zone_revisits_total`.
+
+## Campagnes de référence (Phase 4)
+
+Trois campagnes comparent des groupes sur plusieurs seeds (1, 2, 3), avec CSV agrégé et
+graphiques SVG simples générés par `tools/plot_campaign.py` :
+
+```powershell
+python tools/run_campaign.py experiments/campaigns/<campagne>.json
+python tools/aggregate_results.py results/<campagne> --output results/<campagne>/agents.csv --report results/<campagne>/report.json
+python tools/plot_campaign.py results/<campagne>/agents.csv results/<campagne>/charts
+```
+
+**`memory_capacity_campaign_v1`** (`memory_capacity_profiles_v1.json`, 100 ronciers, 150 s
+simulées, faim initiale 100) compare `memory_capacity` 1 vs 20. Résultat mesuré :
+`memorized_ronces` moyen passe de 1.00 (capacité 1) à 1.42 (capacité 20) — la capacité
+limite bien le nombre de ronciers retenus simultanément. En revanche distance parcourue et
+cueillette sont identiques entre les deux groupes sur ce scénario : la faim ne descend
+jamais sous le seuil de rappel actif (`pickup_hunger_threshold`), donc la mémoire n'influe
+pas ici la trajectoire, seulement son propre remplissage. Une campagne future avec faim
+initiale basse serait nécessaire pour mesurer un effet sur la survie.
+
+**`resource_scarcity_campaign_v1`** (`resource_scarcity_v1.json`, faim initiale 60, 150 s
+simulées, arrêt si tous morts) compare `ronce_count` 5 vs 40. Résultat mesuré : taux de
+survie 8 % (rare, 1/12) contre 33 % (abondant, 4/12) — différence nette et attendue.
+
+**`contrasted_profiles_campaign_v1`** (`contrasted_profiles_v1.json`, 24 ronciers, 150 s
+simulées) compare deux profils comportementaux complets (pas une seule variable isolée) :
+`Rouge` cumule exploration_tendency, curiosity à 1.0 et goal_persistence,
+known_zone_preference à 0.0 ; `Bleu` a le profil inverse. `Vert`/`Jaune` restent neutres
+(valeurs par défaut) comme repère. Résultat mesuré : distance parcourue moyenne 138.99
+(Rouge) contre 89.77 (Bleu), `Vert`/`Jaune` à 123.47/132.39 — cohérent avec les traits
+individuels déjà validés en Phase 2, cette fois combinés.

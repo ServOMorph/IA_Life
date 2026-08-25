@@ -176,7 +176,7 @@ Passer de logs narratifs à des données analysables automatiquement.
 - Une agrégation de plusieurs runs calcule taux de survie, durée moyenne, distance,
   découvertes, revisites et variance entre agents.
 
-## Phase 4 — Campagnes expérimentales [À FAIRE]
+## Phase 4 — Campagnes expérimentales [FAIT]
 
 ### But
 
@@ -191,9 +191,16 @@ Faire de `run_headless.py` le moteur de comparaisons automatisées.
 - [x] Ajouter l'exécution séquentielle robuste, la reprise après interruption et un
   rapport d'échecs explicite ; le parallélisme n'est ajouté qu'après validation de
   l'isolation des fichiers et de Godot.
-- [ ] Produire un tableau de synthèse et des graphiques simples pour comparer les groupes.
-- [ ] Formaliser trois expériences de référence : capacité mémoire, rareté des ressources
-  et profils individuels contrastés, chacune sur plusieurs seeds.
+- [x] Produire un tableau de synthèse et des graphiques simples pour comparer les groupes.
+  Fait le 2026-08-25 : `tools/plot_campaign.py` génère des graphiques SVG en barres à
+  partir du CSV agrégé (aucune dépendance externe) ; `tools/aggregate_results.py` expose
+  désormais aussi `mean_memorized_ronces`, `mean_berries_picked`, `mean_berries_eaten`.
+- [x] Formaliser trois expériences de référence : capacité mémoire, rareté des ressources
+  et profils individuels contrastés, chacune sur plusieurs seeds. Fait le 2026-08-25 :
+  `experiments/campaigns/memory_capacity_campaign_v1.json`,
+  `resource_scarcity_campaign_v1.json`, `contrasted_profiles_campaign_v1.json` (seeds 1/2/3
+  chacune) ; résultats et interprétation dans `experiments/README.md` (section « Campagnes
+  de référence »).
 
 ### Critères d'acceptation
 
@@ -201,7 +208,7 @@ Faire de `run_headless.py` le moteur de comparaisons automatisées.
 - Le rapport indique exactement les paramètres et seeds associés à chaque ligne.
 - Les trois expériences de référence donnent des résultats comparables et reproductibles.
 
-## Phase 5 — Interface d'inspection scalable [À FAIRE]
+## Phase 5 — Interface d'inspection scalable [FAIT]
 
 ### But
 
@@ -209,15 +216,25 @@ Permettre l'observation interactive sans encombrer les panneaux des quatre agent
 
 ### Actions
 
-- [ ] Créer un composant générique de variable, généré depuis le registre (libellé,
-  valeur, bornes, description/tooltip, lecture seule si état dynamique).
-- [ ] Ajouter un panneau Inspecteur avec sélecteur d'agent et filtres par catégorie.
-- [ ] Retirer des panneaux de coin les sliders dupliqués ; ils gardent faim, état de vie,
-  compteurs et indicateurs critiques.
-- [ ] Identifier visuellement si un changement est expérimental, temporaire ou exige le
-  redémarrage de l'expérience.
-- [ ] Ajouter une confirmation avant Relancer et une indication claire que le comportement
-  courant est déterministe tant qu'aucun module LLM n'est activé.
+- [x] Créer un composant générique de variable, généré depuis le registre (libellé,
+  valeur, bornes, description/tooltip, lecture seule si état dynamique). Fait le
+  2026-08-25 : `_build_variable_field()` dans `ui_manager.gd`, piloté par
+  `VariableRegistry.CHARACTER`.
+- [x] Ajouter un panneau Inspecteur avec sélecteur d'agent et filtres par catégorie. Fait le
+  2026-08-25 : bouton "Inspecteur" dans la barre de menu, `OptionButton` agent + catégorie.
+- [x] Retirer des panneaux de coin les sliders dupliqués ; ils gardent faim, état de vie,
+  compteurs et indicateurs critiques. Fait le 2026-08-25 : Vitesse, Vieillissement, Capacité
+  à se nourrir et Mémoire retirés (disponibles dans l'Inspecteur) ; Exploration reste (hors
+  registre) ; faim, historique et état de vie inchangés.
+- [x] Identifier visuellement si un changement est expérimental, temporaire ou exige le
+  redémarrage de l'expérience. Fait le 2026-08-25 : tag coloré par champ ("live" vert,
+  "dynamique" gris, "nécessite Relancer" orange).
+- [x] Ajouter une confirmation avant Relancer et une indication claire que le comportement
+  courant est déterministe tant qu'aucun module LLM n'est activé. Fait le 2026-08-25 :
+  `ConfirmationDialog` avant `_on_reset_pressed()`, note fixe dans le panneau Inspecteur.
+
+Vérifié visuellement par l'utilisateur le 2026-08-25 (tests manuels 15 et 16, validés puis
+retirés de `tests_manuels.md`).
 
 ### Critères d'acceptation
 
@@ -292,7 +309,7 @@ Comparer équitablement automate, comportement paramétrable et LLM dans le mêm
 
 ## Prochain sprint recommandé
 
-1. Finaliser la Phase 4 : formaliser les campagnes mémoire, rareté des ressources et profils
-   contrastés sur plusieurs seeds.
-2. Produire le tableau de synthèse et les graphiques simples associés, puis demander la revue
-   utilisateur du format de résultats avant d'ouvrir la Phase 5.
+Phases 4 et 5 closes et validées par l'utilisateur (2026-08-25). Reste en Phase 6 : décider
+si coopération/communication/agressivité peuvent être abordées (dépend de la stabilité des
+deux mécanismes sociaux déjà mesurés) ou si la priorité passe à la Phase 7 (LLM), toujours
+bloquée tant que Phase 6 n'est pas close.

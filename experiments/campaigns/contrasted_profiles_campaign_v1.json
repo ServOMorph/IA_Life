@@ -1,0 +1,9 @@
+{
+  "campaign_id": "contrasted-profiles-campaign-v1",
+  "base_config": "../contrasted_profiles_v1.json",
+  "parameter_grid": {},
+  "seeds": [1, 2, 3],
+  "repetitions": 1,
+  "python_timeout_seconds": 90,
+  "output_dir": "../../results/contrasted_profiles_campaign_v1"
+}

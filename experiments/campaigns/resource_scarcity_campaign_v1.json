@@ -1,0 +1,11 @@
+{
+  "campaign_id": "resource-scarcity-campaign-v1",
+  "base_config": "../resource_scarcity_v1.json",
+  "parameter_grid": {
+    "environment.game_config.ronce_count": [5, 40]
+  },
+  "seeds": [1, 2, 3],
+  "repetitions": 1,
+  "python_timeout_seconds": 180,
+  "output_dir": "../../results/resource_scarcity_campaign_v1"
+}

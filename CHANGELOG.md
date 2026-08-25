@@ -1,3 +1,22 @@
+## v0.15 — 2026-08-25
+
+### Ajouté
+- Trois campagnes de référence (`memory_capacity`, `resource_scarcity`, `contrasted_profiles`)
+  et `tools/plot_campaign.py` (graphiques SVG sans dépendance externe) — clôture de la Phase 4.
+- Inspecteur générique dans l'UI, piloté par `VariableRegistry` (sélecteur agent/catégorie,
+  tags live/dynamique/nécessite-relancer) — clôture de la Phase 5.
+
+### Modifié
+- `tools/aggregate_results.py` : métriques `mean_memorized_ronces`, `mean_berries_picked`,
+  `mean_berries_eaten` ajoutées.
+- Panneaux de coin allégés (Vitesse, Vieillissement, Capacité à se nourrir, Mémoire déplacés
+  vers l'Inspecteur) ; confirmation ajoutée avant "Relancer".
+
+### Corrigé
+- ROBERTO (`voice-code-bridge`) : script de salutation automatique retiré, le message "salut"
+  remonte désormais normalement vers l'agent ; bouton copier ajouté sur les réponses de
+  l'appli mobile.
+
 ## v0.14 — 2026-08-25
 
 ### Corrigé

@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "experiment_id": "contrasted-profiles-campaign-v1",
+  "seed": 1,
+  "environment": {
+    "game_config": {"ronce_count": 24, "berries_per_ronce": 3}
+  },
+  "agents": {
+    "defaults": {"exploration_tendency": 0.5, "goal_persistence": 0.5, "known_zone_preference": 0.0, "curiosity": 0.0},
+    "individual": {
+      "Rouge": {"exploration_tendency": 1.0, "curiosity": 1.0, "known_zone_preference": 0.0, "goal_persistence": 0.0},
+      "Bleu": {"exploration_tendency": 0.0, "curiosity": 0.0, "known_zone_preference": 1.0, "goal_persistence": 1.0}
+    }
+  },
+  "simulation": {
+    "game_speed": 4.0,
+    "max_simulation_seconds": 60.0,
+    "quit_on_all_dead": false
+  }
+}
