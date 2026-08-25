@@ -1,3 +1,22 @@
+## v0.16 — 2026-08-25
+
+### Ajouté
+- Phase 6 close : trois mécaniques sociales avancées — communication (partage inconditionnel
+  d'une position de roncier mémorisée), coopération (partage de nourriture si faim critique de
+  l'autre) et agressivité (répulsion imposée), chacune avec sa variable dans `VariableRegistry`.
+- Scénarios de validation dédiés : `experiments/social_communication_smoke_v1.json`,
+  `social_cooperation_smoke_v1.json`, `social_aggression_smoke_v1.json`.
+
+### Modifié
+- `scripts/main.gd`, `tools/aggregate_results.py` : nouvelles métriques sociales exportées et
+  agrégées (partages, réceptions, incidents d'agressivité).
+- Roadmap : Phase 6 marquée [FAIT], Phase 7 (LLM) débloquée.
+
+### Corrigé
+- ROBERTO (`voice-code-bridge`) : la demande de permission de notification push n'était
+  déclenchée que par le bouton micro, jamais par l'envoi de texte — corrigé. Ajout d'un
+  système de choix rapide par boutons dans l'appli mobile.
+
 ## v0.15 — 2026-08-25
 
 ### Ajouté

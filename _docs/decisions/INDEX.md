@@ -21,3 +21,4 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 | 2026-08-23 | Le rig Blender reste limité au personnage de développement | validé | [detail](2026-08-23_rig-limite-personnage-dev.md) |
 | 2026-08-24 | Durée simulée déterministe et état initial séparé | validé | [detail](2026-08-24_experiment-config-deterministe.md) |
 | 2026-08-25 | Inspecteur générique (piloté par le registre) remplace les sliders dupliqués des panneaux de coin | validé | [detail](2026-08-25_inspecteur-generique-phase5.md) |
+| 2026-08-25 | Phase 6 : communication (partage inconditionnel), coopération (partage de nourriture si faim critique), agressivité (répulsion imposée) | validé | [detail](2026-08-25_phase6-mecaniques-sociales-avancees.md) |

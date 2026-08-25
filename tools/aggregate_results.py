@@ -47,6 +47,12 @@ SOCIAL_AGENT_FIELDS = {
     "current_social_neighbors": int,
     "social_follow_decisions_total": int,
     "social_avoid_decisions_total": int,
+    "social_shares_total": int,
+    "memories_received_total": int,
+    "food_shared_total": int,
+    "food_received_total": int,
+    "aggression_incidents_total": int,
+    "aggression_received_total": int,
 }
 
 
@@ -157,6 +163,9 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
         memorized = [float(row["memorized_ronces"]) for row in group]
         berries_picked = [float(row["berries_picked_total"]) for row in group]
         berries_eaten = [float(row["berries_eaten_total"]) for row in group]
+        social_shares = [float(row["social_shares_total"]) for row in group]
+        food_shared = [float(row["food_shared_total"]) for row in group]
+        aggression_incidents = [float(row["aggression_incidents_total"]) for row in group]
         experiments[comparison_group] = {
             "campaign_id": group[0]["campaign_id"],
             "campaign_parameters": json.loads(group[0]["campaign_parameters"]),
@@ -172,6 +181,9 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "mean_memorized_ronces": mean(memorized),
             "mean_berries_picked": mean(berries_picked),
             "mean_berries_eaten": mean(berries_eaten),
+            "mean_social_shares": mean(social_shares),
+            "mean_food_shared": mean(food_shared),
+            "mean_aggression_incidents": mean(aggression_incidents),
             "distance_standard_deviation": statistics.pstdev(distances) if len(distances) > 1 else 0.0,
         }
     return {"schema_version": 1, "experiments": experiments}

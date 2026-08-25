@@ -8,20 +8,12 @@ Godot (GDScript), LLM externe (à définir)
 
 ## État actuel (réécrit intégralement à chaque /close)
 Le prototype est un laboratoire headless reproductible : configurations versionnées, logs JSONL,
-résumés et campagnes. Les Phases 1 à 5 sont closes : temps simulé déterministe, configuration
-fixe distincte de l'état initial dynamique, traits comportementaux mesurés, trois campagnes de
-référence (mémoire, rareté des ressources, profils contrastés) exécutées/agrégées/graphiques et
-validées par l'utilisateur, Inspecteur générique piloté par le registre en jeu. Phase 6 (social
-avancé : coopération/communication/agressivité) en attente de décision ; Phase 7 (LLM) bloquée
-tant que Phase 6 n'est pas close.
+résumés et campagnes. Les Phases 1 à 6 sont closes : temps simulé déterministe, traits
+comportementaux mesurés, trois campagnes de référence validées, Inspecteur générique, et
+interactions sociales avancées (communication, coopération, agressivité) implémentées et
+validées par smoke tests. Phase 7 (LLM) débloquée, non démarrée.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-18 : Personnage riggé (Phase 5 graphisme, Blender custom généré par script)
-  branché uniquement sur le personnage de test, validé — voir
-  `_docs/decisions/2026-08-18_personnage-rigge-perso-test.md`.
-- 2026-08-22 : Refonte visuelle des ronces (buisson vert fixe + mûres noires visibles,
-  retrait à la cueillette) ; test manuel 5 validé — voir
-  `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.
 - 2026-08-23 : Le rig Blender reste un outil du personnage de développement ; les quatre
   agents normaux conservent un rendu léger afin de préserver la priorité expérimentale.
 - 2026-08-23 : Après échec des bridges tiers, le projet retient provisoirement un bridge
@@ -47,3 +39,7 @@ tant que Phase 6 n'est pas close.
   retiré (le message "salut" remonte désormais normalement vers l'agent) ; bouton copier
   ajouté sur les bulles de réponse de l'appli mobile. Les deux validés en direct par
   l'utilisateur via le bridge.
+- 2026-08-25 : Phase 6 close — communication (partage inconditionnel de position mémorisée),
+  coopération (partage de nourriture si faim critique de l'autre) et agressivité (répulsion
+  imposée) implémentées, chacune validée par un scénario de simulation dédié — voir
+  `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`. Phase 7 débloquée.

@@ -1,0 +1,23 @@
+{
+  "format_version": 1,
+  "experiment_id": "social-cooperation-smoke-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {
+      "ronce_count": 100,
+      "berries_per_ronce": 3
+    }
+  },
+  "agents": {
+    "defaults": {
+      "social_radius": 90.0,
+      "cooperation_probability": 1.0,
+      "exploration_tendency": 0.5
+    }
+  },
+  "simulation": {
+    "game_speed": 4.0,
+    "max_simulation_seconds": 400.0,
+    "quit_on_all_dead": false
+  }
+}

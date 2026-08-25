@@ -12,3 +12,9 @@
   `_docs/archives/2026-08-23_roadmap_mode-dev.md`) en cours de construction (Phases 1-2 faites).
 - 2026-08-18 : Checklist en jeu (Phase 3 mode dev) + pivot vers un personnage de test
   contrôlable manuellement (remplace F1-F4 seul), voir `_docs/decisions/2026-08-18_*.md`.
+- 2026-08-18 : Personnage riggé (Phase 5 graphisme, Blender custom généré par script)
+  branché uniquement sur le personnage de test, validé — voir
+  `_docs/decisions/2026-08-18_personnage-rigge-perso-test.md`.
+- 2026-08-22 : Refonte visuelle des ronces (buisson vert fixe + mûres noires visibles,
+  retrait à la cueillette) ; test manuel 5 validé — voir
+  `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.

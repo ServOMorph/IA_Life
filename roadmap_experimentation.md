@@ -242,7 +242,7 @@ retirés de `tests_manuels.md`).
 - Les quatre agents restent lisibles en vue d'ensemble.
 - L'UI ne permet pas de modifier silencieusement un état dynamique pendant une campagne.
 
-## Phase 6 — Environnement dynamique et interactions sociales [À FAIRE]
+## Phase 6 — Environnement dynamique et interactions sociales [FAIT]
 
 ### But
 
@@ -263,8 +263,13 @@ Augmenter progressivement la complexité du monde, puis les interactions entre a
   paramètres `social_radius`, `follow_probability` et `avoid_probability`.
 - [x] Mesurer rencontres, durées de regroupement, suivis et évitements : les compteurs sont
   présents dans le résumé de run et leurs moyennes sont calculées par groupe de campagne.
-- [ ] Reporter coopération, communication et agressivité tant que les deux mécanismes de
-  base ne sont ni stables ni mesurés.
+- [x] Communication, coopération et agressivité implémentées le 2026-08-25 (mécanismes de
+  suivi/évitement stables et mesurés au préalable). Communication : partage inconditionnel
+  d'une position de roncier mémorisée (`communication_probability`). Coopération : partage
+  d'une mûre portée avec un agent rencontré dont la faim est sous le seuil de consommation
+  (`cooperation_probability`). Agressivité : répulsion imposée à un agent rencontré,
+  indépendamment de son propre choix (`aggression_probability`). Détail et justification des
+  choix : `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`.
 
 ### Critères d'acceptation
 
@@ -272,7 +277,13 @@ Augmenter progressivement la complexité du monde, puis les interactions entre a
 - Un scénario contrôle démontre une différence statistique mesurable entre suivi et
   évitement sur plusieurs seeds.
 
-## Phase 7 — Décideurs interchangeables et LLM [BLOQUÉ PAR LES PHASES 1 À 6]
+Communication et agressivité validées de façon fiable par un scénario de simulation dédié
+(`experiments/social_communication_smoke_v1.json`, `social_aggression_smoke_v1.json`).
+Coopération validée fonctionnellement (`social_cooperation_smoke_v1.json`) mais seulement en
+configuration généreuse (beaucoup de ronciers, rayon large, longue durée) — pas de preuve
+statistique multi-seeds à ce stade, à traiter en campagne dédiée si nécessaire.
+
+## Phase 7 — Décideurs interchangeables et LLM [TODO]
 
 ### But
 
@@ -309,7 +320,7 @@ Comparer équitablement automate, comportement paramétrable et LLM dans le mêm
 
 ## Prochain sprint recommandé
 
-Phases 4 et 5 closes et validées par l'utilisateur (2026-08-25). Reste en Phase 6 : décider
-si coopération/communication/agressivité peuvent être abordées (dépend de la stabilité des
-deux mécanismes sociaux déjà mesurés) ou si la priorité passe à la Phase 7 (LLM), toujours
-bloquée tant que Phase 6 n'est pas close.
+Phases 1 à 6 closes. Phase 7 (LLM) débloquée, non démarrée : à cadrer (interface de décision,
+adaptateur automate de référence, adaptateur LLM) quand la priorité s'y porte. Point ouvert :
+décider si une campagne multi-seeds est nécessaire pour valider statistiquement la coopération
+avant de la considérer stable au même titre que suivi/évitement.

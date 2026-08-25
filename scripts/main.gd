@@ -460,6 +460,12 @@ func _finish_headless_run(reason: String) -> void:
 				"current_social_neighbors": character.current_social_neighbors,
 				"social_follow_decisions_total": character.social_follow_decisions_total,
 				"social_avoid_decisions_total": character.social_avoid_decisions_total,
+				"social_shares_total": character.social_shares_total,
+				"memories_received_total": character.memories_received_total,
+				"food_shared_total": character.food_shared_total,
+				"food_received_total": character.food_received_total,
+				"aggression_incidents_total": character.aggression_incidents_total,
+				"aggression_received_total": character.aggression_received_total,
 				"lifetime_seconds": lifetime,
 			})
 		GameLogger.write_summary({

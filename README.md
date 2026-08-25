@@ -52,7 +52,8 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 Le prototype est un laboratoire reproductible : configurations versionnées et hashées,
 logs JSONL, résumés par run, agrégation et campagnes headless. Les expériences utilisent
 une durée simulée déterministe et distinguent configuration fixe et état initial dynamique.
-Les Phases 1 à 5 du laboratoire sont closes : trois campagnes de référence (mémoire, rareté
-des ressources, profils contrastés) exécutées et graphiques (`experiments/README.md`), et un
-Inspecteur générique piloté par le registre remplace les sliders dupliqués dans l'UI. Phase 6
-(interactions sociales avancées) en attente de décision avant d'ouvrir la Phase 7 (LLM).
+Les Phases 1 à 6 du laboratoire sont closes : trois campagnes de référence (mémoire, rareté
+des ressources, profils contrastés), un Inspecteur générique piloté par le registre, et des
+interactions sociales avancées (communication, coopération, agressivité) validées par des
+scénarios de simulation dédiés (`experiments/social_*_smoke_v1.json`). Phase 7 (LLM)
+débloquée, non démarrée.

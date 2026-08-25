@@ -1,0 +1,25 @@
+{
+  "format_version": 1,
+  "experiment_id": "social-communication-smoke-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {
+      "ronce_count": 40,
+      "berries_per_ronce": 3
+    }
+  },
+  "agents": {
+    "defaults": {
+      "social_radius": 50.0,
+      "communication_probability": 1.0,
+      "memory_capacity": 10,
+      "exploration_tendency": 0.7,
+      "curiosity": 0.6
+    }
+  },
+  "simulation": {
+    "game_speed": 4.0,
+    "max_simulation_seconds": 300.0,
+    "quit_on_all_dead": false
+  }
+}

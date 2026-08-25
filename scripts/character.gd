@@ -21,6 +21,9 @@ const BaselineDeciderScript = preload("res://scripts/baseline_decider.gd")
 @export var social_radius: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["social_radius"])
 @export_range(0.0, 1.0, 0.01) var follow_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["follow_probability"])
 @export_range(0.0, 1.0, 0.01) var avoid_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["avoid_probability"])
+@export_range(0.0, 1.0, 0.01) var communication_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["communication_probability"])
+@export_range(0.0, 1.0, 0.01) var cooperation_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["cooperation_probability"])
+@export_range(0.0, 1.0, 0.01) var aggression_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["aggression_probability"])
 @export var display_name: String = ""
 @export var manual_control: bool = false
 @export var immortal: bool = false
@@ -47,6 +50,12 @@ var social_contact_seconds: float = 0.0
 var current_social_neighbors: int = 0
 var social_follow_decisions_total: int = 0
 var social_avoid_decisions_total: int = 0
+var social_shares_total: int = 0
+var memories_received_total: int = 0
+var food_shared_total: int = 0
+var food_received_total: int = 0
+var aggression_incidents_total: int = 0
+var aggression_received_total: int = 0
 
 var _direction := Vector3.ZERO
 var _manual_direction := Vector3.ZERO
@@ -377,6 +386,9 @@ func _update_social_perception(scaled_delta: float) -> void:
 				"social_encounters_total": social_encounters_total,
 			})
 			_choose_social_response(other)
+			_attempt_communication(other)
+			_attempt_cooperation(other)
+			_attempt_aggression(other)
 	for other_id in _active_social_contacts:
 		if not nearby_ids.has(other_id):
 			GameLogger.log_event_data("social", "%s quitte une rencontre" % display_name, {
@@ -411,6 +423,71 @@ func _choose_social_response(other) -> void:
 		"event": _social_goal,
 		"social_follow_decisions_total": social_follow_decisions_total,
 		"social_avoid_decisions_total": social_avoid_decisions_total,
+	})
+
+func _attempt_communication(other) -> void:
+	if communication_probability <= 0.0 or _memories.is_empty():
+		return
+	if randf() >= communication_probability:
+		return
+	var shareable = null
+	for m in _memories:
+		if not is_instance_valid(m.ronce):
+			continue
+		var already_known := false
+		for om in other._memories:
+			if om.ronce == m.ronce:
+				already_known = true
+				break
+		if not already_known:
+			shareable = m.ronce
+			break
+	if shareable == null:
+		return
+	other._remember_ronce(shareable)
+	social_shares_total += 1
+	other.memories_received_total += 1
+	GameLogger.log_event_data("communication", "%s partage un roncier connu avec %s" % [display_name, other.display_name], {
+		"agent": display_name,
+		"other_agent": other.display_name,
+		"event": "partage_position",
+		"social_shares_total": social_shares_total,
+	})
+
+func _attempt_cooperation(other) -> void:
+	if cooperation_probability <= 0.0 or berries_carried <= 0:
+		return
+	if other.hunger > GameConfig.eat_hunger_threshold:
+		return
+	if other.berries_carried >= GameConfig.max_berries_carried:
+		return
+	if randf() >= cooperation_probability:
+		return
+	berries_carried -= 1
+	other.berries_carried += 1
+	food_shared_total += 1
+	other.food_received_total += 1
+	GameLogger.log_event_data("cooperation", "%s partage une mûre avec %s" % [display_name, other.display_name], {
+		"agent": display_name,
+		"other_agent": other.display_name,
+		"event": "partage_nourriture",
+		"food_shared_total": food_shared_total,
+	})
+
+func _attempt_aggression(other) -> void:
+	if aggression_probability <= 0.0:
+		return
+	if randf() >= aggression_probability:
+		return
+	other._social_target = self
+	other._social_goal = "evitement_social"
+	aggression_incidents_total += 1
+	other.aggression_received_total += 1
+	GameLogger.log_event_data("agression", "%s repousse %s" % [display_name, other.display_name], {
+		"agent": display_name,
+		"other_agent": other.display_name,
+		"event": "repulsion_imposee",
+		"aggression_incidents_total": aggression_incidents_total,
 	})
 
 func _social_goal_if_active() -> String:
