@@ -18,3 +18,7 @@
 - 2026-08-22 : Refonte visuelle des ronces (buisson vert fixe + mûres noires visibles,
   retrait à la cueillette) ; test manuel 5 validé — voir
   `_docs/decisions/2026-08-22_ronces-mures-visuelles.md`.
+- 2026-08-23 : Le rig Blender reste un outil du personnage de développement ; les quatre
+  agents normaux conservent un rendu léger afin de préserver la priorité expérimentale.
+- 2026-08-23 : Après échec des bridges tiers, le projet retient provisoirement un bridge
+  TCP/JSONL maison pour le premier RL.

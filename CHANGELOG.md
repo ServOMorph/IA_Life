@@ -1,3 +1,19 @@
+## v0.18 — 2026-08-26
+
+### Ajouté
+- ROBERTO (`com_telephone`) : convention `!<commande>` — un message envoyé depuis le téléphone
+  préfixé par `!` (ex. `!close`) déclenche directement la procédure Claude Code correspondante,
+  actions git comprises. Documentée dans `ROBERTO/com_telephone/README.md` et inlinée dans
+  `CLAUDE.md` (section "Bridge ROBERTO").
+
+### Corrigé
+- ROBERTO : cause racine du bug d'injoignabilité du téléphone identifiée et corrigée — la
+  constante `VAPID_PUBLIC_KEY` codée en dur côté client ne correspondait pas à `VAPID_PUBLIC`
+  du serveur (pas un problème de cache navigateur). Reconnexion WebSocket automatique au retour
+  au premier plan, détection ping/pong des connexions mortes côté serveur, purge automatique
+  des souscriptions push obsolètes. Notification push et reconnexion validées en conditions
+  réelles (écran verrouillé).
+
 ## v0.17 — 2026-08-26
 
 ### Ajouté

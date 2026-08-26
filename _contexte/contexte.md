@@ -15,10 +15,6 @@ décideur interchangeable automate/LLM (Ollama local) avec repli automatique sur
 par une campagne comparative de référence (survie automate 65% / llm 40%, `gemma3:1b`).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-23 : Le rig Blender reste un outil du personnage de développement ; les quatre
-  agents normaux conservent un rendu léger afin de préserver la priorité expérimentale.
-- 2026-08-23 : Après échec des bridges tiers, le projet retient provisoirement un bridge
-  TCP/JSONL maison pour le premier RL.
 - 2026-08-24 : Cadre non historique (île isolée) retenu pour l'identité du jeu, sans ancrage
   temporel — voir `DOCUMENTATION/orientation_contexte.md`.
 - 2026-08-24 : `VariableRegistry` devient la source unique des valeurs par défaut/bornes de
@@ -48,3 +44,8 @@ par une campagne comparative de référence (survie automate 65% / llm 40%, `gem
   Ollama local (`gemma3:1b`, `gemma3:4b` écarté après effondrement), repli automatique sur
   l'automate en cas d'erreur, campagne comparative validée — voir
   `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`.
+- 2026-08-26 : ROBERTO — cause racine du bug "injoignable" identifiée et corrigée (clé VAPID
+  codée en dur désynchronisée du serveur, pas un cache navigateur) ; reconnexion WebSocket et
+  notification push validées en conditions réelles. Convention `!<commande>` (commande à
+  distance depuis le téléphone, git compris) créée et inlinée dans `CLAUDE.md` en plus du
+  README — un simple renvoi au README s'est avéré insuffisant.

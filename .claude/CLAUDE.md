@@ -107,3 +107,21 @@ Pour les tâches répétitives et templated (commits, posts, changelogs, donnée
 ## Spécificités projet
 
 Section réservée aux règles propres à ce projet, hors périmètre du kit. Cette section est préservée intégralement par `/update` (jamais écrasée ni fusionnée avec le contenu du kit). Convention : toute règle liée à une section précise du fichier doit la référencer explicitement par son titre (ex: "Section Roadmap : ..."), plutôt que compter sur la position physique de cette section (toujours en fin de fichier).
+
+### Bridge ROBERTO (assistant vocal téléphone)
+Dès que les 3 process du bridge `ROBERTO/com_telephone` sont actifs (voir `monitor.lock` dans
+`ROBERTO/com_telephone/_commands/`) : toute question destinée à l'utilisateur (décision, choix,
+validation) doit passer par `POST /send` (avec `options`/`recommended` si choix fermé) — jamais par
+une question bloquante terminal (AskUserQuestion ou équivalent). Et toute réponse à un message reçu
+via `messages.log` doit repartir par `POST /send`, même si elle a déjà été écrite dans la
+conversation Claude Code (les deux canaux sont étanches). Règle ajoutée le 2026-08-26 après deux
+oublis constatés dans la même session malgré la même règle déjà écrite dans
+`ROBERTO/com_telephone/README.md`.
+
+Convention `!<commande>` : un message téléphone commençant par `!` (ex. `!close`) est une
+instruction directe — appliquer la procédure `.claude/commands/<commande>.md` correspondante, reste
+du message = arguments, y compris les actions git (commit/push) qu'elle prévoit, sans confirmation
+terminal supplémentaire (l'envoi depuis le téléphone vaut confirmation). Si `<commande>` ne
+correspond à aucun fichier commande, le signaler par `POST /send` plutôt que deviner. Détail :
+`ROBERTO/com_telephone/README.md`, section "Commandes à distance (préfixe !)".
+

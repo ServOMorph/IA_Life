@@ -16,62 +16,94 @@
   (non vérifiable en headless).
   fait quand: test validé et retiré de tests_manuels.md.
   réf: tests_manuels.md, scripts/ui_manager.gd (_build_variable_field)
+- [P2|ouvert] Décider si le reste de `ROBERTO/com_telephone` (jamais commité avant ce jour, hors
+  les 3 fichiers modifiés cette session) doit être ajouté au dépôt git en bloc ou zone par zone.
+  fait quand: décision actée (ajout complet, ajout partiel motivé, ou exclusion définitive
+  documentée).
+  réf: ROBERTO/com_telephone/ (DEPLOYMENTS.md, _commands/, specification pdf, reste de
+  voice-code-bridge/)
+- [P3|ouvert] Nettoyer les souscriptions push dupliquées dans `push_subs.json` (accumulation
+  sans purge des entrées valides à chaque réinscription).
+  fait quand: dédoublonnage effectué ou décision explicite de laisser tel quel (impact mineur :
+  notifications dupliquées).
+  réf: ROBERTO/com_telephone/voice-code-bridge/server/server.js (sendPushNotification, route
+  /push/subscribe), push_subs.json
 
 ## Contexte chaud
 
-- Phase 7 (LLM) implémentée et validée ce jour : décideur interchangeable (`automate`/`llm`/
-  `llm_mock`) via `scripts/llm_decider.gd`, backend Ollama local, repli automatique sur erreur,
-  campagne comparative exécutée deux fois (voir décision `2026-08-26_decideurs-interchangeables-llm.md`
-  pour l'historique complet : bug HTTPRequest threadé, effondrement gemma3:4b, pivot gemma3:1b).
+- Phase 7 (LLM) implémentée et validée le 2026-08-26 : décideur interchangeable (`automate`/
+  `llm`/`llm_mock`) via `scripts/llm_decider.gd`, backend Ollama local, repli automatique sur
+  erreur, campagne comparative exécutée deux fois (voir décision
+  `2026-08-26_decideurs-interchangeables-llm.md` pour l'historique complet).
 - Résultat de référence (5 seeds, `gemma3:1b`) : survie automate 65% / llm_mock 40% / llm 40%,
   distance et alimentation du LLM dans un ordre de grandeur cohérent — voir
   `results/llm_vs_automate_v1/report.json` (non tracké git, `results/` dans .gitignore).
+- Bridge ROBERTO (`com_telephone`) opérationnel de bout en bout, validé en conditions réelles
+  (iPhone verrouillé) : reconnexion WebSocket, notification push de secours confirmées. Cause du
+  bug "injoignable" constaté le 2026-08-25 : la constante `VAPID_PUBLIC_KEY` codée en dur dans
+  `app.js` ne correspondait pas à `VAPID_PUBLIC` de `.env` côté serveur (pas un problème de
+  cache navigateur comme supposé initialement) — toute souscription échouait donc
+  systématiquement (`VapidPkHashMismatch`).
+- Convention `!<commande>` (commande à distance depuis le téléphone, git compris) et règle des
+  deux canaux désormais inlinées dans `.claude/CLAUDE.md` (section "Bridge ROBERTO") en plus du
+  README — une simple référence au README s'est avérée insuffisante (deux oublis dans la même
+  session malgré la règle déjà écrite).
+- Le classificateur de sécurité du mode auto de Claude Code bloque systématiquement l'édition de
+  `.claude/CLAUDE.md`, même après confirmation terminal explicite répétée ; une confirmation
+  reçue uniquement via le téléphone (bridge) n'a jamais suffi. Contournement utilisé le
+  2026-08-26 : demander à l'utilisateur de coller lui-même le texte fourni, puis nettoyer les
+  doublons introduits par le collage manuel.
+  `ROBERTO/com_telephone/` : seuls les 3 fichiers modifiés le 2026-08-26 (server.js, app.js,
+  README.md) ont été committés cette session — le reste de l'arborescence (jamais tracké avant
+  ce jour) reste volontairement non ajouté (voir action ouverte).
 - Écart connu : `scripts/check_kit.py` est absent (contrôle d'intégrité de l'étape 10 de
-  `/close` non exécutable) — reconfirmé le 2026-08-26 (quatrième fois).
+  `/close` non exécutable) — reconfirmé le 2026-08-26 (cinquième fois).
 - `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) reste non tracké, origine non
   éclaircie : ne pas committer.
 - `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`, `.rl_godot_pid` : résidus des bridges RL tiers
   abandonnés (GDRL, godot-native-rl) ; non trackés, à nettoyer manuellement si souhaité.
-- `ROBERTO/com_telephone/` reste entièrement non tracké git — ne pas `git add` ce dossier en
-  bloc. Cette session : bridge relancé via `/com_manager start` (port 5000 libéré, Monitor
-  recréé, task_id `b14pc3rlz` dans `monitor.lock`) ; l'appli téléphone a répondu au tout premier
-  message puis est restée injoignable (`POST /send` -> `sent:0`) pour tous les envois suivants
-  de la session malgré les 3 process actifs — à investiguer en début de session suivante si le
-  bridge est réutilisé (piste : reconnexion WebSocket appli non rétablie automatiquement).
-- Ollama tourne en arrière-plan (démarré cette session, `ollama serve` via l'app tray) avec
-  `gemma3:1b` désormais utilisé par la campagne de référence.
+- Ollama tourne en arrière-plan (`ollama serve` via l'app tray) avec `gemma3:1b` utilisé par la
+  campagne de référence LLM.
+- Quand un message "salut"/salutation arrive depuis `messages.log` (téléphone), répondre avec
+  une phrase piochée dans `ROBERTO/com_telephone/voice-code-bridge/server/salutations.json`
+  plutôt qu'une formule générique — préférence explicite de l'utilisateur, actée le 2026-08-26.
 
 ## Dernière session (2026-08-26)
 
 # Session du 2026-08-26
 
 ## Décisions prises
-- Phase 7 (décideurs interchangeables) implémentée : décideur LLM via Ollama local, action
-  "manger" routée via `memory_direction` (même précision de visée que l'automate), repli sur
-  l'automate en cas d'erreur/timeout/indisponibilité.
-- Modèle par défaut de la campagne `llm_vs_automate_v1` : `gemma3:1b` (gemma3:4b s'effondrait
-  sur une réponse fixe indépendante du contexte).
+- Bug ROBERTO "injoignable" résolu : cause racine = clé `VAPID_PUBLIC_KEY` obsolète dans
+  `app.js` (pas un problème de cache navigateur comme supposé initialement).
+- Convention `!<commande>` créée : commande à distance depuis le téléphone, autorisation
+  permanente actée pour les actions git qu'elle déclenche.
+- Règle "deux canaux" + convention `!<commande>` inlinées dans `CLAUDE.md` (référence seule au
+  README insuffisante, prouvé deux fois cette session).
+- Seuls les fichiers ROBERTO modifiés cette session sont committés ; pas d'ajout en bloc de
+  l'arborescence jamais trackée avant ce jour (décision distincte à prendre).
 
 ## Livrables produits ou modifiés
-- `scripts/llm_decider.gd` (nouveau) : décideur async, schéma JSON contraint, logging
-  prompt/réponse, compteurs appels/erreurs/latence.
-- `scripts/character.gd`, `scripts/main.gd`, `scripts/ui_manager.gd`,
-  `scripts/variable_registry.gd` : décideur interchangeable, support enum/string, correctif UI.
-- `tools/aggregate_results.py` : métriques LLM agrégées (mean_llm_calls, llm_error_rate, mean_llm_latency_ms).
-- `experiments/llm_mock_smoke_v1.json`, `llm_vs_automate_v1.json` (+campagne) : scénarios.
-- `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md` : décision + historique complet.
+- `ROBERTO/.../server.js` : logging des échecs push, purge auto souscription VAPID obsolète,
+  détection ping/pong des connexions mortes.
+- `ROBERTO/.../mobile/app.js` : reconnexion WS auto (visibilitychange/pageshow), correctif clé
+  `VAPID_PUBLIC_KEY`, réinscription push systématique au chargement.
+- `ROBERTO/.../README.md` : sections "Commandes à distance (préfixe !)" et "Ajouts dans
+  CLAUDE.md".
+- `.claude/CLAUDE.md` : section "Bridge ROBERTO" (règle deux canaux + convention `!<commande>`).
+- `tests_manuels.md` : tests ROBERTO validés en direct retirés ; test Inspecteur Phase 7
+  conservé.
 
 ## Hypothèses validées / invalidées
-- VALIDE : architecture async robuste, aucun run bloqué (timeout/erreur/indisponibilité gérés).
-- INVALIDE puis corrigée : `HTTPRequest` threadé restait bloqué dans la scène complète
-  (contention `WorkerThreadPool`) -> `use_threads = false`.
-- INVALIDE puis corrigée : `gemma3:4b` répond quasi systématiquement "manger"/"E" quel que
-  soit le contexte -> pivot vers `gemma3:1b` (résultats redevenus cohérents).
-- EN ATTENTE : contrôle visuel manuel de l'Inspecteur (voir actions ouvertes).
+- VALIDE : reconnexion WebSocket après coupure, notification push bout en bout — confirmées en
+  direct par l'utilisateur sur le téléphone (écran verrouillé).
+- INVALIDE puis corrigée : hypothèse "souscription push en cache" -> vraie cause = clé VAPID
+  codée en dur désynchronisée du serveur.
+- INVALIDE : comparaison `sub.options.applicationServerKey` pour détecter le désaccord de clé ->
+  API non exposée par Safari sur cette version, remplacée par désinscription systématique.
 
 ## Prochaine étape exacte
-Décider si un prompt few-shot est nécessaire pour la robustesse multi-modèles, ou si
-`gemma3:1b` suffit comme référence stable pour la suite de la Phase 7.
+Décider si le reste de `ROBERTO/com_telephone` doit être ajouté au dépôt git, et nettoyer les
+souscriptions push dupliquées dans `push_subs.json`.
 
 ## Question bloquante pour la session suivante
 Aucune.
