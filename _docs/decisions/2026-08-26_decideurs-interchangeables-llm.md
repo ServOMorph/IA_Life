@@ -142,4 +142,9 @@ première mesure de référence, pas comme conclusion définitive sur la capacit
 à ce jeu.
 
 ## Commentaire
-(à compléter lors de la validation/invalidation)
+2026-08-26 (session suivante) : écart trouvé lors d'un contrôle manuel de l'Inspecteur — le
+défaut `llm_model` du registre (`scripts/variable_registry.gd`) était resté codé en dur sur
+`gemma3:4b` (modèle écarté pour effondrement), alors que seule la configuration
+`experiments/llm_vs_automate_v1.json` avait été alignée sur `gemma3:1b`. Tout agent
+`decider_type=llm` sans override explicite aurait donc utilisé le modèle écarté par défaut.
+Corrigé (défaut passé à `gemma3:1b`).

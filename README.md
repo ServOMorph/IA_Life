@@ -57,4 +57,6 @@ Les Phases 1 à 7 du laboratoire sont closes : trois campagnes de référence (m
 des ressources, profils contrastés), un Inspecteur générique piloté par le registre, des
 interactions sociales avancées (communication, coopération, agressivité), et un décideur
 interchangeable automate/LLM (Ollama local, repli automatique sur erreur), validé par une
-campagne comparative (`experiments/campaigns/llm_vs_automate_v1.json`).
+campagne comparative (`experiments/campaigns/llm_vs_automate_v1.json`). Phase 8 (vision et
+perception générique des ronciers, agents et objets) ajoutée à la roadmap en [TODO], pas
+encore démarrée.

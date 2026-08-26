@@ -1,3 +1,16 @@
+## v0.19 — 2026-08-26
+
+### Ajouté
+- Roadmap : Phase 8 (Vision et perception générique de l'environnement) ajoutée en [TODO] —
+  remplace la découverte de ressources par contact physique seul, généralise la perception à
+  distance à n'importe quelle entité (ronciers, agents, objets futurs), prévoit l'absorption de
+  `social_radius` sous condition d'équivalence démontrée.
+
+### Corrigé
+- `scripts/variable_registry.gd` : défaut `llm_model` corrigé (`gemma3:4b` -> `gemma3:1b`),
+  désaligné de la décision Phase 7 (modèle de référence stable retenu après effondrement de
+  `gemma3:4b`).
+
 ## v0.18 — 2026-08-26
 
 ### Ajouté

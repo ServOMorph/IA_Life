@@ -22,3 +22,5 @@
   agents normaux conservent un rendu léger afin de préserver la priorité expérimentale.
 - 2026-08-23 : Après échec des bridges tiers, le projet retient provisoirement un bridge
   TCP/JSONL maison pour le premier RL.
+- 2026-08-24 : Cadre non historique (île isolée) retenu pour l'identité du jeu, sans ancrage
+  temporel — voir `DOCUMENTATION/orientation_contexte.md`.

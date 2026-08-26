@@ -328,6 +328,118 @@ variées et cohérentes (survie 40%, proche du mock, contre 65% pour l'automate)
 `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`. Point ouvert : décider si un
 prompt few-shot est nécessaire pour la robustesse multi-modèles avant d'élargir la campagne.
 
+## Phase 8 — Vision et perception générique de l'environnement [TODO]
+
+### But
+
+Donner aux agents une perception à distance réelle, générique et paramétrable, qui remplace
+la découverte par contact comme unique source d'information sur le monde. La vision porte sur
+n'importe quelle entité perceptible (ronciers d'abord, agents ensuite, objets futurs sans
+modification du système), avec portée, champ de vision et occlusion.
+
+### Constat de départ vérifié (2026-08-26)
+
+- Un roncier n'est mémorisé que par collision physique : `_on_ronce_contact` appelle
+  `_remember_ronce` (`scripts/character.gd`). Aucun agent ne peut voir une ressource à distance.
+- L'unique perception à distance existante est `social_radius` : un disque omnidirectionnel,
+  sans occlusion ni champ de vision, réservé aux autres agents
+  (`_update_social_perception`, `scripts/character.gd`). C'est une demi-vision spécialisée.
+- Les ronciers ne sont pas exposés en groupe : ils vivent dans `_ronces` (`scripts/main.gd`),
+  contrairement aux agents (`add_to_group("agents")`). Aucun contrat de perceptibilité commun
+  n'existe aujourd'hui.
+- L'observation transmise aux déciders ne contient rien de perçu à distance hors social :
+  `has_memories`, `memory_direction`, `social_goal`, `social_direction`
+  (`_apply_decision`, `scripts/character.gd`).
+- Le prompt LLM ne décrit le monde que par un booléen « a un roncier mémorisé »
+  (`_build_prompt`, `scripts/llm_decider.gd`).
+
+### Compatibilité des résultats acquis (contrainte forte)
+
+La vision est une primitive de perception qui aurait relevé de la Phase 2 ; elle est introduite
+rétroactivement. Toutes les références produites jusqu'ici (campagnes Phase 4 et
+`llm_vs_automate_v1`) l'ont été en découverte-par-contact. En conséquence :
+
+- La valeur par défaut de `vision_range` est `0.0` (vision désactivée), afin que toute
+  configuration existante reste reproductible bit-à-bit après l'ajout du système.
+- Toute campagne activant la vision constitue une **nouvelle** base de référence et ne se
+  compare pas aux résultats antérieurs. Ce point doit être écrit dans la campagne elle-même.
+
+### Actions — primitive de perception
+
+- [ ] Définir un contrat de perceptibilité générique, indépendant du type : identité, position,
+  type d'entité et état public exposé (ex. un roncier expose s'il porte encore des mûres).
+  Aucun accès à l'état interne d'autrui via la vision.
+- [ ] Exposer les entités perceptibles par un mécanisme unique et déterministe (groupe Godot ou
+  registre central), en remplaçant l'accès direct au tableau `_ronces` pour la perception.
+  L'ordre d'itération doit rester stable à seed fixe.
+- [ ] Implémenter la fonction de vision : portée, champ de vision angulaire relatif à
+  l'orientation de l'agent, et test d'occlusion par le terrain et les obstacles.
+- [ ] Ajouter les variables individuelles au registre : `vision_range` (défaut `0.0` = désactivée),
+  `vision_angle_degrees` (défaut `360.0` = omnidirectionnel), `vision_blocked_by_terrain`
+  (défaut `false`). Chaque variable ajoutée est justifiée par une règle locale documentée.
+- [ ] Décider explicitement quelle direction définit le champ de vision (orientation affichée
+  via `_update_facing`, ou direction de déplacement) et documenter le choix : les deux divergent
+  lors des rebonds et des changements d'objectif.
+- [ ] Journaliser chaque première détection d'une entité (`vision`), sans inonder le log :
+  un événement par entité nouvellement vue, pas par frame.
+
+### Actions — exploitation par les déciders
+
+- [ ] Étendre l'observation d'une liste structurée des entités visibles (type, direction,
+  distance, état public), plus les raccourcis dérivés nécessaires à l'automate.
+- [ ] Ajouter à `BaselineDecider` la règle d'approche d'un roncier visible, et **trancher
+  explicitement la priorité** entre roncier visible et roncier mémorisé (information fraîche
+  contre information certaine). La règle retenue est documentée et couverte par un test.
+- [ ] Étendre le prompt LLM à une description structurée de ce qui est visible, en conservant
+  le vocabulaire fermé et l'espace d'actions de la référence. L'intention « manger » doit
+  pouvoir viser un roncier visible non mémorisé, sans quoi le LLM reste handicapé par rapport
+  à l'automate (même nature de biais que le correctif `memory_direction` de la Phase 7).
+- [ ] Faire mémoriser un roncier vu à distance, ou décider explicitement que seule la cueillette
+  mémorise. Ce choix modifie la signification de `memory_capacity` et doit être tranché avant
+  toute campagne.
+
+### Action — absorption de `social_radius` (dette technique)
+
+- [ ] Faire de la perception des autres agents un cas particulier de la vision, plutôt qu'un
+  second système parallèle. Condition de bascule : les scénarios de la Phase 6
+  (`social_communication_smoke_v1`, `social_aggression_smoke_v1`,
+  `social_cooperation_smoke_v1`) produisent des résultats inchangés à seed fixe avec une vision
+  omnidirectionnelle sans occlusion de portée égale à l'ancien `social_radius`.
+  Si l'équivalence n'est pas démontrée, conserver les deux systèmes et documenter pourquoi.
+
+### Actions — mesure et validation
+
+- [ ] Ajouter les métriques de perception au résumé de run et à `tools/aggregate_results.py` :
+  détections totales, ronciers découverts par vision contre par contact, délai entre première
+  vision et premier contact.
+- [ ] Tests de non-régression : `vision_range = 0.0` reproduit exactement les résultats
+  antérieurs (contrôle via `tools/check_reproducibility.py`).
+- [ ] Scénarios dédiés : entité dans la portée mais hors du champ de vision (non vue), entité
+  dans le champ mais hors de portée (non vue), entité masquée par le relief (non vue si
+  `vision_blocked_by_terrain`).
+- [ ] Campagne multi-seeds comparant plusieurs valeurs de `vision_range` sur la survie et sur
+  le délai de première découverte.
+
+### Critères d'acceptation
+
+- Ajouter un nouveau type d'entité perceptible ne demande aucune modification du système de
+  vision lui-même.
+- Vision désactivée, les résultats des campagnes antérieures sont reproduits à l'identique.
+- La portée, le champ de vision et l'occlusion produisent chacun une différence mesurable dans
+  un scénario contrôlé, sans rendre l'exécution non déterministe à seed fixe.
+- Les trois déciders (`automate`, `llm_mock`, `llm`) accèdent à la même information visuelle et
+  au même espace d'actions.
+- Aucun décideur n'accède, via la vision, à une information que l'agent ne pourrait pas percevoir.
+
+### Point d'attention
+
+`curiosity` et `known_zone_preference` (Phase 2) approximent aujourd'hui une recherche
+d'inconnu en l'absence de vision. Une fois la vision active, leur interprétation change et leur
+utilité doit être réévaluée — sans les retirer avant mesure.
+
+**⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
+Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
+
 ## Qualité transverse et jalons de décision
 
 - Après chaque phase : tests automatisés, smoke test headless, mise à jour des décisions
@@ -341,8 +453,16 @@ prompt few-shot est nécessaire pour la robustesse multi-modèles avant d'élarg
 
 ## Prochain sprint recommandé
 
-Phases 1 à 7 closes. Deux points ouverts, sans priorité imposée entre eux :
+Phases 1 à 7 closes, Phase 8 (vision) ouverte en [TODO].
+
+Deux points ouverts hérités de la Phase 7, sans priorité imposée entre eux :
 - Décider si un prompt few-shot est nécessaire pour la robustesse multi-modèles du décideur
   LLM, ou si `gemma3:1b` suffit comme référence stable pour élargir les campagnes Phase 7.
 - Décider si une campagne multi-seeds est nécessaire pour valider statistiquement la coopération
   avant de la considérer stable au même titre que suivi/évitement.
+
+Recommandation d'ordonnancement : traiter la Phase 8 avant d'élargir les campagnes LLM. La
+vision modifie l'information disponible en entrée du décideur, donc toute campagne LLM lancée
+avant serait à refaire ensuite. Le point ouvert sur le prompt few-shot gagne à être tranché
+en même temps que l'extension du prompt à ce qui est visible (action Phase 8), les deux
+touchant le même code.

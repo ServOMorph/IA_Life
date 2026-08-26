@@ -12,11 +12,11 @@ Le prototype est un laboratoire headless reproductible : configurations versionn
 résumés et campagnes. Les Phases 1 à 7 sont closes fonctionnellement : temps simulé déterministe,
 traits comportementaux mesurés, interactions sociales avancées, Inspecteur générique, et
 décideur interchangeable automate/LLM (Ollama local) avec repli automatique sur erreur, validé
-par une campagne comparative de référence (survie automate 65% / llm 40%, `gemma3:1b`).
+par une campagne comparative de référence (survie automate 65% / llm 40%, `gemma3:1b`, défaut
+`llm_model` du registre désormais aligné). Phase 8 (vision et perception générique) ajoutée à
+la roadmap en [TODO], pas encore démarrée.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-24 : Cadre non historique (île isolée) retenu pour l'identité du jeu, sans ancrage
-  temporel — voir `DOCUMENTATION/orientation_contexte.md`.
 - 2026-08-24 : `VariableRegistry` devient la source unique des valeurs par défaut/bornes de
   `GameConfig` et `Character` ; bridge RL TCP/JSONL maison validé (épisode complet).
 - 2026-08-24 : Les expériences comparables sont bornées par `max_simulation_seconds` et non
@@ -49,3 +49,6 @@ par une campagne comparative de référence (survie automate 65% / llm 40%, `gem
   notification push validées en conditions réelles. Convention `!<commande>` (commande à
   distance depuis le téléphone, git compris) créée et inlinée dans `CLAUDE.md` en plus du
   README — un simple renvoi au README s'est avéré insuffisant.
+- 2026-08-26 : Phase 8 (vision et perception générique) ajoutée à la roadmap en [TODO] ; défaut
+  `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`, désaligné de la décision
+  Phase 7).
