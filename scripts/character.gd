@@ -1,7 +1,5 @@
 extends CharacterBody3D
 
-const BaselineDeciderScript = preload("res://scripts/baseline_decider.gd")
-
 @export var map_half_x: float = 18.0
 @export var map_half_z: float = 18.0
 @export var move_speed: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["move_speed"])
@@ -24,6 +22,10 @@ const BaselineDeciderScript = preload("res://scripts/baseline_decider.gd")
 @export_range(0.0, 1.0, 0.01) var communication_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["communication_probability"])
 @export_range(0.0, 1.0, 0.01) var cooperation_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["cooperation_probability"])
 @export_range(0.0, 1.0, 0.01) var aggression_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["aggression_probability"])
+@export var decider_type: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["decider_type"])
+@export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
+@export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
+@export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
 @export var display_name: String = ""
 @export var manual_control: bool = false
 @export var immortal: bool = false
@@ -57,11 +59,18 @@ var food_received_total: int = 0
 var aggression_incidents_total: int = 0
 var aggression_received_total: int = 0
 
+var llm_calls_total: int:
+	get: return _decider.calls_total if _decider is LLMDecider else 0
+var llm_errors_total: int:
+	get: return _decider.errors_total if _decider is LLMDecider else 0
+var llm_total_latency_ms: float:
+	get: return _decider.total_latency_ms if _decider is LLMDecider else 0.0
+
 var _direction := Vector3.ZERO
 var _manual_direction := Vector3.ZERO
 var _timer := 0.0
 var _memories: Array = []
-var _decider := BaselineDeciderScript.new()
+var _decider = null
 var _last_position := Vector3.ZERO
 var _visited_zone_ids: Dictionary = {}
 var _current_zone_id: String = ""
@@ -81,6 +90,7 @@ var _current_anim: String = ""
 var _rl_direction := Vector3.ZERO
 
 func _ready() -> void:
+	_decider = _build_decider()
 	_pick_new_direction(false)
 	_last_position = position
 	_set_goal("errance")
@@ -89,6 +99,16 @@ func _ready() -> void:
 		"position": [position.x, position.y, position.z],
 	})
 	_record_position_sample()
+
+func _build_decider():
+	match decider_type:
+		"llm", "llm_mock":
+			var decider := LLMDecider.new()
+			decider.configure(llm_model, llm_decision_interval_seconds, llm_timeout_seconds, decider_type == "llm_mock", display_name)
+			add_child(decider)
+			return decider
+		_:
+			return BaselineDecider.new()
 
 func setup_visual(body_mesh: MeshInstance3D, head_mesh: MeshInstance3D) -> void:
 	_body_mesh = body_mesh
@@ -174,7 +194,7 @@ func _apply_decision(scaled_delta: float) -> void:
 		_direction = _rl_direction
 		_set_goal("rl")
 		return
-	var action := _decider.decide({
+	var action: Dictionary = _decider.decide({
 		"manual_control": manual_control,
 		"manual_direction": _manual_direction,
 		"hunger": hunger,
@@ -187,6 +207,13 @@ func _apply_decision(scaled_delta: float) -> void:
 		"wander_timer": _timer,
 		"delta": scaled_delta,
 	})
+	if not (action.has("goal") and action.has("direction") and action.has("renew_wander")
+			and action["goal"] is String and action["direction"] is Vector3 and action["renew_wander"] is bool):
+		GameLogger.log_event_data("decideur_erreur", "%s : action invalide ignorée" % display_name, {
+			"agent": display_name,
+			"decider_type": decider_type,
+		})
+		action = {"goal": current_goal, "direction": _direction, "renew_wander": false}
 	_set_goal(action["goal"])
 	if action["renew_wander"]:
 		_pick_new_direction()

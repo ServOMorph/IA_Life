@@ -54,6 +54,11 @@ SOCIAL_AGENT_FIELDS = {
     "aggression_incidents_total": int,
     "aggression_received_total": int,
 }
+DECIDER_AGENT_FIELDS = {
+    "llm_calls_total": int,
+    "llm_errors_total": int,
+    "llm_total_latency_ms": (int, float),
+}
 
 
 def summaries_in(source: Path) -> list[Path]:
@@ -140,6 +145,7 @@ def flatten_rows(summaries: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 "parameters": json.dumps(agent["parameters"], ensure_ascii=False, sort_keys=True),
                 **{key: agent[key] for key in AGENT_FIELDS if key not in {"name", "alive", "parameters"}},
                 **{key: agent.get(key, 0) for key in SOCIAL_AGENT_FIELDS},
+                **{key: agent.get(key, 0) for key in DECIDER_AGENT_FIELDS},
             })
     return rows
 
@@ -166,6 +172,10 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
         social_shares = [float(row["social_shares_total"]) for row in group]
         food_shared = [float(row["food_shared_total"]) for row in group]
         aggression_incidents = [float(row["aggression_incidents_total"]) for row in group]
+        llm_calls = [float(row["llm_calls_total"]) for row in group]
+        llm_errors = [float(row["llm_errors_total"]) for row in group]
+        llm_total_latency = [float(row["llm_total_latency_ms"]) for row in group]
+        llm_calls_sum = sum(llm_calls)
         experiments[comparison_group] = {
             "campaign_id": group[0]["campaign_id"],
             "campaign_parameters": json.loads(group[0]["campaign_parameters"]),
@@ -184,6 +194,9 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "mean_social_shares": mean(social_shares),
             "mean_food_shared": mean(food_shared),
             "mean_aggression_incidents": mean(aggression_incidents),
+            "mean_llm_calls": mean(llm_calls),
+            "llm_error_rate": (sum(llm_errors) / llm_calls_sum) if llm_calls_sum > 0 else 0.0,
+            "mean_llm_latency_ms": (sum(llm_total_latency) / llm_calls_sum) if llm_calls_sum > 0 else 0.0,
             "distance_standard_deviation": statistics.pstdev(distances) if len(distances) > 1 else 0.0,
         }
     return {"schema_version": 1, "experiments": experiments}

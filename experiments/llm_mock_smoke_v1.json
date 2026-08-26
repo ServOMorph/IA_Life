@@ -1,0 +1,19 @@
+{
+  "format_version": 1,
+  "experiment_id": "llm-mock-smoke-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {"ronce_count": 24, "berries_per_ronce": 3}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate"},
+    "individual": {
+      "Rouge": {"decider_type": "llm_mock", "llm_decision_interval_seconds": 2.0}
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 30.0,
+    "quit_on_all_dead": false
+  }
+}

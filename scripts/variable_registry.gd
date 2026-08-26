@@ -33,11 +33,17 @@ const CHARACTER: Dictionary = {
 	"communication_probability": {"label": "Probabilité de communication", "description": "Probabilité qu'un agent partage une position de roncier mémorisée avec un autre agent rencontré qui ne la connaît pas encore.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"cooperation_probability": {"label": "Probabilité de coopération", "description": "Probabilité qu'un agent cède une mûre portée à un agent rencontré dont la faim est sous le seuil de consommation.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"aggression_probability": {"label": "Probabilité d'agressivité", "description": "Probabilité qu'un agent force un agent rencontré à s'éloigner, indépendamment du choix de ce dernier.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
+	"decider_type": {"label": "Type de décideur", "description": "Système qui décide des actions de l'agent : automate déterministe, LLM local via Ollama, ou LLM simulé sans appel réseau (test).", "scope": "individuelle", "category": "décision", "type": "enum", "options": ["automate", "llm", "llm_mock"], "default": "automate", "dynamic": false, "live_editable": false},
+	"llm_model": {"label": "Modèle LLM", "description": "Nom du modèle Ollama interrogé quand decider_type vaut 'llm'.", "scope": "individuelle", "category": "décision", "type": "string", "default": "gemma3:4b", "dynamic": false, "live_editable": false},
+	"llm_decision_interval_seconds": {"label": "Intervalle de décision LLM", "description": "Durée simulée minimale entre deux appels au LLM ; l'action précédente est conservée entre-temps.", "scope": "individuelle", "category": "décision", "type": "float", "min": 0.5, "max": 60.0, "default": 3.0, "dynamic": false, "live_editable": false},
+	"llm_timeout_seconds": {"label": "Timeout LLM", "description": "Délai maximal d'attente d'une réponse Ollama avant repli sur l'automate.", "scope": "individuelle", "category": "décision", "type": "float", "min": 0.5, "max": 60.0, "default": 8.0, "dynamic": false, "live_editable": false},
 }
 
 static func default_value(definition: Dictionary):
 	if definition["type"] == "int":
 		return int(definition["default"])
+	if definition["type"] == "enum" or definition["type"] == "string":
+		return String(definition["default"])
 	return float(definition["default"])
 
 static func validate_values(values: Dictionary, definitions: Dictionary, scope: String) -> PackedStringArray:
@@ -50,6 +56,15 @@ static func validate_values(values: Dictionary, definitions: Dictionary, scope: 
 		var value = values[key_variant]
 		var definition: Dictionary = definitions[key]
 		var expected_type: String = definition["type"]
+		if expected_type == "enum":
+			var options: Array = definition.get("options", [])
+			if typeof(value) != TYPE_STRING or not options.has(String(value)):
+				errors.append("%s.%s : valeur '%s' hors énumération %s" % [scope, key, value, options])
+			continue
+		if expected_type == "string":
+			if typeof(value) != TYPE_STRING:
+				errors.append("%s.%s : type string attendu" % [scope, key])
+			continue
 		var is_number := typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT
 		var valid_type := (expected_type == "int" and is_number and is_equal_approx(float(value), roundf(float(value)))) or (expected_type == "float" and is_number)
 		if not valid_type:

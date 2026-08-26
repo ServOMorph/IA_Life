@@ -466,6 +466,9 @@ func _finish_headless_run(reason: String) -> void:
 				"food_received_total": character.food_received_total,
 				"aggression_incidents_total": character.aggression_incidents_total,
 				"aggression_received_total": character.aggression_received_total,
+				"llm_calls_total": character.llm_calls_total,
+				"llm_errors_total": character.llm_errors_total,
+				"llm_total_latency_ms": character.llm_total_latency_ms,
 				"lifetime_seconds": lifetime,
 			})
 		GameLogger.write_summary({

@@ -4,14 +4,15 @@
 Créer un environnement Godot avec 2 personnages lowpoly pilotés chacun par un LLM, capables de se déplacer et de communiquer entre eux (loggé), afin d'étudier l'évolution de leurs comportements face aux modifications de l'environnement de jeu.
 
 ## Stack / contraintes techniques (stable, rarement modifié)
-Godot (GDScript), LLM externe (à définir)
+Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les campagnes ;
+`gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
 Le prototype est un laboratoire headless reproductible : configurations versionnées, logs JSONL,
-résumés et campagnes. Les Phases 1 à 6 sont closes : temps simulé déterministe, traits
-comportementaux mesurés, trois campagnes de référence validées, Inspecteur générique, et
-interactions sociales avancées (communication, coopération, agressivité) implémentées et
-validées par smoke tests. Phase 7 (LLM) débloquée, non démarrée.
+résumés et campagnes. Les Phases 1 à 7 sont closes fonctionnellement : temps simulé déterministe,
+traits comportementaux mesurés, interactions sociales avancées, Inspecteur générique, et
+décideur interchangeable automate/LLM (Ollama local) avec repli automatique sur erreur, validé
+par une campagne comparative de référence (survie automate 65% / llm 40%, `gemma3:1b`).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-23 : Le rig Blender reste un outil du personnage de développement ; les quatre
@@ -43,3 +44,7 @@ validées par smoke tests. Phase 7 (LLM) débloquée, non démarrée.
   coopération (partage de nourriture si faim critique de l'autre) et agressivité (répulsion
   imposée) implémentées, chacune validée par un scénario de simulation dédié — voir
   `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`. Phase 7 débloquée.
+- 2026-08-26 : Phase 7 — décideur LLM interchangeable (`scripts/llm_decider.gd`), backend
+  Ollama local (`gemma3:1b`, `gemma3:4b` écarté après effondrement), repli automatique sur
+  l'automate en cas d'erreur, campagne comparative validée — voir
+  `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`.

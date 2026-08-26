@@ -1,3 +1,25 @@
+## v0.17 — 2026-08-26
+
+### Ajouté
+- Phase 7 close : décideur de personnage interchangeable (`automate`/`llm`/`llm_mock`) via
+  `scripts/llm_decider.gd`, backend Ollama local, repli automatique sur l'automate en cas de
+  timeout/erreur/indisponibilité réseau. L'intention "manger" route via `memory_direction`
+  (même précision de visée que l'automate). Logging complet prompt/réponse.
+- `VariableRegistry` : support des types `enum`/`string` (nouvelles variables `decider_type`,
+  `llm_model`, `llm_decision_interval_seconds`, `llm_timeout_seconds`).
+- Scénarios et campagne comparative : `experiments/llm_mock_smoke_v1.json`,
+  `experiments/llm_vs_automate_v1.json`, `experiments/campaigns/llm_vs_automate_v1.json`.
+
+### Modifié
+- `tools/aggregate_results.py` : métriques LLM agrégées (appels, taux d'erreur, latence).
+- `scripts/ui_manager.gd` : correctif d'affichage de l'Inspecteur pour les types texte.
+
+### Corrigé
+- `HTTPRequest` threadé restait bloqué jusqu'au timeout dans la scène complète (contention du
+  `WorkerThreadPool` de Godot) — corrigé par `use_threads = false`.
+- Modèle `gemma3:4b` écarté après effondrement sur une réponse fixe indépendante du contexte ;
+  `gemma3:1b` retenu comme référence (voir `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`).
+
 ## v0.16 — 2026-08-25
 
 ### Ajouté

@@ -1,0 +1,16 @@
+{
+  "format_version": 1,
+  "experiment_id": "llm-vs-automate-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {"ronce_count": 24, "berries_per_ronce": 3}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "llm_model": "gemma3:1b"}
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 180.0,
+    "quit_on_all_dead": false
+  }
+}

@@ -6,7 +6,8 @@ LLM, capables de se déplacer et de communiquer entre eux (loggé), afin d'étud
 l'évolution de leurs comportements face aux modifications de l'environnement de jeu.
 
 ## Stack
-Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à définir.
+Godot 4.5 (GDScript), scène construite entièrement par code. LLM local via Ollama
+(`gemma3:1b` en référence pour les campagnes).
 
 ## Structure
 - `project.godot`, `scenes/Main.tscn` : projet Godot.
@@ -52,8 +53,8 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM externe à d�
 Le prototype est un laboratoire reproductible : configurations versionnées et hashées,
 logs JSONL, résumés par run, agrégation et campagnes headless. Les expériences utilisent
 une durée simulée déterministe et distinguent configuration fixe et état initial dynamique.
-Les Phases 1 à 6 du laboratoire sont closes : trois campagnes de référence (mémoire, rareté
-des ressources, profils contrastés), un Inspecteur générique piloté par le registre, et des
-interactions sociales avancées (communication, coopération, agressivité) validées par des
-scénarios de simulation dédiés (`experiments/social_*_smoke_v1.json`). Phase 7 (LLM)
-débloquée, non démarrée.
+Les Phases 1 à 7 du laboratoire sont closes : trois campagnes de référence (mémoire, rareté
+des ressources, profils contrastés), un Inspecteur générique piloté par le registre, des
+interactions sociales avancées (communication, coopération, agressivité), et un décideur
+interchangeable automate/LLM (Ollama local, repli automatique sur erreur), validé par une
+campagne comparative (`experiments/campaigns/llm_vs_automate_v1.json`).

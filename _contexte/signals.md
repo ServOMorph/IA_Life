@@ -1,69 +1,77 @@
-# Signals — ia_life (MAJ 2026-08-25)
+# Signals — ia_life (MAJ 2026-08-26)
 
 ## Actions ouvertes
 
-- [P2|ouvert] Décider si Phase 7 (LLM) démarre maintenant que la Phase 6 est close.
-  fait quand: décision actée et documentée dans roadmap_experimentation.md (statut Phase 7).
-  réf: roadmap_experimentation.md (Phase 7)
+- [P2|ouvert] Décider si un prompt few-shot est nécessaire pour la robustesse multi-modèles du
+  décideur LLM, ou si `gemma3:1b` suffit comme référence stable (`gemma3:4b` s'est effondré sur
+  une réponse fixe "manger"/"E" ce jour, indépendante de l'observation).
+  fait quand: décision actée et documentée dans _docs/decisions/2026-08-26_decideurs-interchangeables-llm.md.
+  réf: scripts/llm_decider.gd, experiments/llm_vs_automate_v1.json
 - [P2|ouvert] Décider si une campagne multi-seeds est nécessaire pour valider statistiquement
   la coopération (fonctionne mais observée seulement en configuration généreuse à ce stade).
   fait quand: campagne lancée et documentée, ou décision explicite de considérer la validation
   fonctionnelle actuelle suffisante.
   réf: experiments/social_cooperation_smoke_v1.json, tools/aggregate_results.py (mean_food_shared)
+- [P3|ouvert] Contrôle visuel manuel de l'affichage `decider_type`/`llm_*` dans l'Inspecteur
+  (non vérifiable en headless).
+  fait quand: test validé et retiré de tests_manuels.md.
+  réf: tests_manuels.md, scripts/ui_manager.gd (_build_variable_field)
 
 ## Contexte chaud
 
-- Phase 6 (roadmap_experimentation.md) close ce jour : communication (partage inconditionnel
-  de position mémorisée), coopération (partage de nourriture si faim critique de l'autre) et
-  agressivité (répulsion imposée) implémentées et validées par smoke tests dédiés — voir
-  `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`. Phase 7 (LLM) débloquée.
+- Phase 7 (LLM) implémentée et validée ce jour : décideur interchangeable (`automate`/`llm`/
+  `llm_mock`) via `scripts/llm_decider.gd`, backend Ollama local, repli automatique sur erreur,
+  campagne comparative exécutée deux fois (voir décision `2026-08-26_decideurs-interchangeables-llm.md`
+  pour l'historique complet : bug HTTPRequest threadé, effondrement gemma3:4b, pivot gemma3:1b).
+- Résultat de référence (5 seeds, `gemma3:1b`) : survie automate 65% / llm_mock 40% / llm 40%,
+  distance et alimentation du LLM dans un ordre de grandeur cohérent — voir
+  `results/llm_vs_automate_v1/report.json` (non tracké git, `results/` dans .gitignore).
 - Écart connu : `scripts/check_kit.py` est absent (contrôle d'intégrité de l'étape 10 de
-  `/close` non exécutable) — reconfirmé le 2026-08-25 (troisième fois).
+  `/close` non exécutable) — reconfirmé le 2026-08-26 (quatrième fois).
 - `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) reste non tracké, origine non
   éclaircie : ne pas committer.
 - `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`, `.rl_godot_pid` : résidus des bridges RL tiers
   abandonnés (GDRL, godot-native-rl) ; non trackés, à nettoyer manuellement si souhaité.
-- `ROBERTO/com_telephone/` reste entièrement non tracké git (node_modules, `.env` avec
-  secrets, voix, logs) — ne pas `git add` ce dossier en bloc. Cette session : système de choix
-  rapide par boutons ajouté (`server.js`, `mobile/index.html`, `mobile/app.js`), règle durable
-  documentée dans `README.md` (utiliser ces boutons pour toute décision quand le bridge est
-  actif) ; correction d'un bug réel — la demande de permission de notification push n'était
-  déclenchée que par le bouton micro, jamais par l'envoi de texte, donc jamais activée pour un
-  usage texte-only. Les 3 process (node/stt/tts) et le Monitor sur `messages.log` restent actifs
-  en fin de session (task_id `be3rcakkm` dans `ROBERTO/com_telephone/_commands/monitor.lock`),
-  à revalider en début de session suivante.
+- `ROBERTO/com_telephone/` reste entièrement non tracké git — ne pas `git add` ce dossier en
+  bloc. Cette session : bridge relancé via `/com_manager start` (port 5000 libéré, Monitor
+  recréé, task_id `b14pc3rlz` dans `monitor.lock`) ; l'appli téléphone a répondu au tout premier
+  message puis est restée injoignable (`POST /send` -> `sent:0`) pour tous les envois suivants
+  de la session malgré les 3 process actifs — à investiguer en début de session suivante si le
+  bridge est réutilisé (piste : reconnexion WebSocket appli non rétablie automatiquement).
+- Ollama tourne en arrière-plan (démarré cette session, `ollama serve` via l'app tray) avec
+  `gemma3:1b` désormais utilisé par la campagne de référence.
 
-## Dernière session (2026-08-25)
+## Dernière session (2026-08-26)
 
-# Session du 2026-08-25
+# Session du 2026-08-26
 
 ## Décisions prises
-- Phase 6 close : communication (partage inconditionnel de position mémorisée), coopération
-  (partage de nourriture si faim critique) et agressivité (répulsion imposée) implémentées.
-- ROBERTO : système de choix rapide par boutons, à utiliser systématiquement pour toute
-  décision quand le bridge téléphone est actif.
+- Phase 7 (décideurs interchangeables) implémentée : décideur LLM via Ollama local, action
+  "manger" routée via `memory_direction` (même précision de visée que l'automate), repli sur
+  l'automate en cas d'erreur/timeout/indisponibilité.
+- Modèle par défaut de la campagne `llm_vs_automate_v1` : `gemma3:1b` (gemma3:4b s'effondrait
+  sur une réponse fixe indépendante du contexte).
 
 ## Livrables produits ou modifiés
-- `scripts/variable_registry.gd`, `scripts/character.gd` : 3 nouvelles mécaniques sociales.
-- `scripts/main.gd`, `tools/aggregate_results.py` : nouvelles métriques exportées/agrégées.
-- `experiments/social_communication_smoke_v1.json`, `social_cooperation_smoke_v1.json`,
-  `social_aggression_smoke_v1.json` : scénarios de validation.
-- ROBERTO (hors git) : boutons de choix rapide, correction de l'abonnement aux notifications
-  push, documenté dans `README.md`.
-- `roadmap_experimentation.md` : Phase 6 marquée [FAIT], Phase 7 débloquée.
-- `_docs/decisions/` : nouvelle entrée (mécaniques sociales avancées).
+- `scripts/llm_decider.gd` (nouveau) : décideur async, schéma JSON contraint, logging
+  prompt/réponse, compteurs appels/erreurs/latence.
+- `scripts/character.gd`, `scripts/main.gd`, `scripts/ui_manager.gd`,
+  `scripts/variable_registry.gd` : décideur interchangeable, support enum/string, correctif UI.
+- `tools/aggregate_results.py` : métriques LLM agrégées (mean_llm_calls, llm_error_rate, mean_llm_latency_ms).
+- `experiments/llm_mock_smoke_v1.json`, `llm_vs_automate_v1.json` (+campagne) : scénarios.
+- `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md` : décision + historique complet.
 
 ## Hypothèses validées / invalidées
-- VALIDE : communication et agressivité se déclenchent de façon fiable et rapide en simulation.
-- VALIDE avec réserve : coopération fonctionne mais nécessite une configuration généreuse
-  (beaucoup de ronciers, rayon large, longue durée) pour être observée — pas de preuve
-  statistique multi-seeds à ce stade.
-- INVALIDE puis corrigée : les notifications push ROBERTO ne s'abonnaient jamais en usage
-  texte -> demande de permission déplacée sur l'envoi de message et le chargement de la page.
+- VALIDE : architecture async robuste, aucun run bloqué (timeout/erreur/indisponibilité gérés).
+- INVALIDE puis corrigée : `HTTPRequest` threadé restait bloqué dans la scène complète
+  (contention `WorkerThreadPool`) -> `use_threads = false`.
+- INVALIDE puis corrigée : `gemma3:4b` répond quasi systématiquement "manger"/"E" quel que
+  soit le contexte -> pivot vers `gemma3:1b` (résultats redevenus cohérents).
+- EN ATTENTE : contrôle visuel manuel de l'Inspecteur (voir actions ouvertes).
 
 ## Prochaine étape exacte
-Décider si Phase 7 (LLM) démarre maintenant, et si une campagne multi-seeds est nécessaire
-pour valider statistiquement la coopération avant de la considérer stable.
+Décider si un prompt few-shot est nécessaire pour la robustesse multi-modèles, ou si
+`gemma3:1b` suffit comme référence stable pour la suite de la Phase 7.
 
 ## Question bloquante pour la session suivante
 Aucune.

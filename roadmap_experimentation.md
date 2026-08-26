@@ -283,7 +283,7 @@ Coopération validée fonctionnellement (`social_cooperation_smoke_v1.json`) mai
 configuration généreuse (beaucoup de ronciers, rayon large, longue durée) — pas de preuve
 statistique multi-seeds à ce stade, à traiter en campagne dédiée si nécessaire.
 
-## Phase 7 — Décideurs interchangeables et LLM [TODO]
+## Phase 7 — Décideurs interchangeables et LLM [FAIT]
 
 ### But
 
@@ -291,21 +291,42 @@ Comparer équitablement automate, comportement paramétrable et LLM dans le mêm
 
 ### Actions
 
-- [ ] Stabiliser l'interface de décision : observation structurée en entrée, action
-  validée en sortie, budget de temps et gestion des erreurs.
-- [ ] Implémenter l'adaptateur de l'automate existant comme référence de comparaison.
-- [ ] Définir un adaptateur LLM sans accès direct à l'état interne du jeu, avec une action
-  limitée au même espace d'actions que la référence.
-- [ ] Logger prompt/réponse de manière traçable et sûre, avec identifiant de modèle,
-  paramètres et latence ; exclure secrets et données sensibles des logs.
-- [ ] Prévoir timeout, réponse invalide, indisponibilité réseau et mode simulation locale.
-- [ ] Exécuter des campagnes comparatives LLM / règles / profils paramétrables.
+- [x] Stabiliser l'interface de décision : observation structurée en entrée, action
+  validée en sortie, budget de temps et gestion des erreurs. Fait le 2026-08-26 :
+  validation défensive de l'action retournée dans `character.gd::_apply_decision`
+  (garde-fou indépendant du décideur), timeout configurable par agent.
+- [x] Implémenter l'adaptateur de l'automate existant comme référence de comparaison.
+  `BaselineDecider` inchangé, utilisé tel quel comme référence.
+- [x] Définir un adaptateur LLM sans accès direct à l'état interne du jeu, avec une action
+  limitée au même espace d'actions que la référence. Fait le 2026-08-26 :
+  `scripts/llm_decider.gd` (`decider_type` : `automate`/`llm`/`llm_mock`) ; l'intention
+  "manger" route via `memory_direction` (même précision de visée que l'automate) — limitation
+  documentée pour "suivre"/"eviter" (direction cardinale grossière, non testée en pratique
+  car `social_radius` désactivé dans la campagne de référence).
+- [x] Logger prompt/réponse de manière traçable et sûre, avec identifiant de modèle,
+  paramètres et latence ; exclure secrets et données sensibles des logs. Fait le 2026-08-26 :
+  `llm_decision`/`llm_decider_erreur` incluent prompt exact et réponse brute (Ollama local,
+  aucun secret transmis).
+- [x] Prévoir timeout, réponse invalide, indisponibilité réseau et mode simulation locale.
+  Fait le 2026-08-26 : repli automatique sur `BaselineDecider` dans tous les cas, mode
+  `llm_mock` déterministe sans appel réseau pour les tests.
+- [x] Exécuter des campagnes comparatives LLM / règles / profils paramétrables. Fait le
+  2026-08-26 : `experiments/campaigns/llm_vs_automate_v1.json` (3 déciders × 5 seeds),
+  résultats dans `results/llm_vs_automate_v1/` (non tracké git).
 
 ### Critères d'acceptation
 
 - Les trois décideurs sont comparés avec une même configuration et les mêmes seeds.
 - Chaque action LLM est validée, rejouable dans les limites documentées et mesurée.
 - Aucun appel externe ne peut bloquer ou corrompre une campagne.
+
+Backend retenu : Ollama local. `gemma3:4b` (modèle initialement choisi) s'est révélé
+inutilisable pour ce prompt (réponse quasi fixe "manger"/"E" indépendante du contexte,
+0 roncier jamais découvert sur 5 seeds) — pivot vers `gemma3:1b`, qui produit des décisions
+variées et cohérentes (survie 40%, proche du mock, contre 65% pour l'automate). Détail complet
+(bug HTTPRequest threadé bloqué dans la scène complète, effondrement du modèle, correctifs) :
+`_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`. Point ouvert : décider si un
+prompt few-shot est nécessaire pour la robustesse multi-modèles avant d'élargir la campagne.
 
 ## Qualité transverse et jalons de décision
 
@@ -320,7 +341,8 @@ Comparer équitablement automate, comportement paramétrable et LLM dans le mêm
 
 ## Prochain sprint recommandé
 
-Phases 1 à 6 closes. Phase 7 (LLM) débloquée, non démarrée : à cadrer (interface de décision,
-adaptateur automate de référence, adaptateur LLM) quand la priorité s'y porte. Point ouvert :
-décider si une campagne multi-seeds est nécessaire pour valider statistiquement la coopération
-avant de la considérer stable au même titre que suivi/évitement.
+Phases 1 à 7 closes. Deux points ouverts, sans priorité imposée entre eux :
+- Décider si un prompt few-shot est nécessaire pour la robustesse multi-modèles du décideur
+  LLM, ou si `gemma3:1b` suffit comme référence stable pour élargir les campagnes Phase 7.
+- Décider si une campagne multi-seeds est nécessaire pour valider statistiquement la coopération
+  avant de la considérer stable au même titre que suivi/évitement.
