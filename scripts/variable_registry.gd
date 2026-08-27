@@ -27,6 +27,9 @@ const CHARACTER: Dictionary = {
 	"goal_persistence": {"label": "Persistance d'objectif", "description": "0,5 est neutre ; une valeur élevée prolonge localement l'errance dans la direction actuelle avant une réorientation.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.5, "dynamic": false, "live_editable": false},
 	"known_zone_preference": {"label": "Préférence zones connues", "description": "Attire l'errance vers le centre de la zone déjà visitée la plus proche. 0 n'applique aucun biais ; 1 applique le biais maximal.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"curiosity": {"label": "Curiosité", "description": "Favorise localement, lors d'une réorientation, une direction candidate menant vers une zone encore inconnue.", "scope": "individuelle", "category": "comportement", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
+	"vision_range": {"label": "Portée de vision", "description": "Distance à laquelle un agent perçoit une entité perceptible (ronciers, futurs types d'entités). 0 désactive la vision.", "scope": "individuelle", "category": "perception", "type": "float", "min": 0.0, "max": 250.0, "default": 0.0, "dynamic": false, "live_editable": false},
+	"vision_angle_degrees": {"label": "Angle de vision", "description": "Champ de vision angulaire, relatif à l'orientation visuelle de l'agent. 360 = omnidirectionnel.", "scope": "individuelle", "category": "perception", "type": "float", "min": 0.0, "max": 360.0, "default": 360.0, "dynamic": false, "live_editable": false},
+	"vision_blocked_by_terrain": {"label": "Vision bloquée par le terrain", "description": "Si activé, une entité masquée par le terrain ou un obstacle n'est pas perçue même dans la portée et l'angle de vision.", "scope": "individuelle", "category": "perception", "type": "bool", "default": false, "dynamic": false, "live_editable": false},
 	"social_radius": {"label": "Rayon social", "description": "Distance à laquelle un agent perçoit un autre agent.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 250.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"follow_probability": {"label": "Probabilité de suivi", "description": "Probabilité qu'un agent suive un autre agent perçu dans son rayon social.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
 	"avoid_probability": {"label": "Probabilité d'évitement", "description": "Probabilité qu'un agent évite un autre agent perçu dans son rayon social.", "scope": "individuelle", "category": "social", "type": "float", "min": 0.0, "max": 1.0, "default": 0.0, "dynamic": false, "live_editable": false},
@@ -44,6 +47,8 @@ static func default_value(definition: Dictionary):
 		return int(definition["default"])
 	if definition["type"] == "enum" or definition["type"] == "string":
 		return String(definition["default"])
+	if definition["type"] == "bool":
+		return bool(definition["default"])
 	return float(definition["default"])
 
 static func validate_values(values: Dictionary, definitions: Dictionary, scope: String) -> PackedStringArray:
@@ -64,6 +69,10 @@ static func validate_values(values: Dictionary, definitions: Dictionary, scope: 
 		if expected_type == "string":
 			if typeof(value) != TYPE_STRING:
 				errors.append("%s.%s : type string attendu" % [scope, key])
+			continue
+		if expected_type == "bool":
+			if typeof(value) != TYPE_BOOL:
+				errors.append("%s.%s : type bool attendu" % [scope, key])
 			continue
 		var is_number := typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT
 		var valid_type := (expected_type == "int" and is_number and is_equal_approx(float(value), roundf(float(value)))) or (expected_type == "float" and is_number)

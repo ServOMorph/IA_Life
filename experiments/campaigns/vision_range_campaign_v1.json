@@ -1,0 +1,11 @@
+{
+  "campaign_id": "vision-range-campaign-v1",
+  "base_config": "../vision_range_profiles_v1.json",
+  "parameter_grid": {
+    "agents.defaults.vision_range": [0.0, 15.0, 50.0]
+  },
+  "seeds": [1, 2, 3],
+  "repetitions": 1,
+  "python_timeout_seconds": 180,
+  "output_dir": "../../results/vision_range_campaign_v1"
+}

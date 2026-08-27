@@ -1,3 +1,22 @@
+## v0.20 — 2026-08-27
+
+### Ajouté
+- Phase 8 (vision et perception générique) : contrat de perceptibilité générique, fonction de
+  vision (portée, angle, occlusion), 3 nouvelles variables au registre (`vision_range`,
+  `vision_angle_degrees`, `vision_blocked_by_terrain`), mémorisation et priorité "visible >
+  mémorisé" sur l'automate et le LLM. `social_radius` absorbé comme cas particulier de la
+  vision (code partagé `Character._perceive`), équivalence stricte démontrée sur les 3
+  scénarios sociaux Phase 6.
+- Métriques de perception (`vision_detections_total`, `ronces_discovered_by_vision_total`,
+  délai vision→contact) dans le résumé de run et `tools/aggregate_results.py`.
+- 6 tests unitaires vision dans `tools/run_manual_checks.gd` ; 4 scénarios comparatifs
+  portée/angle/occlusion et une campagne multi-seeds `vision_range` dans `experiments/`.
+
+### Corrigé
+- Bug de mémorisation par vision : déclenchée à chaque frame, elle bouclait indéfiniment
+  quand plus d'entités étaient visibles simultanément que `memory_capacity`. Corrigée
+  (déclenchement une fois par apparition, pas par frame).
+
 ## v0.19 — 2026-08-26
 
 ### Ajouté

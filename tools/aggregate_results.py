@@ -59,6 +59,12 @@ DECIDER_AGENT_FIELDS = {
     "llm_errors_total": int,
     "llm_total_latency_ms": (int, float),
 }
+VISION_AGENT_FIELDS = {
+    "vision_detections_total": int,
+    "ronces_discovered_by_vision_total": int,
+    "vision_to_contact_delay_seconds_total": (int, float),
+    "vision_to_contact_events_total": int,
+}
 
 
 def summaries_in(source: Path) -> list[Path]:
@@ -146,6 +152,7 @@ def flatten_rows(summaries: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 **{key: agent[key] for key in AGENT_FIELDS if key not in {"name", "alive", "parameters"}},
                 **{key: agent.get(key, 0) for key in SOCIAL_AGENT_FIELDS},
                 **{key: agent.get(key, 0) for key in DECIDER_AGENT_FIELDS},
+                **{key: agent.get(key, 0) for key in VISION_AGENT_FIELDS},
             })
     return rows
 
@@ -176,6 +183,10 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
         llm_errors = [float(row["llm_errors_total"]) for row in group]
         llm_total_latency = [float(row["llm_total_latency_ms"]) for row in group]
         llm_calls_sum = sum(llm_calls)
+        vision_detections = [float(row["vision_detections_total"]) for row in group]
+        ronces_discovered_by_vision = [float(row["ronces_discovered_by_vision_total"]) for row in group]
+        vision_to_contact_delay_sum = sum(float(row["vision_to_contact_delay_seconds_total"]) for row in group)
+        vision_to_contact_events_sum = sum(float(row["vision_to_contact_events_total"]) for row in group)
         experiments[comparison_group] = {
             "campaign_id": group[0]["campaign_id"],
             "campaign_parameters": json.loads(group[0]["campaign_parameters"]),
@@ -197,6 +208,9 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "mean_llm_calls": mean(llm_calls),
             "llm_error_rate": (sum(llm_errors) / llm_calls_sum) if llm_calls_sum > 0 else 0.0,
             "mean_llm_latency_ms": (sum(llm_total_latency) / llm_calls_sum) if llm_calls_sum > 0 else 0.0,
+            "mean_vision_detections": mean(vision_detections),
+            "mean_ronces_discovered_by_vision": mean(ronces_discovered_by_vision),
+            "mean_vision_to_contact_delay_seconds": (vision_to_contact_delay_sum / vision_to_contact_events_sum) if vision_to_contact_events_sum > 0 else 0.0,
             "distance_standard_deviation": statistics.pstdev(distances) if len(distances) > 1 else 0.0,
         }
     return {"schema_version": 1, "experiments": experiments}

@@ -123,3 +123,34 @@ Lancer Godot en mode RL au premier plan, identifier pourquoi `RLBridge.start()` 
 
 ## Question bloquante pour la session suivante
 Aucune
+
+---
+
+# Session du 2026-08-26
+
+## Décisions prises
+- Défaut `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`), aligné sur la décision
+  Phase 7 déjà actée mais jamais reportée dans `variable_registry.gd`.
+- Phase 8 (Vision et perception générique de l'environnement) ajoutée à la roadmap en [TODO],
+  avec recommandation de la traiter avant d'élargir les campagnes LLM.
+
+## Livrables produits ou modifiés
+- `scripts/variable_registry.gd` : défaut `llm_model` corrigé (ligne 37).
+- `tests_manuels.md` : vidé intégralement (tous les tests en attente validés).
+- `roadmap_experimentation.md` : Phase 8 ajoutée, section "Prochain sprint recommandé" mise à
+  jour.
+- `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md` : commentaire ajouté sur le
+  correctif du défaut `llm_model`.
+
+## Hypothèses validées / invalidées
+- VALIDE : affichage `decider_type`/`llm_*` dans l'Inspecteur conforme à l'attendu (test manuel
+  Phase 7).
+- INVALIDE : hypothèse que le défaut `llm_model` du registre était déjà aligné sur `gemma3:1b`
+  -> resté sur `gemma3:4b`, corrigé.
+
+## Prochaine étape exacte
+Décider de l'ordre entre la Phase 8 (vision) et les points ouverts Phase 7 (few-shot, campagne
+coopération multi-seeds) ; démarrer la Phase 8 si priorité confirmée.
+
+## Question bloquante pour la session suivante
+Aucune.

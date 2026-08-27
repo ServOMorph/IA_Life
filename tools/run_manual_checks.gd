@@ -29,8 +29,12 @@ func _run() -> void:
 	_test_experiment_config_defaults()
 	_test_experiment_config_overrides()
 	_test_experiment_config_validation()
+	_test_vision_range_and_angle()
+	_test_vision_memorization()
+	_test_vision_memory_capacity_no_churn()
+	_test_vision_priority_over_memory()
 	if _failures.is_empty():
-		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, et ExperimentConfig validés automatiquement.")
+		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig et vision (Phase 8) validés automatiquement.")
 		get_tree().quit(0)
 	else:
 		for failure in _failures:
@@ -46,6 +50,103 @@ func _make_character() -> CharacterBody3D:
 	character.set_script(load("res://scripts/character.gd"))
 	get_tree().root.add_child(character)
 	return character
+
+func _make_ronce(local_position: Vector3) -> Area3D:
+	var ronce := Area3D.new()
+	ronce.set_script(load("res://scripts/ronce.gd"))
+	ronce.berries = 1
+	ronce.position = local_position
+	get_tree().root.add_child(ronce)
+	ronce.add_to_group("perceptible")
+	return ronce
+
+func _test_vision_range_and_angle() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 90.0
+	character.vision_blocked_by_terrain = false
+
+	var in_front := _make_ronce(Vector3(0.0, 0.0, -5.0))
+	var behind_out_of_angle := _make_ronce(Vector3(0.0, 0.0, 5.0))
+	var in_front_out_of_range := _make_ronce(Vector3(0.0, 0.0, -50.0))
+
+	character._update_vision_perception()
+
+	_expect(character._visible_entities.size() == 1, "Phase 8 vision : le nombre d'entités perçues est incorrect (angle/portée).")
+	var seen_nodes: Array = []
+	for entry in character._visible_entities:
+		seen_nodes.append(entry["node"])
+	_expect(seen_nodes.has(in_front), "Phase 8 vision : une entité dans le champ et la portée n'est pas perçue.")
+	_expect(not seen_nodes.has(behind_out_of_angle), "Phase 8 vision : une entité hors du champ de vision est perçue à tort.")
+	_expect(not seen_nodes.has(in_front_out_of_range), "Phase 8 vision : une entité hors de portée est perçue à tort.")
+
+	character.free()
+	in_front.free()
+	behind_out_of_angle.free()
+	in_front_out_of_range.free()
+
+func _test_vision_memorization() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 360.0
+	character.memory_capacity = 5
+
+	var ronce := _make_ronce(Vector3(0.0, 0.0, -5.0))
+	character._update_vision_perception()
+
+	_expect(character.memorized_ronces_count() == 1, "Phase 8 vision : un roncier vu à distance n'est pas mémorisé.")
+	_expect(character.ronces_discovered_by_vision_total == 1, "Phase 8 vision : le compteur de découvertes par vision est incorrect.")
+	_expect(character.vision_detections_total == 1, "Phase 8 vision : le compteur de détections est incorrect.")
+
+	character._update_vision_perception()
+	_expect(character.ronces_discovered_by_vision_total == 1, "Phase 8 vision : une entité déjà mémorisée est comptée deux fois.")
+
+	character.free()
+	ronce.free()
+
+func _test_vision_memory_capacity_no_churn() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 360.0
+	character.memory_capacity = 2
+
+	var ronces: Array = []
+	for i in 5:
+		ronces.append(_make_ronce(Vector3(float(i) - 2.0, 0.0, -5.0)))
+
+	for i in 10:
+		character._update_vision_perception()
+
+	_expect(character.ronces_discovered_by_vision_total == 5, "Phase 8 vision : la mémorisation par vision boucle sans fin quand plus d'entités sont visibles que memory_capacity.")
+	_expect(character.memorized_ronces_count() == 2, "Phase 8 vision : la capacité de mémoire n'est pas respectée avec plusieurs ronciers visibles.")
+
+	character.free()
+	for r in ronces:
+		r.free()
+
+func _test_vision_priority_over_memory() -> void:
+	var visible_direction := Vector3(1.0, 0.0, 0.0)
+	var memory_direction := Vector3(0.0, 0.0, 1.0)
+	var observation := {
+		"manual_control": false,
+		"manual_direction": Vector3.ZERO,
+		"hunger": 95.0,
+		"pickup_hunger_threshold": 90.0,
+		"has_memories": true,
+		"memory_direction": memory_direction,
+		"has_visible_ronce": true,
+		"visible_ronce_direction": visible_direction,
+		"social_goal": "",
+		"social_direction": Vector3.ZERO,
+		"current_direction": Vector3.ZERO,
+		"wander_timer": 1.0,
+		"delta": 0.1,
+	}
+	var action: Dictionary = BaselineDecider.new().decide(observation)
+	_expect(action["direction"].is_equal_approx(visible_direction), "Phase 8 vision : l'automate ne priorise pas le roncier visible sur le roncier mémorisé.")
 
 func _test_game_data_settings() -> void:
 	var saved := {

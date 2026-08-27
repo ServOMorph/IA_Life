@@ -1,0 +1,25 @@
+{
+  "format_version": 1,
+  "experiment_id": "vision-baseline-smoke-v1",
+  "seed": 42,
+  "environment": {
+    "game_config": {
+      "ronce_count": 12,
+      "berries_per_ronce": 3
+    }
+  },
+  "agents": {
+    "defaults": {
+      "vision_range": 250.0,
+      "vision_angle_degrees": 360.0,
+      "vision_blocked_by_terrain": false,
+      "memory_capacity": 20,
+      "exploration_tendency": 0.6
+    }
+  },
+  "simulation": {
+    "game_speed": 8.0,
+    "max_simulation_seconds": 40.0,
+    "quit_on_all_dead": false
+  }
+}

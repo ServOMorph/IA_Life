@@ -53,10 +53,10 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM local via Oll
 Le prototype est un laboratoire reproductible : configurations versionnées et hashées,
 logs JSONL, résumés par run, agrégation et campagnes headless. Les expériences utilisent
 une durée simulée déterministe et distinguent configuration fixe et état initial dynamique.
-Les Phases 1 à 7 du laboratoire sont closes : trois campagnes de référence (mémoire, rareté
+Les Phases 1 à 8 du laboratoire sont closes : trois campagnes de référence (mémoire, rareté
 des ressources, profils contrastés), un Inspecteur générique piloté par le registre, des
-interactions sociales avancées (communication, coopération, agressivité), et un décideur
-interchangeable automate/LLM (Ollama local, repli automatique sur erreur), validé par une
-campagne comparative (`experiments/campaigns/llm_vs_automate_v1.json`). Phase 8 (vision et
-perception générique des ronciers, agents et objets) ajoutée à la roadmap en [TODO], pas
-encore démarrée.
+interactions sociales avancées (communication, coopération, agressivité), un décideur
+interchangeable automate/LLM (Ollama local, repli automatique sur erreur), et une vision
+générique (portée, angle, occlusion) qui remplace la découverte par contact seul et absorbe
+la perception sociale par code partagé (`Character._perceive`). Aucune Phase 9 définie pour
+l'instant.

@@ -1,18 +1,7 @@
-# Signals — ia_life (MAJ 2026-08-26)
+# Signals — ia_life (MAJ 2026-08-27)
 
 ## Actions ouvertes
 
-- [P2|ouvert] Décider si un prompt few-shot est nécessaire pour la robustesse multi-modèles du
-  décideur LLM, ou si `gemma3:1b` suffit comme référence stable (`gemma3:4b` s'est effondré sur
-  une réponse fixe "manger"/"E" ce jour, indépendante de l'observation). Point à trancher en même
-  temps que l'extension du prompt LLM prévue en Phase 8 (même code touché).
-  fait quand: décision actée et documentée dans _docs/decisions/2026-08-26_decideurs-interchangeables-llm.md.
-  réf: scripts/llm_decider.gd, experiments/llm_vs_automate_v1.json, roadmap_experimentation.md (Phase 8)
-- [P2|ouvert] Décider si une campagne multi-seeds est nécessaire pour valider statistiquement
-  la coopération (fonctionne mais observée seulement en configuration généreuse à ce stade).
-  fait quand: campagne lancée et documentée, ou décision explicite de considérer la validation
-  fonctionnelle actuelle suffisante.
-  réf: experiments/social_cooperation_smoke_v1.json, tools/aggregate_results.py (mean_food_shared)
 - [P2|ouvert] Décider si le reste de `ROBERTO/com_telephone` (jamais commité avant le 2026-08-26,
   hors les 3 fichiers modifiés ce jour-là) doit être ajouté au dépôt git en bloc ou zone par zone.
   fait quand: décision actée (ajout complet, ajout partiel motivé, ou exclusion définitive
@@ -25,87 +14,77 @@
   notifications dupliquées).
   réf: ROBERTO/com_telephone/voice-code-bridge/server/server.js (sendPushNotification, route
   /push/subscribe), push_subs.json
-- [P3|ouvert] Démarrer ou reporter explicitement la Phase 8 (vision et perception générique),
-  ajoutée en [TODO] à la roadmap ; trois choix de conception à trancher avant l'implémentation
-  (mémorisation par vision ou non, priorité visible/mémorisé, direction de référence du champ
-  de vision).
-  fait quand: Phase 8 passée [EN COURS] avec les choix tranchés, ou décision explicite de la
-  reporter après les points ouverts Phase 7.
-  réf: roadmap_experimentation.md (Phase 8)
+- [P2|ouvert] Décider de la Phase 9 (aucune définie à ce stade) ou d'un autre axe de travail.
+  fait quand: nouvelle phase ajoutée à roadmap_experimentation.md et démarrée, ou décision
+  explicite de ne pas en ajouter pour l'instant.
+  réf: roadmap_experimentation.md (section "Prochain sprint recommandé")
 
 ## Contexte chaud
 
-- Phase 7 (LLM) implémentée et validée le 2026-08-26 : décideur interchangeable (`automate`/
-  `llm`/`llm_mock`) via `scripts/llm_decider.gd`, backend Ollama local, repli automatique sur
-  erreur, campagne comparative exécutée deux fois (voir décision
-  `2026-08-26_decideurs-interchangeables-llm.md` pour l'historique complet).
-- Résultat de référence (5 seeds, `gemma3:1b`) : survie automate 65% / llm_mock 40% / llm 40%,
-  distance et alimentation du LLM dans un ordre de grandeur cohérent — voir
-  `results/llm_vs_automate_v1/report.json` (non tracké git, `results/` dans .gitignore).
-- Défaut `llm_model` du registre corrigé (`scripts/variable_registry.gd`) : `gemma3:4b` ->
-  `gemma3:1b`, trouvé désaligné avec la décision Phase 7 lors du contrôle manuel de l'Inspecteur.
-- Roadmap : Phase 8 (Vision et perception générique de l'environnement) ajoutée en [TODO]. La
-  vision remplace la découverte de ressources par contact seul, généralise à n'importe quelle
-  entité perceptible, et absorbe `social_radius` sous condition d'équivalence démontrée sur les
-  scénarios sociaux Phase 6. Recommandation : la traiter avant d'élargir les campagnes LLM (elle
-  change l'observation transmise au décideur).
-- `tests_manuels.md` vidé intégralement le 2026-08-26 : tous les tests en attente validés
-  (Inspecteur Phase 7, reconnexion WebSocket ROBERTO, re-abonnement push VAPID).
-- Bridge ROBERTO (`com_telephone`) opérationnel de bout en bout, validé en conditions réelles
-  (iPhone verrouillé) : reconnexion WebSocket, notification push de secours confirmées. Cause du
-  bug "injoignable" constaté le 2026-08-25 : la constante `VAPID_PUBLIC_KEY` codée en dur dans
-  `app.js` ne correspondait pas à `VAPID_PUBLIC` de `.env` côté serveur (pas un problème de
-  cache navigateur comme supposé initialement) — toute souscription échouait donc
-  systématiquement (`VapidPkHashMismatch`).
-- Convention `!<commande>` (commande à distance depuis le téléphone, git compris) et règle des
-  deux canaux désormais inlinées dans `.claude/CLAUDE.md` (section "Bridge ROBERTO") en plus du
-  README.
-- Le classificateur de sécurité du mode auto de Claude Code bloque systématiquement l'édition de
-  `.claude/CLAUDE.md`, même après confirmation terminal explicite répétée ; une confirmation
-  reçue uniquement via le téléphone (bridge) n'a jamais suffi. Contournement utilisé le
-  2026-08-26 : demander à l'utilisateur de coller lui-même le texte fourni.
-- `ROBERTO/com_telephone/` : seuls les 3 fichiers modifiés le 2026-08-26 (server.js, app.js,
-  README.md) ont été committés — le reste de l'arborescence (jamais tracké avant ce jour) reste
-  volontairement non ajouté (voir action ouverte).
-- Écart connu : `scripts/check_kit.py` est absent (contrôle d'intégrité de l'étape 10 de
-  `/close` non exécutable) — reconfirmé le 2026-08-26 (sixième fois).
-- `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) reste non tracké, origine non
-  éclaircie : ne pas committer.
+- Phase 8 (vision et perception générique) close le 2026-08-27 : primitive de perception
+  générique (`get_perception_type`/`get_perception_state`, groupe `perceptible`), vision
+  (portée/angle/occlusion via `Character._perceive`), 3 choix de conception tranchés
+  (orientation visuelle, priorité visible > mémorisé, mémorisation par vision). `social_radius`
+  absorbé comme cas particulier de la vision (code partagé, `_update_social_perception` réutilise
+  `_perceive`) — équivalence stricte démontrée à seed fixe sur les 3 scénarios Phase 6. Détail :
+  `_docs/decisions/2026-08-27_phase8-vision-perception.md`.
+- Bug trouvé et corrigé pendant la validation Phase 8 : la mémorisation par vision se déclenchait
+  à chaque frame pour chaque entité visible, ce qui faisait boucler indéfiniment l'éviction quand
+  plus d'entités étaient visibles simultanément que `memory_capacity`
+  (`ronces_discovered_by_vision_total` explosait, dizaines de milliers d'incréments sur une
+  campagne courte). Corrigé (mémorisation une fois par apparition, pas par frame) ; test de
+  non-régression dédié dans `tools/run_manual_checks.gd`.
+- Points ouverts hérités de la Phase 7 clos le 2026-08-27 : prompt few-shot du décideur LLM jugé
+  non nécessaire (`gemma3:1b` reste stable et conforme avec le prompt étendu par la Phase 8,
+  testé contre Ollama réel) ; coopération sociale validée statistiquement (campagne 5 seeds,
+  partage de nourriture observé sur 5/5, jamais nul). Décisions dans
+  `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md` et
+  `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`.
+- Écart connu : `scripts/check_kit.py` toujours absent (étape 10 de `/close` non exécutable) —
+  reconfirmé le 2026-08-27 (septième fois).
 - `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`, `.rl_godot_pid` : résidus des bridges RL tiers
   abandonnés (GDRL, godot-native-rl) ; non trackés, à nettoyer manuellement si souhaité.
-- Ollama tourne en arrière-plan (`ollama serve` via l'app tray) avec `gemma3:1b` utilisé par la
-  campagne de référence LLM.
+- `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) reste non tracké, origine non
+  éclaircie : ne pas committer.
+- Ollama tourne en arrière-plan (`gemma3:1b` référence stable pour le décideur LLM, y compris
+  avec le prompt étendu par la Phase 8).
 - Quand un message "salut"/salutation arrive depuis `messages.log` (téléphone), répondre avec
   une phrase piochée dans `ROBERTO/com_telephone/voice-code-bridge/server/salutations.json`
-  plutôt qu'une formule générique — préférence explicite de l'utilisateur, actée le 2026-08-26.
+  plutôt qu'une formule générique — préférence explicite de l'utilisateur.
+- Convention `!<commande>` (commande à distance depuis le téléphone, git compris) et règle des
+  deux canaux : inlinées dans `.claude/CLAUDE.md` (section "Bridge ROBERTO") et
+  `ROBERTO/com_telephone/README.md`.
 
-## Dernière session (2026-08-26)
+## Dernière session (2026-08-27)
 
-# Session du 2026-08-26
+# Session du 2026-08-27
 
 ## Décisions prises
-- Défaut `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`), aligné sur la décision
-  Phase 7 déjà actée mais jamais reportée dans `variable_registry.gd`.
-- Phase 8 (Vision et perception générique de l'environnement) ajoutée à la roadmap en [TODO],
-  avec recommandation de la traiter avant d'élargir les campagnes LLM.
+- Phase 8 (vision) complétée : direction de référence = orientation visuelle, priorité roncier
+  visible > mémorisé, mémorisation par vision. `social_radius` absorbé comme cas particulier de
+  la vision (code partagé), équivalence stricte démontrée sur les 3 scénarios Phase 6.
+- Prompt few-shot LLM jugé non nécessaire (`gemma3:1b` stable avec le prompt étendu).
+- Coopération validée statistiquement (5 seeds, partage de nourriture jamais nul).
 
 ## Livrables produits ou modifiés
-- `scripts/variable_registry.gd` : défaut `llm_model` corrigé (ligne 37).
-- `tests_manuels.md` : vidé intégralement (tous les tests en attente validés).
-- `roadmap_experimentation.md` : Phase 8 ajoutée, section "Prochain sprint recommandé" mise à
-  jour.
-- `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md` : commentaire ajouté sur le
-  correctif du défaut `llm_model`.
+- `scripts/character.gd`, `ronce.gd`, `baseline_decider.gd`, `llm_decider.gd`, `main.gd`,
+  `variable_registry.gd`, `ui_manager.gd` : Phase 8.
+- `tools/aggregate_results.py`, `tools/run_manual_checks.gd` (6 nouveaux tests vision).
+- `experiments/vision_*.json` (4 scénarios), `campaigns/vision_range_campaign_v1.json`,
+  `campaigns/social_cooperation_multiseed_v1.json` : créés.
+- `_docs/decisions/2026-08-27_phase8-vision-perception.md` : créé ; deux décisions Phase 6/7
+  complétées d'un commentaire de clôture.
 
 ## Hypothèses validées / invalidées
-- VALIDE : affichage `decider_type`/`llm_*` dans l'Inspecteur conforme à l'attendu (test manuel
-  Phase 7).
-- INVALIDE : hypothèse que le défaut `llm_model` du registre était déjà aligné sur `gemma3:1b`
-  -> resté sur `gemma3:4b`, corrigé.
+- VALIDE : coopération reproductible sur 5/5 seeds ; `gemma3:1b` stable avec le prompt étendu.
+- INVALIDE : mémorisation par vision à chaque frame -> boucle infinie si plus d'entités visibles
+  que `memory_capacity` -> corrigée (une fois par apparition), test de non-régression ajouté.
+- INVALIDE (mineure) : distance horizontale pour l'absorption sociale -> corrigée (distance 3D
+  préservée pour le social via un paramètre `flatten_vertical` sur `_perceive`).
 
 ## Prochaine étape exacte
-Décider de l'ordre entre la Phase 8 (vision) et les points ouverts Phase 7 (few-shot, campagne
-coopération multi-seeds) ; démarrer la Phase 8 si priorité confirmée.
+Décider de la Phase 9 (aucune définie) ou d'un autre axe ; sinon traiter les points restants hors
+code (inclusion git de `ROBERTO/com_telephone`, dédoublonnage `push_subs.json`).
 
 ## Question bloquante pour la session suivante
 Aucune.

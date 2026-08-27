@@ -1,0 +1,20 @@
+{
+  "format_version": 1,
+  "experiment_id": "vision-range-campaign-v1",
+  "seed": 1,
+  "environment": {
+    "game_config": {"ronce_count": 40, "berries_per_ronce": 3}
+  },
+  "agents": {
+    "defaults": {
+      "exploration_tendency": 0.5,
+      "vision_angle_degrees": 360.0,
+      "vision_range": 0.0
+    }
+  },
+  "simulation": {
+    "game_speed": 4.0,
+    "max_simulation_seconds": 150.0,
+    "quit_on_all_dead": false
+  }
+}

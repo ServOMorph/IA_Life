@@ -148,3 +148,18 @@ défaut `llm_model` du registre (`scripts/variable_registry.gd`) était resté c
 `experiments/llm_vs_automate_v1.json` avait été alignée sur `gemma3:1b`. Tout agent
 `decider_type=llm` sans override explicite aurait donc utilisé le modèle écarté par défaut.
 Corrigé (défaut passé à `gemma3:1b`).
+
+2026-08-27 (Phase 8) : décision prise sur le point ouvert « prompt few-shot nécessaire ? ».
+`_build_prompt` étendu avec le champ vision (« Voit un roncier avec des mûres à proximité »,
+action Phase 8), puis testé avec `gemma3:1b` réel (Ollama, `decider_type=llm`,
+`experiments` de test ad hoc, vision activée). Comportement observé sur ~15 décisions
+réussies après montée en charge du modèle : JSON strictement conforme au schéma à chaque
+appel, intention `manger` choisie de façon cohérente dès que faim + roncier disponible
+(mémorisé ou visible), alternance avec `explorer` sinon — aucun signe d'effondrement sur une
+réponse fixe comme observé avec `gemma3:4b`. Seuls les tout premiers appels (chargement à
+froid du modèle, ~2-3 par agent) timeout à 8 s, comportement déjà documenté ci-dessus comme
+attendu, indépendant du prompt. **Décision : prompt few-shot jugé non nécessaire pour
+l'instant** — `gemma3:1b` continue de produire des réponses variées et conformes avec le
+prompt étendu, sans dégradation constatée. À réévaluer seulement si une future extension du
+prompt (nouveau champ, nouveau modèle) fait apparaître une dégradation similaire à celle de
+`gemma3:4b`.

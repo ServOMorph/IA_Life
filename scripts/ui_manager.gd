@@ -572,7 +572,7 @@ func _build_variable_field(definition: Dictionary, value, on_change: Callable) -
 	var dynamic: bool = definition.get("dynamic", false)
 	var live_editable: bool = definition.get("live_editable", false)
 	var decimals := 0 if definition["type"] == "int" else 2
-	var is_text_type: bool = definition["type"] == "enum" or definition["type"] == "string"
+	var is_text_type: bool = definition["type"] == "enum" or definition["type"] == "string" or definition["type"] == "bool"
 	var value_label := Label.new()
 	value_label.custom_minimum_size = Vector2(50, 0)
 	value_label.text = String(value) if is_text_type else ("%.*f" % [decimals, float(value)])

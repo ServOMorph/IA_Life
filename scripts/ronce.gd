@@ -1,6 +1,7 @@
 extends Area3D
 
 var berries: int = 3
+var solid_body: StaticBody3D = null
 
 var _berry_meshes: Array = []
 
@@ -35,3 +36,12 @@ func harvest_one() -> bool:
 		var removed: MeshInstance3D = _berry_meshes.pop_back()
 		removed.queue_free()
 	return true
+
+func get_perception_type() -> String:
+	return "roncier"
+
+func get_perception_state() -> Dictionary:
+	return {"has_berries": berries > 0}
+
+func get_occlusion_exclude_rids() -> Array:
+	return [solid_body.get_rid()] if solid_body != null else []

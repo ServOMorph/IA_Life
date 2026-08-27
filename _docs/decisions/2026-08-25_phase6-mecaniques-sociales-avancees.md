@@ -29,5 +29,11 @@ simulation court (`experiments/social_communication_smoke_v1.json`,
 mais ne s'est observée que dans une configuration généreuse (100 ronciers, rayon social 90,
 400 s simulées) : le déclenchement dépend d'une coïncidence spatio-temporelle (un agent en
 surplus de nourriture croisant un agent en faim critique) plus rare que pour les deux autres
-mécaniques. Aucune campagne multi-seeds n'a été menée à ce stade pour en démontrer l'effet de
-façon statistique, contrairement à suivi/évitement (Phase 6, action sociale précédente).
+mécaniques.
+
+2026-08-27 : campagne multi-seeds exécutée (`experiments/campaigns/social_cooperation_multiseed_v1.json`,
+5 seeds, configuration identique à `social_cooperation_smoke_v1.json`). Partage de nourriture
+observé sur les 5/5 seeds (total par seed : 2, 5, 5, 3, 6 — jamais nul), `mean_food_shared`
+1.05 sur 20 enregistrements agent, survie 75%. La coopération n'est donc pas un artefact d'une
+seed favorable : elle se déclenche de façon reproductible dans cette configuration généreuse.
+Point ouvert clos — pas de campagne supplémentaire jugée nécessaire à ce stade.

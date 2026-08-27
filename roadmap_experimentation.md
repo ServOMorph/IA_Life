@@ -328,7 +328,7 @@ variées et cohérentes (survie 40%, proche du mock, contre 65% pour l'automate)
 `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`. Point ouvert : décider si un
 prompt few-shot est nécessaire pour la robustesse multi-modèles avant d'élargir la campagne.
 
-## Phase 8 — Vision et perception générique de l'environnement [TODO]
+## Phase 8 — Vision et perception générique de l'environnement [FAIT]
 
 ### But
 
@@ -366,59 +366,81 @@ rétroactivement. Toutes les références produites jusqu'ici (campagnes Phase 4
 
 ### Actions — primitive de perception
 
-- [ ] Définir un contrat de perceptibilité générique, indépendant du type : identité, position,
+- [x] Définir un contrat de perceptibilité générique, indépendant du type : identité, position,
   type d'entité et état public exposé (ex. un roncier expose s'il porte encore des mûres).
-  Aucun accès à l'état interne d'autrui via la vision.
-- [ ] Exposer les entités perceptibles par un mécanisme unique et déterministe (groupe Godot ou
+  Aucun accès à l'état interne d'autrui via la vision. Fait le 2026-08-27 :
+  `get_perception_type()`/`get_perception_state()` sur `ronce.gd`, groupe `perceptible`.
+- [x] Exposer les entités perceptibles par un mécanisme unique et déterministe (groupe Godot ou
   registre central), en remplaçant l'accès direct au tableau `_ronces` pour la perception.
-  L'ordre d'itération doit rester stable à seed fixe.
-- [ ] Implémenter la fonction de vision : portée, champ de vision angulaire relatif à
-  l'orientation de l'agent, et test d'occlusion par le terrain et les obstacles.
-- [ ] Ajouter les variables individuelles au registre : `vision_range` (défaut `0.0` = désactivée),
+  L'ordre d'itération doit rester stable à seed fixe. Fait le 2026-08-27 : groupe `perceptible`
+  peuplé dans `main.gd::_spawn_ronce`.
+- [x] Implémenter la fonction de vision : portée, champ de vision angulaire relatif à
+  l'orientation de l'agent, et test d'occlusion par le terrain et les obstacles. Fait le
+  2026-08-27 : `Character._perceive` (portée, angle, raycast d'occlusion optionnel).
+- [x] Ajouter les variables individuelles au registre : `vision_range` (défaut `0.0` = désactivée),
   `vision_angle_degrees` (défaut `360.0` = omnidirectionnel), `vision_blocked_by_terrain`
-  (défaut `false`). Chaque variable ajoutée est justifiée par une règle locale documentée.
-- [ ] Décider explicitement quelle direction définit le champ de vision (orientation affichée
+  (défaut `false`). Chaque variable ajoutée est justifiée par une règle locale documentée. Fait
+  le 2026-08-27 : `scripts/variable_registry.gd` (catégorie `perception`), support du type
+  `bool` ajouté à `VariableRegistry`.
+- [x] Décider explicitement quelle direction définit le champ de vision (orientation affichée
   via `_update_facing`, ou direction de déplacement) et documenter le choix : les deux divergent
-  lors des rebonds et des changements d'objectif.
-- [ ] Journaliser chaque première détection d'une entité (`vision`), sans inonder le log :
-  un événement par entité nouvellement vue, pas par frame.
+  lors des rebonds et des changements d'objectif. Décision du 2026-08-27 : orientation visuelle
+  (progressive), plus réaliste — voir `_docs/decisions/2026-08-27_phase8-vision-perception.md`.
+- [x] Journaliser chaque première détection d'une entité (`vision`), sans inonder le log :
+  un événement par entité nouvellement vue, pas par frame. Fait le 2026-08-27, vérifié dans les
+  logs JSONL (catégorie `vision`).
 
 ### Actions — exploitation par les déciders
 
-- [ ] Étendre l'observation d'une liste structurée des entités visibles (type, direction,
-  distance, état public), plus les raccourcis dérivés nécessaires à l'automate.
-- [ ] Ajouter à `BaselineDecider` la règle d'approche d'un roncier visible, et **trancher
+- [x] Étendre l'observation d'une liste structurée des entités visibles (type, direction,
+  distance, état public), plus les raccourcis dérivés nécessaires à l'automate. Fait le
+  2026-08-27 : `_visible_entities`, `has_visible_ronce`/`visible_ronce_direction` dans
+  l'observation.
+- [x] Ajouter à `BaselineDecider` la règle d'approche d'un roncier visible, et **trancher
   explicitement la priorité** entre roncier visible et roncier mémorisé (information fraîche
-  contre information certaine). La règle retenue est documentée et couverte par un test.
-- [ ] Étendre le prompt LLM à une description structurée de ce qui est visible, en conservant
+  contre information certaine). La règle retenue est documentée et couverte par un test. Décision
+  du 2026-08-27 : priorité au roncier visible, testée (`_test_vision_priority_over_memory`).
+- [x] Étendre le prompt LLM à une description structurée de ce qui est visible, en conservant
   le vocabulaire fermé et l'espace d'actions de la référence. L'intention « manger » doit
   pouvoir viser un roncier visible non mémorisé, sans quoi le LLM reste handicapé par rapport
-  à l'automate (même nature de biais que le correctif `memory_direction` de la Phase 7).
-- [ ] Faire mémoriser un roncier vu à distance, ou décider explicitement que seule la cueillette
+  à l'automate (même nature de biais que le correctif `memory_direction` de la Phase 7). Fait
+  le 2026-08-27, validé contre `gemma3:1b` réel (Ollama) — aucune dégradation constatée.
+- [x] Faire mémoriser un roncier vu à distance, ou décider explicitement que seule la cueillette
   mémorise. Ce choix modifie la signification de `memory_capacity` et doit être tranché avant
-  toute campagne.
+  toute campagne. Décision du 2026-08-27 : mémorisation par vision activée (une fois par
+  apparition, pas par frame — voir bug corrigé ci-dessous).
 
 ### Action — absorption de `social_radius` (dette technique)
 
-- [ ] Faire de la perception des autres agents un cas particulier de la vision, plutôt qu'un
+- [x] Faire de la perception des autres agents un cas particulier de la vision, plutôt qu'un
   second système parallèle. Condition de bascule : les scénarios de la Phase 6
   (`social_communication_smoke_v1`, `social_aggression_smoke_v1`,
   `social_cooperation_smoke_v1`) produisent des résultats inchangés à seed fixe avec une vision
   omnidirectionnelle sans occlusion de portée égale à l'ancien `social_radius`.
   Si l'équivalence n'est pas démontrée, conserver les deux systèmes et documenter pourquoi.
+  Fait le 2026-08-27 : `_update_social_perception` réutilise `Character._perceive` (code
+  partagé, `social_radius` reste un paramètre indépendant) ; équivalence stricte démontrée sur
+  les 3 scénarios Phase 6 à seed fixe.
 
 ### Actions — mesure et validation
 
-- [ ] Ajouter les métriques de perception au résumé de run et à `tools/aggregate_results.py` :
+- [x] Ajouter les métriques de perception au résumé de run et à `tools/aggregate_results.py` :
   détections totales, ronciers découverts par vision contre par contact, délai entre première
-  vision et premier contact.
-- [ ] Tests de non-régression : `vision_range = 0.0` reproduit exactement les résultats
-  antérieurs (contrôle via `tools/check_reproducibility.py`).
-- [ ] Scénarios dédiés : entité dans la portée mais hors du champ de vision (non vue), entité
+  vision et premier contact. Fait le 2026-08-27 : `vision_detections_total`,
+  `ronces_discovered_by_vision_total`, `vision_to_contact_delay_seconds_total` /
+  `vision_to_contact_events_total`.
+- [x] Tests de non-régression : `vision_range = 0.0` reproduit exactement les résultats
+  antérieurs (contrôle via `tools/check_reproducibility.py`). Vérifié le 2026-08-27.
+- [x] Scénarios dédiés : entité dans la portée mais hors du champ de vision (non vue), entité
   dans le champ mais hors de portée (non vue), entité masquée par le relief (non vue si
-  `vision_blocked_by_terrain`).
-- [ ] Campagne multi-seeds comparant plusieurs valeurs de `vision_range` sur la survie et sur
-  le délai de première découverte.
+  `vision_blocked_by_terrain`). Fait le 2026-08-27 : `experiments/vision_baseline_smoke_v1.json`,
+  `vision_narrow_angle_smoke_v1.json`, `vision_short_range_smoke_v1.json`,
+  `vision_occlusion_smoke_v1.json` (comparatifs, différence mesurable sur chaque filtre).
+- [x] Campagne multi-seeds comparant plusieurs valeurs de `vision_range` sur la survie et sur
+  le délai de première découverte. Fait le 2026-08-27 :
+  `experiments/campaigns/vision_range_campaign_v1.json` (3 valeurs × 3 seeds) — pas de
+  différence de survie dans ce scénario (ressources abondantes), différence nette sur la
+  vitesse de découverte.
 
 ### Critères d'acceptation
 
@@ -453,16 +475,17 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 ## Prochain sprint recommandé
 
-Phases 1 à 7 closes, Phase 8 (vision) ouverte en [TODO].
+Phases 1 à 8 closes. Aucune Phase 9 définie pour l'instant.
 
-Deux points ouverts hérités de la Phase 7, sans priorité imposée entre eux :
-- Décider si un prompt few-shot est nécessaire pour la robustesse multi-modèles du décideur
-  LLM, ou si `gemma3:1b` suffit comme référence stable pour élargir les campagnes Phase 7.
-- Décider si une campagne multi-seeds est nécessaire pour valider statistiquement la coopération
-  avant de la considérer stable au même titre que suivi/évitement.
+Les deux points ouverts hérités de la Phase 7 sont clos (2026-08-27) : prompt few-shot jugé non
+nécessaire (`gemma3:1b` stable avec le prompt étendu par la Phase 8), coopération validée
+statistiquement (5 seeds, jamais nulle) — voir `_docs/decisions/`.
 
-Recommandation d'ordonnancement : traiter la Phase 8 avant d'élargir les campagnes LLM. La
-vision modifie l'information disponible en entrée du décideur, donc toute campagne LLM lancée
-avant serait à refaire ensuite. Le point ouvert sur le prompt few-shot gagne à être tranché
-en même temps que l'extension du prompt à ce qui est visible (action Phase 8), les deux
-touchant le même code.
+Point d'attention hérité de la Phase 8, non retraité : `curiosity` et `known_zone_preference`
+(Phase 2) approximent une recherche d'inconnu en l'absence de vision ; leur interprétation
+change maintenant que la vision est disponible et reste à réévaluer sans les retirer avant
+mesure (voir "Point d'attention" ci-dessus).
+
+Recommandation pour toute future campagne LLM élargie : la vision modifie l'information
+disponible en entrée du décideur (Phase 8), donc toute campagne LLM antérieure à la Phase 8
+n'est pas comparable à une campagne lancée après.

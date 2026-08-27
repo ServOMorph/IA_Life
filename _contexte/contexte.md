@@ -9,18 +9,12 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Le prototype est un laboratoire headless reproductible : configurations versionnées, logs JSONL,
-résumés et campagnes. Les Phases 1 à 7 sont closes fonctionnellement : temps simulé déterministe,
-traits comportementaux mesurés, interactions sociales avancées, Inspecteur générique, et
-décideur interchangeable automate/LLM (Ollama local) avec repli automatique sur erreur, validé
-par une campagne comparative de référence (survie automate 65% / llm 40%, `gemma3:1b`, défaut
-`llm_model` du registre désormais aligné). Phase 8 (vision et perception générique) ajoutée à
-la roadmap en [TODO], pas encore démarrée.
+résumés et campagnes. Les Phases 1 à 8 sont closes fonctionnellement : temps simulé déterministe,
+traits comportementaux mesurés, interactions sociales avancées, Inspecteur générique, décideur
+interchangeable automate/LLM, et vision générique (portée/angle/occlusion) qui absorbe la
+perception sociale par code partagé. Aucune Phase 9 définie pour l'instant.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-24 : `VariableRegistry` devient la source unique des valeurs par défaut/bornes de
-  `GameConfig` et `Character` ; bridge RL TCP/JSONL maison validé (épisode complet).
-- 2026-08-24 : Les expériences comparables sont bornées par `max_simulation_seconds` et non
-  par le temps mural ; la configuration fixe est séparée de `agents.initial_state`.
 - 2026-08-25 : `ROBERTO/com_telephone/_commands/com_manager.md` libère désormais le port 5000
   (taskkill) avant tout démarrage/redémarrage de `node`, pour prévenir l'échec EADDRINUSE causé
   par un process orphelin non tracké.
@@ -52,3 +46,9 @@ la roadmap en [TODO], pas encore démarrée.
 - 2026-08-26 : Phase 8 (vision et perception générique) ajoutée à la roadmap en [TODO] ; défaut
   `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`, désaligné de la décision
   Phase 7).
+- 2026-08-27 : Phase 8 (vision) close — primitive de perception, vision portée/angle/occlusion,
+  `social_radius` absorbé comme cas particulier de la vision (code partagé, équivalence
+  démontrée sur les scénarios sociaux Phase 6) — voir
+  `_docs/decisions/2026-08-27_phase8-vision-perception.md`.
+- 2026-08-27 : Points ouverts Phase 7 clos — prompt few-shot LLM jugé non nécessaire, coopération
+  sociale validée statistiquement (5 seeds, jamais nulle).

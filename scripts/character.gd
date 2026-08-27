@@ -16,6 +16,9 @@ extends CharacterBody3D
 @export_range(0.0, 1.0, 0.01) var goal_persistence: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["goal_persistence"])
 @export_range(0.0, 1.0, 0.01) var known_zone_preference: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["known_zone_preference"])
 @export_range(0.0, 1.0, 0.01) var curiosity: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["curiosity"])
+@export var vision_range: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["vision_range"])
+@export_range(0.0, 360.0, 0.1) var vision_angle_degrees: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["vision_angle_degrees"])
+@export var vision_blocked_by_terrain: bool = VariableRegistry.default_value(VariableRegistry.CHARACTER["vision_blocked_by_terrain"])
 @export var social_radius: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["social_radius"])
 @export_range(0.0, 1.0, 0.01) var follow_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["follow_probability"])
 @export_range(0.0, 1.0, 0.01) var avoid_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["avoid_probability"])
@@ -58,6 +61,10 @@ var food_shared_total: int = 0
 var food_received_total: int = 0
 var aggression_incidents_total: int = 0
 var aggression_received_total: int = 0
+var vision_detections_total: int = 0
+var ronces_discovered_by_vision_total: int = 0
+var vision_to_contact_delay_seconds_total: float = 0.0
+var vision_to_contact_events_total: int = 0
 
 var llm_calls_total: int:
 	get: return _decider.calls_total if _decider is LLMDecider else 0
@@ -78,6 +85,10 @@ var _position_sample_clock: float = 0.0
 var _active_social_contacts: Dictionary = {}
 var _social_target = null
 var _social_goal: String = ""
+var _visible_entities: Array = []
+var _active_vision_contacts: Dictionary = {}
+var _first_vision_time: Dictionary = {}
+var _first_contact_recorded: Dictionary = {}
 
 var _body_mesh: MeshInstance3D
 var _head_mesh: MeshInstance3D
@@ -162,6 +173,7 @@ func _physics_process(delta: float) -> void:
 	_try_eat_berry()
 	_decay_memories(scaled_delta)
 	_update_social_perception(scaled_delta)
+	_update_vision_perception()
 
 	_apply_decision(scaled_delta)
 
@@ -194,6 +206,7 @@ func _apply_decision(scaled_delta: float) -> void:
 		_direction = _rl_direction
 		_set_goal("rl")
 		return
+	var visible_ronce_direction := _direction_to_nearest_visible_ronce()
 	var action: Dictionary = _decider.decide({
 		"manual_control": manual_control,
 		"manual_direction": _manual_direction,
@@ -201,6 +214,8 @@ func _apply_decision(scaled_delta: float) -> void:
 		"pickup_hunger_threshold": GameConfig.pickup_hunger_threshold,
 		"has_memories": not _memories.is_empty(),
 		"memory_direction": _direction_to_nearest_memory(),
+		"has_visible_ronce": visible_ronce_direction != Vector3.ZERO,
+		"visible_ronce_direction": visible_ronce_direction,
 		"social_goal": _social_goal_if_active(),
 		"social_direction": _social_direction(),
 		"current_direction": _direction,
@@ -271,9 +286,12 @@ func kill() -> void:
 	hunger = 0.0
 	_die()
 
+func _now_elapsed_seconds() -> float:
+	return simulation_elapsed_seconds if simulation_elapsed_seconds >= 0.0 else GameLogger.get_elapsed_seconds()
+
 func _die() -> void:
 	is_dead = true
-	death_elapsed_seconds = simulation_elapsed_seconds if simulation_elapsed_seconds >= 0.0 else GameLogger.get_elapsed_seconds()
+	death_elapsed_seconds = _now_elapsed_seconds()
 	velocity = Vector3.ZERO
 	GameLogger.log_event_data("mort", "%s meurt de faim en (%.1f, %.1f) — mûres ramassées: %d, mangées: %d" % [display_name, position.x, position.z, berries_picked_total, berries_eaten_total], {
 		"agent": display_name,
@@ -390,18 +408,100 @@ func _direction_to_unknown_zone_candidate(base_direction: Vector3) -> Vector3:
 			return candidate.normalized()
 	return Vector3.ZERO
 
+func _vision_forward() -> Vector3:
+	var forward := -basis.z
+	forward.y = 0.0
+	if forward.length_squared() < 0.0001:
+		return Vector3.FORWARD
+	return forward.normalized()
+
+func _is_occluded(space_state: PhysicsDirectSpaceState3D, entity) -> bool:
+	var eye_offset := Vector3(0.0, 1.0, 0.0)
+	var exclude: Array = [get_rid()]
+	if entity.has_method("get_occlusion_exclude_rids"):
+		exclude.append_array(entity.get_occlusion_exclude_rids())
+	var query := PhysicsRayQueryParameters3D.create(position + eye_offset, entity.position + eye_offset, 0xFFFFFFFF, exclude)
+	return not space_state.intersect_ray(query).is_empty()
+
+func _perceive(range_value: float, angle_degrees: float, blocked_by_terrain: bool, group_name: String, flatten_vertical: bool = true) -> Array:
+	var result: Array = []
+	if range_value <= 0.0:
+		return result
+	var forward := _vision_forward()
+	var half_angle_rad := deg_to_rad(angle_degrees) * 0.5
+	var omnidirectional := angle_degrees >= 360.0
+	var space_state: PhysicsDirectSpaceState3D = get_world_3d().direct_space_state if blocked_by_terrain else null
+	for entity in get_tree().get_nodes_in_group(group_name):
+		if entity == self or not is_instance_valid(entity):
+			continue
+		var to_entity: Vector3 = entity.position - position
+		if flatten_vertical:
+			to_entity.y = 0.0
+		var distance := to_entity.length()
+		if distance > range_value or distance < 0.01:
+			continue
+		var direction := to_entity / distance
+		if not omnidirectional and forward.angle_to(direction) > half_angle_rad:
+			continue
+		if blocked_by_terrain and _is_occluded(space_state, entity):
+			continue
+		result.append({
+			"node": entity,
+			"type": entity.get_perception_type() if entity.has_method("get_perception_type") else "inconnu",
+			"distance": distance,
+			"direction": direction,
+			"state": entity.get_perception_state() if entity.has_method("get_perception_state") else {},
+		})
+	return result
+
+func _update_vision_perception() -> void:
+	_visible_entities = _perceive(vision_range, vision_angle_degrees, vision_blocked_by_terrain, "perceptible")
+	if _visible_entities.is_empty():
+		_active_vision_contacts.clear()
+		return
+	var seen_ids: Dictionary = {}
+	for entry in _visible_entities:
+		var entity = entry["node"]
+		var entity_id: int = entity.get_instance_id()
+		seen_ids[entity_id] = true
+		if not _active_vision_contacts.has(entity_id):
+			vision_detections_total += 1
+			GameLogger.log_event_data("vision", "%s détecte un %s à distance" % [display_name, entry["type"]], {
+				"agent": display_name,
+				"entity_type": entry["type"],
+				"distance": entry["distance"],
+				"vision_detections_total": vision_detections_total,
+			})
+			# Une fois par nouvelle apparition, pas par frame : sinon l'éviction en cas de dépassement de memory_capacity boucle indéfiniment.
+			if entry["type"] == "roncier":
+				if not _first_vision_time.has(entity_id):
+					_first_vision_time[entity_id] = _now_elapsed_seconds()
+				if _remember_ronce(entity):
+					ronces_discovered_by_vision_total += 1
+	_active_vision_contacts = seen_ids
+
+func _direction_to_nearest_visible_ronce() -> Vector3:
+	var nearest_distance := INF
+	var nearest_direction := Vector3.ZERO
+	for entry in _visible_entities:
+		if entry["type"] != "roncier" or not bool(entry["state"].get("has_berries", false)):
+			continue
+		if entry["distance"] < nearest_distance:
+			nearest_distance = entry["distance"]
+			nearest_direction = entry["direction"]
+	return nearest_direction
+
 func _update_social_perception(scaled_delta: float) -> void:
 	if social_radius <= 0.0:
 		current_social_neighbors = 0
 		return
 	var nearby_ids: Dictionary = {}
-	for other in get_tree().get_nodes_in_group("agents"):
-		if other == self or not is_instance_valid(other) or other.is_dead:
+	for entry in _perceive(social_radius, 360.0, false, "agents", false):
+		var other = entry["node"]
+		if other.is_dead:
 			continue
-		var distance := position.distance_to(other.position)
-		if distance > social_radius:
-			continue
-		var other_id := other.get_instance_id()
+		var distance: float = entry["distance"]
+		var other_id: int = other.get_instance_id()
 		nearby_ids[other_id] = true
 		if not _active_social_contacts.has(other_id):
 			social_encounters_total += 1
@@ -541,6 +641,7 @@ func _on_ronce_contact(ronce) -> void:
 func try_pick_berry_from_ronce(ronce, ignore_hunger_threshold: bool = false) -> bool:
 	if is_dead:
 		return false
+	_record_first_contact(ronce)
 	_remember_ronce(ronce)
 	if berries_carried >= GameConfig.max_berries_carried:
 		return false
@@ -559,13 +660,24 @@ func try_pick_berry_from_ronce(ronce, ignore_hunger_threshold: bool = false) -> 
 		return true
 	return false
 
-func _remember_ronce(ronce) -> void:
+func _record_first_contact(ronce) -> void:
+	var ronce_id: int = ronce.get_instance_id()
+	if _first_contact_recorded.has(ronce_id) or not _first_vision_time.has(ronce_id):
+		return
+	_first_contact_recorded[ronce_id] = true
+	var delay: float = _now_elapsed_seconds() - float(_first_vision_time[ronce_id])
+	if delay < 0.0:
+		return
+	vision_to_contact_delay_seconds_total += delay
+	vision_to_contact_events_total += 1
+
+func _remember_ronce(ronce) -> bool:
 	for m in _memories:
 		if m.ronce == ronce:
 			m.strength = MEMORY_MAX_STRENGTH
-			return
+			return false
 	if memory_capacity <= 0:
-		return
+		return false
 	if _memories.size() >= memory_capacity:
 		var weakest_idx := 0
 		for i in range(1, _memories.size()):
@@ -575,6 +687,7 @@ func _remember_ronce(ronce) -> void:
 		_memories.remove_at(weakest_idx)
 	_memories.append({"ronce": ronce, "strength": MEMORY_MAX_STRENGTH})
 	GameLogger.log_event("memoire", "%s mémorise un nouveau roncier en (%.1f, %.1f) (%d/%d)" % [display_name, ronce.position.x, ronce.position.z, _memories.size(), memory_capacity])
+	return true
 
 func _decay_memories(scaled_delta: float) -> void:
 	for i in range(_memories.size() - 1, -1, -1):

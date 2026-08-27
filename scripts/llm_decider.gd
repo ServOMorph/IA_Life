@@ -123,7 +123,9 @@ func _apply_success(intention: String, direction: String, latency_ms: float) -> 
 	calls_total += 1
 	total_latency_ms += latency_ms
 	var vector: Vector3
-	if intention == "manger" and bool(_last_observation.get("has_memories", false)):
+	if intention == "manger" and bool(_last_observation.get("has_visible_ronce", false)):
+		vector = _last_observation.get("visible_ronce_direction", Vector3.ZERO)
+	elif intention == "manger" and bool(_last_observation.get("has_memories", false)):
 		# Même précision de visée que l'automate pour cette intention : l'espace d'action
 		# comparé n'est alors plus la géométrie (que ni l'un ni l'autre décideur ne "choisit"
 		# vraiment), mais le choix d'intention lui-même.
@@ -158,9 +160,10 @@ func _fail(reason: String, detail: String) -> void:
 	})
 
 func _build_prompt(observation: Dictionary) -> String:
-	return "Tu contrôles un agent dans une simulation de survie. Faim: %.0f/100 (0 = mort). A un roncier mémorisé: %s. Réponds uniquement avec un objet JSON strict à deux clés : intention (une valeur parmi %s) et direction (une valeur parmi %s, ou 'aucune')." % [
+	return "Tu contrôles un agent dans une simulation de survie. Faim: %.0f/100 (0 = mort). A un roncier mémorisé: %s. Voit un roncier avec des mûres à proximité: %s. Réponds uniquement avec un objet JSON strict à deux clés : intention (une valeur parmi %s) et direction (une valeur parmi %s, ou 'aucune')." % [
 		float(observation.get("hunger", 0.0)),
 		observation.get("has_memories", false),
+		observation.get("has_visible_ronce", false),
 		INTENTIONS,
 		COMPASS_DIRECTIONS,
 	]

@@ -24,3 +24,7 @@
   TCP/JSONL maison pour le premier RL.
 - 2026-08-24 : Cadre non historique (île isolée) retenu pour l'identité du jeu, sans ancrage
   temporel — voir `DOCUMENTATION/orientation_contexte.md`.
+- 2026-08-24 : `VariableRegistry` devient la source unique des valeurs par défaut/bornes de
+  `GameConfig` et `Character` ; bridge RL TCP/JSONL maison validé (épisode complet).
+- 2026-08-24 : Les expériences comparables sont bornées par `max_simulation_seconds` et non
+  par le temps mural ; la configuration fixe est séparée de `agents.initial_state`.

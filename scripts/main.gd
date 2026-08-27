@@ -450,6 +450,10 @@ func _finish_headless_run(reason: String) -> void:
 				"berries_eaten_total": character.berries_eaten_total,
 				"berries_carried": character.berries_carried,
 				"memorized_ronces": character.memorized_ronces_count(),
+				"vision_detections_total": character.vision_detections_total,
+				"ronces_discovered_by_vision_total": character.ronces_discovered_by_vision_total,
+				"vision_to_contact_delay_seconds_total": character.vision_to_contact_delay_seconds_total,
+				"vision_to_contact_events_total": character.vision_to_contact_events_total,
 				"wander_reorientations_total": character.wander_reorientations_total,
 				"distance_travelled_total": character.distance_travelled_total,
 				"visited_zones_total": character.visited_zones_total,
@@ -965,6 +969,8 @@ func _spawn_ronce(pos: Vector3) -> void:
 	solid_body.add_child(solid_collision)
 	ronce.add_child(solid_body)
 
+	ronce.solid_body = solid_body
+	ronce.add_to_group("perceptible")
 	add_child(ronce)
 	ronce.setup_visual(_bush_berry_positions(ronce.berries), berry_mat)
 	_ronces.append(ronce)
