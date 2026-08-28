@@ -108,15 +108,25 @@ Pour les tâches répétitives et templated (commits, posts, changelogs, donnée
 
 Section réservée aux règles propres à ce projet, hors périmètre du kit. Cette section est préservée intégralement par `/update` (jamais écrasée ni fusionnée avec le contenu du kit). Convention : toute règle liée à une section précise du fichier doit la référencer explicitement par son titre (ex: "Section Roadmap : ..."), plutôt que compter sur la position physique de cette section (toujours en fin de fichier).
 
-### Bridge ROBERTO (assistant vocal téléphone)
-Dès que les 3 process du bridge `ROBERTO/com_telephone` sont actifs (voir `monitor.lock` dans
-`ROBERTO/com_telephone/_commands/`) : toute question destinée à l'utilisateur (décision, choix,
-validation) doit passer par `POST /send` (avec `options`/`recommended` si choix fermé) — jamais par
-une question bloquante terminal (AskUserQuestion ou équivalent). Et toute réponse à un message reçu
-via `messages.log` doit repartir par `POST /send`, même si elle a déjà été écrite dans la
-conversation Claude Code (les deux canaux sont étanches). Règle ajoutée le 2026-08-26 après deux
-oublis constatés dans la même session malgré la même règle déjà écrite dans
-`ROBERTO/com_telephone/README.md`.
+### Bridge ROBERTO (assistant vocal téléphone, raccordé)
+Le bridge assistant vocal est **partagé et hébergé par le projet Roberto**
+(`D:\ServOMorph\Roberto\com_telephone\`). IA_Life n'héberge plus le serveur — il en est un simple
+projet raccordé (cf. `ROBERTO/com_telephone/README.md` et la commande `/roberto`). Migration faite
+le 2026-08-28 (`Roberto\roadmap_com_telephone_hub.md`).
+
+- **Log surveillé** :
+  `D:\ServOMorph\Roberto\com_telephone\voice-code-bridge\server\logs\messages_ia_life.log`.
+  Verrou du Monitor actif : `ROBERTO/com_telephone/_commands/monitor_ia_life.lock` (se fier à ce
+  fichier, jamais à la mémoire de conversation). Mise en écoute : commande `/roberto`.
+- **`POST /send` (`http://127.0.0.1:5000/send`, loopback) obligatoirement avec `"project": "ia_life"`
+  et un `"text"` non vide** — sinon HTTP 400.
+- Dès que le bridge est actif : toute question destinée à l'utilisateur (décision, choix,
+  validation) passe par `POST /send` (avec `options`/`recommended` si choix fermé), jamais par une
+  question bloquante terminal (AskUserQuestion ou équivalent). Toute réponse à un message reçu via
+  le log repart par `POST /send`, même si elle est déjà écrite dans la conversation Claude Code
+  (canaux étanches). Règle ajoutée le 2026-08-26 après deux oublis répétés.
+- Prérequis : les 3 process partagés doivent tourner (démarrés côté Roberto via
+  `com_manager.py start`). Rien à lancer depuis IA_Life.
 
 Convention `!<commande>` : un message téléphone commençant par `!` (ex. `!close`) est une
 instruction directe — appliquer la procédure `.claude/commands/<commande>.md` correspondante, reste

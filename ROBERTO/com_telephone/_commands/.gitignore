@@ -1,0 +1,3 @@
+*.pid
+monitor.lock
+monitor_ia_life.lock

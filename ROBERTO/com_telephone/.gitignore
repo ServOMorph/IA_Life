@@ -1,0 +1,10 @@
+# Reliquats de l'ancien hebergement du pont (migre vers Roberto le 2026-08-28,
+# cf. Roberto\roadmap_com_telephone_hub.md). Dossier mort conserve sur disque,
+# supprimable manuellement depuis un terminal :  rm -rf voice-code-bridge/
+voice-code-bridge/
+DEPLOYMENTS.md
+specification_assistant_vocal_claude_code.pdf
+_commands/com_manager.py
+_commands/com_manager.md
+_commands/com_stop.md
+_docs/
