@@ -28,3 +28,6 @@
   `GameConfig` et `Character` ; bridge RL TCP/JSONL maison validé (épisode complet).
 - 2026-08-24 : Les expériences comparables sont bornées par `max_simulation_seconds` et non
   par le temps mural ; la configuration fixe est séparée de `agents.initial_state`.
+- 2026-08-25 : `ROBERTO/com_telephone/_commands/com_manager.md` libère désormais le port 5000
+  (taskkill) avant tout démarrage/redémarrage de `node`, pour prévenir l'échec EADDRINUSE causé
+  par un process orphelin non tracké.

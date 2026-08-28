@@ -154,3 +154,37 @@ coopération multi-seeds) ; démarrer la Phase 8 si priorité confirmée.
 
 ## Question bloquante pour la session suivante
 Aucune.
+
+---
+
+# Session du 2026-08-27
+
+## Décisions prises
+- Phase 8 (vision) complétée : direction de référence = orientation visuelle, priorité roncier
+  visible > mémorisé, mémorisation par vision. `social_radius` absorbé comme cas particulier de
+  la vision (code partagé), équivalence stricte démontrée sur les 3 scénarios Phase 6.
+- Prompt few-shot LLM jugé non nécessaire (`gemma3:1b` stable avec le prompt étendu).
+- Coopération validée statistiquement (5 seeds, partage de nourriture jamais nul).
+
+## Livrables produits ou modifiés
+- `scripts/character.gd`, `ronce.gd`, `baseline_decider.gd`, `llm_decider.gd`, `main.gd`,
+  `variable_registry.gd`, `ui_manager.gd` : Phase 8.
+- `tools/aggregate_results.py`, `tools/run_manual_checks.gd` (6 nouveaux tests vision).
+- `experiments/vision_*.json` (4 scénarios), `campaigns/vision_range_campaign_v1.json`,
+  `campaigns/social_cooperation_multiseed_v1.json` : créés.
+- `_docs/decisions/2026-08-27_phase8-vision-perception.md` : créé ; deux décisions Phase 6/7
+  complétées d'un commentaire de clôture.
+
+## Hypothèses validées / invalidées
+- VALIDE : coopération reproductible sur 5/5 seeds ; `gemma3:1b` stable avec le prompt étendu.
+- INVALIDE : mémorisation par vision à chaque frame -> boucle infinie si plus d'entités visibles
+  que `memory_capacity` -> corrigée (une fois par apparition), test de non-régression ajouté.
+- INVALIDE (mineure) : distance horizontale pour l'absorption sociale -> corrigée (distance 3D
+  préservée pour le social via un paramètre `flatten_vertical` sur `_perceive`).
+
+## Prochaine étape exacte
+Décider de la Phase 9 (aucune définie) ou d'un autre axe ; sinon traiter les points restants hors
+code (inclusion git de `ROBERTO/com_telephone`, dédoublonnage `push_subs.json`).
+
+## Question bloquante pour la session suivante
+Aucune.

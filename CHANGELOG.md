@@ -1,3 +1,18 @@
+## v0.21 — 2026-08-28
+
+### Modifié
+- Assistant vocal `com_telephone` : le pont (serveur Node + STT + TTS + tunnel + PWA) a été migré
+  vers le projet Roberto, qui en devient l'hôte et le template de référence. IA_Life est
+  désormais un projet **raccordé** : `ROBERTO/com_telephone/` réduit à un README de raccordement,
+  la commande `/roberto` (surveille `messages_ia_life.log` chez Roberto) et une section
+  « Bridge ROBERTO » réécrite dans `.claude/CLAUDE.md`.
+- Serveur, PWA et `com_manager` retirés du dépôt IA_Life (`git rm --cached` + suppression disque) ;
+  reliquats restants gitignorés.
+
+### Corrigé
+- Clôt l'action ouverte sur l'inclusion git de `ROBERTO/com_telephone` : le bridge n'est plus
+  versionné dans IA_Life (il l'est dans Roberto).
+
 ## v0.20 — 2026-08-27
 
 ### Ajouté

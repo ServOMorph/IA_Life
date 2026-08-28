@@ -60,3 +60,7 @@ interchangeable automate/LLM (Ollama local, repli automatique sur erreur), et un
 générique (portée, angle, occlusion) qui remplace la découverte par contact seul et absorbe
 la perception sociale par code partagé (`Character._perceive`). Aucune Phase 9 définie pour
 l'instant.
+
+L'assistant vocal `com_telephone` (pilotage du projet depuis un téléphone) n'est plus hébergé
+ici : le pont a été migré vers le projet Roberto le 2026-08-28. IA_Life en est un projet
+raccordé — `ROBERTO/com_telephone/` se limite à un README et la commande `/roberto`.

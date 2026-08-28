@@ -40,7 +40,7 @@ session Claude Code, son historique de conversation, son log d'échange et son d
 - **Pré-requis d'usage** : un projet n'est joignable que si sa session Claude Code tourne avec son
   Monitor actif ; sinon le message reste dans le log et seule la push part.
 
-## Phase 1 — Registre projets + config serveur partagé  [TODO]
+## Phase 1 — Registre projets + config serveur partagé  [FAIT]
 
 - Créer `voice-code-bridge/server/projects.json` avec les deux entrées (`ia_life`, `tsa`) et
   l'ajouter au `.gitignore` du bridge.
@@ -52,7 +52,7 @@ session Claude Code, son historique de conversation, son log d'échange et son d
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 2 — Routage serveur multi-projet  [TODO]
+## Phase 2 — Routage serveur multi-projet  [FAIT]
 
 - `server.js` :
   - charger `projects.json` au démarrage (échec fatal si absent ou vide).
@@ -69,7 +69,7 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 3 — Sélecteur de projet dans la PWA  [TODO]
+## Phase 3 — Sélecteur de projet dans la PWA  [FAIT]
 
 - `index.html` : segmented control (un bouton par projet) sous le header, libellés = `label`
   du registre (exposés via un petit endpoint `GET /projects` ou injectés dans `index.html`).
@@ -87,7 +87,7 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Déploiement dans Appli_TSA_SDI_TDAH  [TODO]
+## Phase 4 — Déploiement dans Appli_TSA_SDI_TDAH  [FAIT]
 
 - Créer `D:\ServOMorph\Appli_TSA_SDI_TDAH\ROBERTO\com_telephone\` (à côté du contenu ROBERTO
   existant `_orchestrateur_ia`, `flux_b_drive` — ne rien vider) :

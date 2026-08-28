@@ -13,11 +13,10 @@ résumés et campagnes. Les Phases 1 à 8 sont closes fonctionnellement : temps 
 traits comportementaux mesurés, interactions sociales avancées, Inspecteur générique, décideur
 interchangeable automate/LLM, et vision générique (portée/angle/occlusion) qui absorbe la
 perception sociale par code partagé. Aucune Phase 9 définie pour l'instant.
+Assistant vocal `com_telephone` : le pont n'est plus hébergé ici — migré vers le projet Roberto
+le 2026-08-28. IA_Life est un projet raccordé (README léger + commande `/roberto`).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-25 : `ROBERTO/com_telephone/_commands/com_manager.md` libère désormais le port 5000
-  (taskkill) avant tout démarrage/redémarrage de `node`, pour prévenir l'échec EADDRINUSE causé
-  par un process orphelin non tracké.
 - 2026-08-25 : Phase 4 close — 3 campagnes de référence (`memory_capacity`,
   `resource_scarcity`, `contrasted_profiles`) formalisées, exécutées sur seeds 1/2/3,
   agrégées (`tools/aggregate_results.py`) et graphiques (`tools/plot_campaign.py`, SVG sans
@@ -52,3 +51,8 @@ perception sociale par code partagé. Aucune Phase 9 définie pour l'instant.
   `_docs/decisions/2026-08-27_phase8-vision-perception.md`.
 - 2026-08-27 : Points ouverts Phase 7 clos — prompt few-shot LLM jugé non nécessaire, coopération
   sociale validée statistiquement (5 seeds, jamais nulle).
+- 2026-08-28 : Pont `com_telephone` migré vers le projet Roberto (hôte du serveur + template de
+  référence unique). IA_Life devient un projet raccordé (README léger + `/roberto` surveillant
+  `messages_ia_life.log` chez Roberto). Serveur/PWA retirés du dépôt IA_Life. Clôt l'action
+  ouverte sur l'inclusion git de `ROBERTO/com_telephone`. Détail :
+  `D:\ServOMorph\Roberto\roadmap_com_telephone_hub.md`.
