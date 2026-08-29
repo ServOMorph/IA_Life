@@ -58,8 +58,11 @@ des ressources, profils contrastés), un Inspecteur générique piloté par le r
 interactions sociales avancées (communication, coopération, agressivité), un décideur
 interchangeable automate/LLM (Ollama local, repli automatique sur erreur), et une vision
 générique (portée, angle, occlusion) qui remplace la découverte par contact seul et absorbe
-la perception sociale par code partagé (`Character._perceive`). Aucune Phase 9 définie pour
-l'instant.
+la perception sociale par code partagé (`Character._perceive`).
+
+Axe d'évolution suivant (retenu le 2026-08-29) : l'apprentissage individuel — un troisième
+décideur qui apprend, pendant une seule vie, quelle action de recherche de nourriture marche
+selon la situation de faim. Plan : `roadmap_apprentissage.md` (Phase 1 non démarrée).
 
 L'assistant vocal `com_telephone` (pilotage du projet depuis un téléphone) n'est plus hébergé
 ici : le pont a été migré vers le projet Roberto le 2026-08-28. IA_Life en est un projet

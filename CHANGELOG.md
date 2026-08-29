@@ -1,3 +1,19 @@
+## v0.22 — 2026-08-29
+
+### Ajouté
+- `roadmap_apprentissage.md` : axe d'évolution suivant retenu — apprentissage individuel
+  (option 1B, « heuristiques apprises »). Un décideur `adaptive_decider.gd` (3ᵉ valeur de
+  `decider_type`) apprend en une vie, via une table `(situation, action) → score` en moyenne
+  mobile, quelle action de recherche de nourriture marche selon la situation de faim. Périmètre
+  fixé : faim uniquement, 3 situations, 3 actions (goals `ronce_visible` / `ronce_memorisee` /
+  `errance`), ε-greedy seedé, un seul apprenant (perso 0), pas de persistance entre vies.
+  4 phases avec checkpoints ; Phase 1 non démarrée. Options 1A (évolution/sélection) et 1C
+  (RL formel) écartées pour l'instant.
+
+### Modifié
+- `roadmap_experimentation.md` : la section « Prochain sprint » renvoie vers
+  `roadmap_apprentissage.md` (plus de Phase 9 dans cette roadmap).
+
 ## v0.21 — 2026-08-28
 
 ### Modifié

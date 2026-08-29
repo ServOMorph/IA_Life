@@ -475,7 +475,9 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 ## Prochain sprint recommandé
 
-Phases 1 à 8 closes. Aucune Phase 9 définie pour l'instant.
+Phases 1 à 8 closes. Cette roadmap n'a pas de Phase 9 : l'axe d'évolution suivant retenu le
+2026-08-29 est l'**apprentissage individuel** (option 1B), suivi dans une roadmap dédiée —
+`roadmap_apprentissage.md`.
 
 Les deux points ouverts hérités de la Phase 7 sont clos (2026-08-27) : prompt few-shot jugé non
 nécessaire (`gemma3:1b` stable avec le prompt étendu par la Phase 8), coopération validée

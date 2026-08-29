@@ -188,3 +188,33 @@ code (inclusion git de `ROBERTO/com_telephone`, dédoublonnage `push_subs.json`)
 
 ## Question bloquante pour la session suivante
 Aucune.
+
+---
+
+# Session du 2026-08-28
+
+## Décisions prises
+- Le pont `com_telephone` est migré vers le projet Roberto (hôte du serveur + template de
+  référence unique). IA_Life devient un projet raccordé : plus de serveur, README de
+  raccordement + commande `/roberto`.
+- `.env` d'IA_Life réutilisé tel quel sur Roberto → lien appli et abonnements push préservés.
+- Reste de `ROBERTO/com_telephone/` : serveur/PWA/com_manager retirés du dépôt, reliquats
+  gitignorés → clôt l'action ouverte [P2] sur l'inclusion git du bridge.
+
+## Livrables produits ou modifiés
+- `ROBERTO/com_telephone/README.md` : réécrit (raccordement au pont Roberto).
+- `.claude/commands/roberto.md` : créé. `.claude/CLAUDE.md` : section « Bridge ROBERTO » réécrite.
+- `ROBERTO/com_telephone/.gitignore`, `_commands/.gitignore` : créés / mis à jour.
+- Serveur + PWA + `com_manager` retirés (`git rm --cached` + suppression disque, sauf 1 dossier vide).
+- Commits : `866a48c`, `852e4a2`.
+
+## Hypothèses validées / invalidées
+- VALIDE : bascule du pont vers Roberto sans changement de lien appli ni perte des push.
+- EN ATTENTE : tests manuels téléphone (aller-retour vocal par projet) — `Roberto/tests_manuels.md`.
+
+## Prochaine étape exacte
+Côté IA_Life : rien de bloquant (Phase 9 non définie). Hors zone : finir les tests manuels du
+pont depuis le téléphone, supprimer le dossier vide `voice-code-bridge/`.
+
+## Question bloquante pour la session suivante
+Aucune.

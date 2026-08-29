@@ -1,11 +1,13 @@
-# Signals — ia_life (MAJ 2026-08-28)
+# Signals — ia_life (MAJ 2026-08-29)
 
 ## Actions ouvertes
 
-- [P2|ouvert] Décider de la Phase 9 (aucune définie à ce stade) ou d'un autre axe de travail.
-  fait quand: nouvelle phase ajoutée à roadmap_experimentation.md et démarrée, ou décision
-  explicite de ne pas en ajouter pour l'instant.
-  réf: roadmap_experimentation.md (section "Prochain sprint recommandé")
+- [P1|ouvert] Démarrer la Phase 1 de `roadmap_apprentissage.md` : squelette
+  `scripts/adaptive_decider.gd` (3ᵉ valeur `"adaptatif"` de `decider_type`, dispatch dans
+  `character.gd::_build_decider()`, variables `learning_rate`/`exploration_epsilon` au registre,
+  ε-greedy seedé, pas encore de mise à jour), + tests dans `tools/run_manual_checks.gd`.
+  fait quand: Phase 1 faite, tests verts, checkpoint `/compact` atteint.
+  réf: roadmap_apprentissage.md (Phase 1), scripts/baseline_decider.gd, scripts/character.gd (L114, L210), scripts/variable_registry.gd (L39)
 - [P3|ouvert] Supprimer le dossier vide `ROBERTO/com_telephone/voice-code-bridge/` (rmdir bloqué
   par un handle Windows pendant la session du 2026-08-28).
   fait quand: `rmdir` réussit (fermer l'IDE si besoin pour libérer le handle).
@@ -13,61 +15,66 @@
 - [P3|ouvert] `_docs/captures/` (captures d'écran envoyées depuis le téléphone) non tracké et
   non ignoré — décider gitignore ou purge.
   fait quand: entrée ajoutée au `.gitignore` racine, ou dossier vidé.
-  réf: .gitignore racine, ROBERTO/com_telephone/README.md (route user.image côté pont Roberto)
+  réf: .gitignore racine
 
 ## Contexte chaud
 
-- 2026-08-28 : le pont vocal `com_telephone` est désormais **hébergé par le projet Roberto**
-  (`D:\ServOMorph\Roberto\com_telephone\`). IA_Life en est un projet **raccordé** : plus de
-  serveur ici, juste `ROBERTO/com_telephone/README.md` + la commande `/roberto` (surveille
-  `...\Roberto\...\logs\messages_ia_life.log`, verrou `_commands/monitor_ia_life.lock`).
-  `POST /send` exige `"project": "ia_life"` et un `"text"` non vide (sinon HTTP 400).
-  Détail migration : `D:\ServOMorph\Roberto\roadmap_com_telephone_hub.md`.
-- Convention `!<commande>` (commande à distance depuis le téléphone, git compris) et règle des
-  deux canaux : toujours dans `.claude/CLAUDE.md` (section "Bridge ROBERTO") — section réécrite
-  le 2026-08-28 (chemins Roberto).
-- Quand un message "salut"/salutation arrive depuis le log téléphone, répondre avec une phrase
-  piochée dans `...\Roberto\...\server\salutations.json` plutôt qu'une formule générique —
-  préférence explicite de l'utilisateur.
+- Axe d'évolution suivant retenu (2026-08-29) : **apprentissage individuel**, option 1B
+  (« heuristiques apprises ») — le personnage apprend pendant sa vie quelle action de recherche
+  de nourriture marche selon sa situation de faim, via une table `(situation, action) → score`.
+  Options 1A (évolution/sélection) et 1C (RL formel) écartées pour l'instant. Plan :
+  `roadmap_apprentissage.md`, Phase 1 non démarrée.
+- Périmètre 1B figé : besoin = faim uniquement (seul besoin implémenté) ; situations S1 roncier
+  visible / S2 en mémoire seulement / S3 rien de connu ; actions = goals `ronce_visible`,
+  `ronce_memorisee`, `errance` ; ε-greedy seedé par perso ; MAJ en moyenne mobile ; un seul
+  apprenant (perso 0) ; pas de persistance entre vies.
+- Risque principal de 1B : si la discrétisation en 3 situations est trop grossière,
+  l'apprentissage plafonnera bas — à réévaluer avant de conclure si le gate Phase 3 stagne.
+- 2026-08-28 : le pont vocal `com_telephone` est hébergé par le projet Roberto
+  (`D:\ServOMorph\Roberto\com_telephone\`). IA_Life en est un projet **raccordé** : `POST /send`
+  exige `"project": "ia_life"` et un `"text"` non vide. Mise en écoute : commande `/roberto`
+  (surveille `...\Roberto\...\logs\messages_ia_life.log`, verrou `_commands/monitor_ia_life.lock`).
+  Détail : `D:\ServOMorph\Roberto\roadmap_com_telephone_hub.md`.
+- Convention `!<commande>` et règle des deux canaux : dans `.claude/CLAUDE.md` (section
+  "Bridge ROBERTO", chemins Roberto).
+- Message "salut" reçu du log téléphone → répondre avec une phrase de
+  `...\Roberto\...\server\salutations.json`, pas une formule générique (préférence utilisateur).
 - Écart connu : `scripts/check_kit.py` toujours absent (étape 10 de `/close` non exécutable) —
-  reconfirmé le 2026-08-28 (huitième fois).
+  reconfirmé le 2026-08-29 (neuvième fois).
 - `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`, `.rl_godot_pid` : résidus des bridges RL tiers
-  abandonnés (GDRL, godot-native-rl) ; non trackés, à nettoyer manuellement si souhaité.
-- `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) reste non tracké, origine non
-  éclaircie : ne pas committer.
+  abandonnés ; non trackés, à nettoyer manuellement si souhaité.
+- `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) : non tracké, ne pas committer.
 - `DOCUMENTATION/RL/report-source.md` : non tracké, à trier avec l'agent documentaire.
-- Ollama tourne en arrière-plan (`gemma3:1b` référence stable pour le décideur LLM, y compris
-  avec le prompt étendu par la Phase 8).
-- Simulation : Phases 1 à 8 du laboratoire closes, aucune Phase 9 définie.
+- Ollama tourne en arrière-plan (`gemma3:1b`, référence stable du décideur LLM).
+- Simulation : Phases 1 à 8 du laboratoire closes ; `roadmap_experimentation.md` n'a plus de
+  phase suivante — le prochain axe est `roadmap_apprentissage.md`.
 
-## Dernière session (2026-08-28)
+## Dernière session (2026-08-29)
 
-# Session du 2026-08-28
+# Session du 2026-08-29
 
 ## Décisions prises
-- Le pont `com_telephone` est migré vers le projet Roberto (hôte du serveur + template de
-  référence unique). IA_Life devient un projet raccordé : plus de serveur, README de
-  raccordement + commande `/roberto`.
-- `.env` d'IA_Life réutilisé tel quel sur Roberto → lien appli et abonnements push préservés.
-- Reste de `ROBERTO/com_telephone/` : serveur/PWA/com_manager retirés du dépôt, reliquats
-  gitignorés → clôt l'action ouverte [P2] sur l'inclusion git du bridge.
+- Axe d'évolution du projet retenu : apprentissage individuel (option 1B, « heuristiques
+  apprises »). Le personnage apprend pendant sa vie quelle action de recherche de nourriture
+  marche selon sa situation de faim. Options 1A (évolution/sélection) et 1C (RL formel) écartées
+  pour l'instant.
+- Périmètre du premier chantier figé : besoin = faim uniquement, 3 situations, 3 actions (goals
+  `ronce_visible` / `ronce_memorisee` / `errance`), ε-greedy seedé, MAJ en moyenne mobile, un
+  seul apprenant (perso 0), pas de persistance entre vies.
 
 ## Livrables produits ou modifiés
-- `ROBERTO/com_telephone/README.md` : réécrit (raccordement au pont Roberto).
-- `.claude/commands/roberto.md` : créé. `.claude/CLAUDE.md` : section « Bridge ROBERTO » réécrite.
-- `ROBERTO/com_telephone/.gitignore`, `_commands/.gitignore` : créés / mis à jour.
-- Serveur + PWA + `com_manager` retirés (`git rm --cached` + suppression disque, sauf 1 dossier vide).
-- Commits : `866a48c`, `852e4a2`.
+- `roadmap_apprentissage.md` : créé (4 phases, Phase 1 [EN COURS] non démarrée, checkpoints /compact).
+- `roadmap_experimentation.md` : section « Prochain sprint » renvoie vers `roadmap_apprentissage.md`.
 
 ## Hypothèses validées / invalidées
-- VALIDE : bascule du pont vers Roberto sans changement de lien appli ni perte des push.
-- EN ATTENTE : tests manuels téléphone (aller-retour vocal par projet) — `Roberto/tests_manuels.md`.
+- EN ATTENTE : la discrétisation en 3 situations est-elle assez fine pour que l'apprentissage
+  progresse (gate Phase 3) — risque principal identifié.
 
 ## Prochaine étape exacte
-Côté IA_Life : rien de bloquant (Phase 9 non définie). Hors zone : finir les tests manuels du
-pont depuis le téléphone, supprimer le dossier vide `voice-code-bridge/`.
+Lancer la Phase 1 de `roadmap_apprentissage.md` : squelette `adaptive_decider.gd` (dispatch,
+variables au registre, ε-greedy seedé, pas de MAJ) + tests dans `tools/run_manual_checks.gd`.
 
 ## Question bloquante pour la session suivante
-Aucune.
+Aucune (roadmap validée dans son principe ; démarrage Phase 1 en attente de feu vert).
 
 <!-- Écrasé intégralement par /close. Synthèse < 25 lignes. -->

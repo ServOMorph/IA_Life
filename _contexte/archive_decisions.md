@@ -31,3 +31,7 @@
 - 2026-08-25 : `ROBERTO/com_telephone/_commands/com_manager.md` libère désormais le port 5000
   (taskkill) avant tout démarrage/redémarrage de `node`, pour prévenir l'échec EADDRINUSE causé
   par un process orphelin non tracké.
+- 2026-08-25 : Phase 4 close — 3 campagnes de référence (`memory_capacity`,
+  `resource_scarcity`, `contrasted_profiles`) formalisées, exécutées sur seeds 1/2/3,
+  agrégées (`tools/aggregate_results.py`) et graphiques (`tools/plot_campaign.py`, SVG sans
+  dépendance). Résultats documentés dans `experiments/README.md`, validés par l'utilisateur.

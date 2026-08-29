@@ -15,12 +15,10 @@ interchangeable automate/LLM, et vision générique (portée/angle/occlusion) qu
 perception sociale par code partagé. Aucune Phase 9 définie pour l'instant.
 Assistant vocal `com_telephone` : le pont n'est plus hébergé ici — migré vers le projet Roberto
 le 2026-08-28. IA_Life est un projet raccordé (README léger + commande `/roberto`).
+Axe suivant : apprentissage individuel (option 1B, `roadmap_apprentissage.md`) — un décideur
+`adaptive_decider.gd` qui apprend en une vie sur la faim. Phase 1 non démarrée.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-25 : Phase 4 close — 3 campagnes de référence (`memory_capacity`,
-  `resource_scarcity`, `contrasted_profiles`) formalisées, exécutées sur seeds 1/2/3,
-  agrégées (`tools/aggregate_results.py`) et graphiques (`tools/plot_campaign.py`, SVG sans
-  dépendance). Résultats documentés dans `experiments/README.md`, validés par l'utilisateur.
 - 2026-08-25 : Phase 5 close — Inspecteur générique dans `ui_manager.gd` piloté par
   `VariableRegistry` (sélecteur agent/catégorie, tags live/dynamique/nécessite-relancer),
   sliders dupliqués retirés des panneaux de coin, confirmation avant Relancer. Validé
@@ -56,3 +54,7 @@ le 2026-08-28. IA_Life est un projet raccordé (README léger + commande `/rober
   `messages_ia_life.log` chez Roberto). Serveur/PWA retirés du dépôt IA_Life. Clôt l'action
   ouverte sur l'inclusion git de `ROBERTO/com_telephone`. Détail :
   `D:\ServOMorph\Roberto\roadmap_com_telephone_hub.md`.
+- 2026-08-29 : axe d'évolution suivant retenu — apprentissage individuel (option 1B,
+  « heuristiques apprises ») : le personnage apprend en une vie quelle action de recherche de
+  nourriture marche selon sa situation de faim (table `(situation, action) → score`). 1A
+  (évolution/sélection) et 1C (RL formel) écartées pour l'instant. Plan : `roadmap_apprentissage.md`.
