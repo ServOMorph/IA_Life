@@ -146,3 +146,41 @@ known_zone_preference à 0.0 ; `Bleu` a le profil inverse. `Vert`/`Jaune` resten
 (valeurs par défaut) comme repère. Résultat mesuré : distance parcourue moyenne 138.99
 (Rouge) contre 89.77 (Bleu), `Vert`/`Jaune` à 123.47/132.39 — cohérent avec les traits
 individuels déjà validés en Phase 2, cette fois combinés.
+
+## Courbe d'apprentissage du décideur adaptatif (roadmap_apprentissage, Phase 3)
+
+`apprentissage_faim_v1.json` fait vivre `Rouge` en `adaptatif` (vision 15,
+`hunger_depletion_rate` 0,8) au milieu de trois `automate`, seed fixe, 420 s simulées. Le
+décideur adaptatif journalise `apprentissage_decision`, `apprentissage_maj` (récompense +
+score avant/après) et `apprentissage_table` (dump de fin de vie).
+
+La campagne compare deux bras au même seed via une grille sur
+`agents.individual.Rouge.exploration_epsilon` : `0.2` (learner, exploite la table apprise)
+et `1.0` (contrôle, sélection toujours aléatoire parmi les actions valides, table jamais
+lue). 2 répétitions par bras → 4 runs.
+
+```powershell
+python tools/run_campaign.py experiments/campaigns/apprentissage_faim_v1.json
+python tools/aggregate_results.py results/apprentissage_faim_v1 --learning-curve results/apprentissage_faim_v1/curve
+python tools/plot_learning_curve.py results/apprentissage_faim_v1/curve/learning_curve.csv results/apprentissage_faim_v1/charts
+```
+
+`--learning-curve` produit `learning_curve.csv` (taux de décisions de faim réussies
+`reward > 0` et `reward` moyen, en fenêtre glissante, avec la colonne `params` du bras) et
+`learning_curve_summary.json` (pentes, débuts/fins, `reward` moyen sur la vie, test
+d'égalité stricte des suites de récompense entre répétitions d'un même bras).
+
+Résultat Phase 3 (2026-08-30, seed 20260830) : chaque bras est **reproductible au bit près**
+entre ses 2 répétitions. Le learner accumule un `reward` moyen supérieur au contrôle sur la
+vie (−0,203 vs −0,250), taux de réussite double (0,094 vs 0,047) ; dans S1 la table rend
+`ronce_visible` positive (+0,106) et la sélection s'y concentre ; le learner survit (420 s),
+le contrôle meurt (375 s). **Gate franchi sur ce seed.**
+
+Phase 4 — robustesse (`apprentissage_faim_v2.json` + `campaigns/apprentissage_faim_v2_sweep.json`,
+balayage `learning_rate` × `exploration_epsilon`, 2 seeds, 24 runs) : l'avantage **ne
+généralise pas**. Sur le second seed (20260831) le contrôle aléatoire fait mieux que la
+plupart des configurations apprenantes ; l'effet moyen (~0,05 de `reward`) est de l'ordre
+de la variance inter-seed. `learning_rate` n'a aucun effet mesurable (suites de récompense
+identiques au bit près pour `lr` 0,1/0,2/0,4 sur le seed « propre »). Seul signal robuste :
+`exploration_epsilon` doit être ≤ 0,2 (à 0,4 le décideur retombe au niveau du hasard).
+Détail et recommandation : `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`.

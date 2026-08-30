@@ -40,11 +40,13 @@ func _run() -> void:
 	_test_adaptive_determinism()
 	_test_adaptive_engagement()
 	_test_adaptive_registry_and_dispatch()
+	_test_adaptive_online_reward()
+	_test_adaptive_terminal_penalty()
 	_test_continuous_harvest_while_in_contact()
 	_test_baseline_ignores_full_inventory()
 	_test_adaptive_ignores_full_inventory()
 	if _failures.is_empty():
-		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig, vision (Phase 8) et décideur adaptatif (Phase 1) validés automatiquement.")
+		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig, vision (Phase 8) et décideur adaptatif (Phases 1 et 2) validés automatiquement.")
 		get_tree().quit(0)
 	else:
 		for failure in _failures:
@@ -501,6 +503,50 @@ func _test_adaptive_registry_and_dispatch() -> void:
 	character.decider_type = "automate"
 	_expect(character._build_decider() is BaselineDecider, "Adaptatif dispatch : les autres valeurs de decider_type ne doivent pas être affectées.")
 	character.queue_free()
+
+func _test_adaptive_online_reward() -> void:
+	# Fenêtre 1 : décision prise en S1 sur l'action au meilleur score.
+	var decider := AdaptiveDecider.new()
+	decider.configure(0.5, 0.0, 2.0, 5, "Test")
+	decider.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE, 0.4)
+	decider.decide(_adaptive_observation({"hunger": 40.0, "has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": 0.0}))
+	_expect(decider.pending_decision()["action"] == AdaptiveDecider.ACTION_RONCE_VISIBLE, "Adaptatif reward : la première décision doit être mise en attente.")
+	_expect(decider.updates_total == 0, "Adaptatif reward : aucune mise à jour tant qu'une seule décision a été prise.")
+
+	# Fenêtre 2 : l'engagement expire, la faim a augmenté de 3 sur la fenêtre.
+	decider.decide(_adaptive_observation({"hunger": 43.0, "has_visible_ronce": true, "delta": 3.0, "elapsed_seconds": 3.0}))
+	var expected_reward := clampf(3.0 / AdaptiveDecider.REWARD_HUNGER_SCALE, -1.0, 1.0)
+	var expected_score := 0.4 + 0.5 * (expected_reward - 0.4)
+	_expect(decider.updates_total == 1, "Adaptatif reward : une reprise de décision doit produire exactement une mise à jour.")
+	_expect(is_equal_approx(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE), expected_score), "Adaptatif reward : le score doit suivre score += lr * (reward - score).")
+
+	# Une faim en forte baisse donne une récompense négative saturée à -1.
+	var falling := AdaptiveDecider.new()
+	falling.configure(1.0, 0.0, 1.0, 5, "Test")
+	falling.decide(_adaptive_observation({"hunger": 30.0, "has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": 0.0}))
+	falling.decide(_adaptive_observation({"hunger": 0.5, "has_visible_ronce": true, "delta": 2.0, "elapsed_seconds": 2.0}))
+	_expect(is_equal_approx(falling.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE), -1.0), "Adaptatif reward : une faim en forte baisse doit donner une récompense bornée à -1.")
+
+func _test_adaptive_terminal_penalty() -> void:
+	var decider := AdaptiveDecider.new()
+	decider.configure(0.5, 0.0, 5.0, 5, "Test")
+	decider.decide(_adaptive_observation({"hunger": 20.0, "has_visible_ronce": true, "has_memories": true, "delta": 0.0, "elapsed_seconds": 0.0}))
+	var pending := decider.pending_decision()
+	var before := decider.get_score(pending["situation"], pending["action"])
+	var expected := before + 0.5 * (AdaptiveDecider.TERMINAL_REWARD - before)
+
+	decider.on_terminal_starvation()
+	_expect(decider.updates_total == 1, "Adaptatif terminal : la pénalité terminale compte pour une mise à jour.")
+	_expect(is_equal_approx(decider.get_score(pending["situation"], pending["action"]), expected), "Adaptatif terminal : la mort de faim pénalise la dernière cellule tenue.")
+
+	decider.on_terminal_starvation()
+	_expect(decider.updates_total == 1, "Adaptatif terminal : la pénalité terminale ne s'applique qu'une seule fois.")
+	_expect(is_equal_approx(decider.get_score(pending["situation"], pending["action"]), expected), "Adaptatif terminal : un second appel ne modifie pas le score.")
+
+	var untouched := AdaptiveDecider.new()
+	untouched.configure(0.5, 0.0, 5.0, 5, "Test")
+	untouched.on_terminal_starvation()
+	_expect(untouched.updates_total == 0, "Adaptatif terminal : sans décision mémorisée, la mort ne produit aucune mise à jour.")
 
 func _test_adaptive_engagement() -> void:
 	var stable := _adaptive_observation({"has_visible_ronce": true, "has_memories": true, "delta": 0.1})

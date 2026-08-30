@@ -434,6 +434,8 @@ func _finish_headless_run(reason: String) -> void:
 		for character in _characters:
 			if not is_instance_valid(character):
 				continue
+			if not character.is_dead:
+				character.log_adaptive_table("run_end")
 			var parameters := _character_defaults.duplicate(true)
 			if _character_overrides.has(character.display_name):
 				parameters.merge(_character_overrides[character.display_name], true)

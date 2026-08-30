@@ -313,6 +313,9 @@ func _die() -> void:
 		"berries_picked_total": berries_picked_total,
 		"berries_eaten_total": berries_eaten_total,
 	})
+	if _decider is AdaptiveDecider:
+		_decider.on_terminal_starvation()
+	log_adaptive_table("starvation")
 	if _anim_player != null:
 		_play_anim("Death")
 		return
@@ -716,6 +719,12 @@ func _decay_memories(scaled_delta: float) -> void:
 
 func memorized_ronces_count() -> int:
 	return _memories.size()
+
+## Dump de la table apprise, pour les agents en décideur adaptatif uniquement. Appelé à
+## la mort de faim et en fin de simulation (main.gd) pour les survivants.
+func log_adaptive_table(reason: String) -> void:
+	if _decider is AdaptiveDecider:
+		_decider.log_table(reason)
 
 ## Un roncier mémorisé vidé de ses mûres n'est plus une cible : sans ce filtre, un agent
 ## affamé qui vient de vider un roncier le garde comme souvenir le plus proche (il est

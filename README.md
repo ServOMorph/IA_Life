@@ -62,14 +62,21 @@ la perception sociale par code partagé (`Character._perceive`).
 
 Axe d'évolution suivant (retenu le 2026-08-29) : l'apprentissage individuel — un troisième
 décideur (`scripts/adaptive_decider.gd`) qui apprend, pendant une seule vie, quelle action de
-recherche de nourriture marche selon la situation de faim, avec engagement sur l'action choisie
-plutôt qu'une décision à chaque frame. Phase 1 close. Plan : `roadmap_apprentissage.md`.
+recherche de nourriture marche selon la situation de faim. `roadmap_apprentissage.md` est
+terminée côté code (4 phases) : discrétisation S1/S2/S3, table ε-greedy, engagement sur
+l'action, récompense sur la fenêtre d'engagement, mise à jour en ligne, pénalité terminale,
+logs `apprentissage_*`. Phase 3 : un gate comparant l'apprenant à un bras de contrôle
+aléatoire (même seed) est franchi sur le seed testé. Phase 4 (balayage `learning_rate` ×
+`exploration_epsilon`, 2 seeds) : l'avantage **ne généralise pas** — `learning_rate` sans
+levier, la discrétisation est probablement trop grossière pour apprendre en une seule vie.
+Bifurcation à trancher (affiner le modèle, ou basculer vers sélection entre vies / RL) —
+`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`.
 
-Cette Phase 1 a révélé et corrigé deux bugs de mécanique préexistants, affectant l'automate et
-le LLM mock (pas seulement l'apprentissage) : le seuil de recherche de nourriture était inversé,
-et rien ne faisait sortir un agent d'un objectif de cueillette atteint. Corrigés et revalidés sur
-six campagnes de référence rejouées à seeds identiques — détail :
-`_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`.
+Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
+l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne
+faisait sortir un agent d'un objectif de cueillette atteint. Corrigés et revalidés sur les
+six campagnes de référence et sur `llm_vs_automate_v1` (vrai LLM Ollama) rejoués à seeds
+identiques — détail : `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`.
 
 L'assistant vocal `com_telephone` (pilotage du projet depuis un téléphone) n'est plus hébergé
 ici : le pont a été migré vers le projet Roberto le 2026-08-28. IA_Life en est un projet

@@ -216,13 +216,164 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
     return {"schema_version": 1, "experiments": experiments}
 
 
+def _jsonl_sources(source: Path) -> list[Path]:
+    if source.is_file():
+        return [source]
+    return sorted(source.rglob("*.jsonl"))
+
+
+def _learning_series(jsonl_path: Path) -> dict[str, list[dict[str, Any]]]:
+    """Extrait, par agent, la suite chronologique des mises à jour de score non terminales
+    du décideur adaptatif (événements apprentissage_maj)."""
+    series: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    for line in jsonl_path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if not line:
+            continue
+        try:
+            event = json.loads(line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("category") != "apprentissage_maj":
+            continue
+        data = event.get("data", {})
+        if data.get("terminal", False):
+            continue
+        series[str(data.get("agent", ""))].append({
+            "elapsed_seconds": float(event.get("elapsed_seconds", 0.0)),
+            "reward": float(data.get("reward", 0.0)),
+        })
+    return series
+
+
+def build_learning_curves(source: Path, window: int, step: int) -> tuple[list[dict[str, Any]], dict[str, Any]]:
+    sources = _jsonl_sources(source)
+    if not sources:
+        raise ValueError(f"Aucun fichier *.jsonl dans {source}")
+    rows: list[dict[str, Any]] = []
+    runs: dict[str, Any] = {}
+    # Regroupé par (agent, paramètres de campagne) : deux runs ne sont comparables pour la
+    # reproductibilité que s'ils partagent la même configuration (même bras de campagne).
+    reward_signatures: dict[str, list[str]] = defaultdict(list)
+    for jsonl_path in sources:
+        run_name = jsonl_path.parent.name if jsonl_path.parent != source and source.is_dir() else jsonl_path.stem
+        run_parameters: dict[str, Any] = {}
+        manifest_path = jsonl_path.parent / "manifest.json"
+        if manifest_path.exists():
+            try:
+                run_parameters = json.loads(manifest_path.read_text(encoding="utf-8")).get("parameters", {})
+            except (OSError, json.JSONDecodeError):
+                run_parameters = {}
+        param_key = json.dumps(run_parameters, sort_keys=True)
+        for agent, decisions in _learning_series(jsonl_path).items():
+            rewards = [d["reward"] for d in decisions]
+            reward_signatures[f"{agent} | {param_key}"].append(json.dumps([round(r, 6) for r in rewards]))
+            n = len(decisions)
+            windows: list[dict[str, Any]] = []
+            if n >= window:
+                for w_index, start in enumerate(range(0, n - window + 1, step)):
+                    chunk = decisions[start:start + window]
+                    success = mean([1.0 if d["reward"] > 0.0 else 0.0 for d in chunk])
+                    center = start + window // 2
+                    row = {
+                        "run": run_name,
+                        "agent": agent,
+                        "params": param_key,
+                        "n_decisions": n,
+                        "window_index": w_index,
+                        "center_decision": center,
+                        "center_elapsed": decisions[center]["elapsed_seconds"],
+                        "success_rate": success,
+                        "mean_reward": mean([d["reward"] for d in chunk]),
+                    }
+                    rows.append(row)
+                    windows.append(row)
+            start_rate = windows[0]["success_rate"] if windows else 0.0
+            end_rate = windows[-1]["success_rate"] if windows else 0.0
+            def _slope(key: str) -> float:
+                if len(windows) < 2:
+                    return 0.0
+                xs = [w["window_index"] for w in windows]
+                ys = [w[key] for w in windows]
+                x_mean = mean(xs)
+                y_mean = mean(ys)
+                denom = sum((x - x_mean) ** 2 for x in xs)
+                return sum((x - x_mean) * (y - y_mean) for x, y in zip(xs, ys)) / denom if denom else 0.0
+
+            def _step_volatility(key: str) -> float:
+                # Amplitude moyenne des variations d'une fenêtre à la suivante : mesure
+                # « apprend sans osciller » (bas = stable, haut = la courbe zigzague).
+                if len(windows) < 2:
+                    return 0.0
+                deltas = [abs(windows[i][key] - windows[i - 1][key]) for i in range(1, len(windows))]
+                return mean(deltas)
+
+            half = len(windows) // 2
+            first_half = mean([w["mean_reward"] for w in windows[:half]]) if half else 0.0
+            second_half = mean([w["mean_reward"] for w in windows[half:]]) if windows[half:] else 0.0
+            runs.setdefault(run_name, {})[agent] = {
+                "parameters": run_parameters,
+                "n_decisions": n,
+                "windows": len(windows),
+                "start_success_rate": start_rate,
+                "end_success_rate": end_rate,
+                "delta_success_rate": end_rate - start_rate,
+                "slope_per_window": _slope("success_rate"),
+                "mean_reward_slope_per_window": _slope("mean_reward"),
+                "success_rate_step_volatility": _step_volatility("success_rate"),
+                "mean_reward_step_volatility": _step_volatility("mean_reward"),
+                "first_half_mean_reward": first_half,
+                "second_half_mean_reward": second_half,
+                "second_minus_first_half_mean_reward": second_half - first_half,
+                "start_mean_reward": windows[0]["mean_reward"] if windows else 0.0,
+                "end_mean_reward": windows[-1]["mean_reward"] if windows else 0.0,
+                "overall_success_rate": mean([1.0 if r > 0.0 else 0.0 for r in rewards]) if rewards else 0.0,
+                "overall_mean_reward": mean(rewards) if rewards else 0.0,
+            }
+    reproducible = {
+        agent: (len(set(signatures)) == 1 and len(signatures) > 1)
+        for agent, signatures in reward_signatures.items()
+    }
+    summary = {
+        "schema_version": 1,
+        "window": window,
+        "step": step,
+        "runs": runs,
+        "reproducible_across_runs": reproducible,
+    }
+    return rows, summary
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="Valide et agrège les résultats IA_Life.")
     parser.add_argument("source", type=Path, help="Fichier summary ou dossier à analyser")
     parser.add_argument("--output", type=Path, help="CSV des résultats par agent")
     parser.add_argument("--report", type=Path, help="Rapport JSON agrégé")
     parser.add_argument("--validate-only", action="store_true", help="Valide sans créer de sortie")
+    parser.add_argument("--learning-curve", type=Path, metavar="OUT_DIR",
+                        help="Écrit learning_curve.csv + learning_curve_summary.json (taux de décisions de faim réussies du décideur adaptatif, fenêtre glissante) à partir des .jsonl de la source")
+    parser.add_argument("--lc-window", type=int, default=20, help="Taille de la fenêtre glissante (décisions), défaut 20")
+    parser.add_argument("--lc-step", type=int, default=5, help="Pas de la fenêtre glissante (décisions), défaut 5")
     args = parser.parse_args()
+
+    if args.learning_curve is not None:
+        try:
+            rows, summary = build_learning_curves(args.source, args.lc_window, args.lc_step)
+        except ValueError as error:
+            print(f"Courbe d'apprentissage échouée :\n{error}", file=sys.stderr)
+            return 1
+        args.learning_curve.mkdir(parents=True, exist_ok=True)
+        csv_path = args.learning_curve / "learning_curve.csv"
+        fieldnames = ["run", "agent", "params", "n_decisions", "window_index", "center_decision", "center_elapsed", "success_rate", "mean_reward"]
+        with csv_path.open("w", encoding="utf-8", newline="") as file:
+            writer = csv.DictWriter(file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(rows)
+        summary_path = args.learning_curve / "learning_curve_summary.json"
+        summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+        print(f"Courbe d'apprentissage écrite : {csv_path}")
+        print(f"Résumé courbe d'apprentissage écrit : {summary_path}")
+        return 0
     try:
         summaries = load_valid_summaries(args.source)
     except ValueError as error:

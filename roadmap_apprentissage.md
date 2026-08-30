@@ -101,7 +101,7 @@ remonte à 85 % de survie, au-dessus des 75 % d'origine. Détail et tableau comp
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 2 — Récompense et mise à jour en ligne  [TODO]
+## Phase 2 — Récompense et mise à jour en ligne  [FAIT]
 
 - Au début de chaque `decide()` en situation de faim : calculer `reward` depuis la variation de
   `hunger` depuis la dernière décision de faim (normalisée, bornée `[-1, 1]`) ; appliquer
@@ -114,10 +114,14 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 - Tests : séquence scriptée situation → action → Δhunger connu → score attendu ; borne de reward
   respectée ; MAJ terminale appelée exactement une fois.
 
+Réalisé le 2026-08-30 : `adaptive_decider.gd` (`_apply_online_reward`, `_commit_reward`,
+`on_terminal_starvation`, `log_table`), hooks fin de vie dans `character.gd` et `main.gd`,
+2 tests dans `run_manual_checks.gd`. `REWARD_HUNGER_SCALE` reste une constante interne (5,0).
+
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 3 — Campagne de validation (gate)  [TODO]
+## Phase 3 — Campagne de validation (gate)  [FAIT]
 
 - `experiments/apprentissage_faim_v1.json` : seed fixe, personnage 0 en `adaptatif`, les autres
   en `automate`, durée simulée permettant plusieurs dizaines de décisions de faim pour l'apprenant.
@@ -132,10 +136,19 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
   `_docs/decisions/2026-08-JJ_apprentissage-intra-vie-faim.md` (+ ligne dans
   `_docs/decisions/INDEX.md`).
 
+Réalisé le 2026-08-30. Le gate de pente absolue n'a pas fonctionné (transitoire de faim
+initiale commun à tous les comportements ; `vision_range` 40 → 100 % S1). **Recalibré** : gate
+= `reward` moyen de l'apprenant (`exploration_epsilon` 0,2) au-dessus d'un bras de contrôle
+(`exploration_epsilon` 1,0, sélection aléatoire) au même seed, `vision_range` 15. Ainsi
+recalibré, gate franchi sur le seed testé (learner −0,203 > contrôle −0,250, reproductible ;
+table S1 `ronce_visible` → +0,106 ; learner survit, contrôle meurt). Outils :
+`aggregate_results.py --learning-curve`, `tools/plot_learning_curve.py`. Décision :
+`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`.
+
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Robustesse et réglages  [TODO]
+## Phase 4 — Robustesse et réglages  [FAIT]
 
 - Balayage `learning_rate` × `exploration_epsilon` (petite campagne multi-valeurs) : trouver une
   plage qui apprend sans osciller.
@@ -144,6 +157,21 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
   change le comportement.
 - Décider explicitement de la suite (ligne dans `signals.md`) : persistance entre vies (1B
   étendu), plusieurs apprenants simultanés, ou bascule vers 1C (RL).
+
+Réalisé le 2026-08-30 (`experiments/apprentissage_faim_v2.json`,
+`experiments/campaigns/apprentissage_faim_v2_sweep.json`, `lr` ∈ {0,1 ; 0,2 ; 0,4} ×
+`ε` ∈ {0,1 ; 0,2 ; 0,4 ; 1,0}, 2 seeds, 24 runs). Résultat : l'avantage de l'apprenant sur le
+contrôle **ne généralise pas** (+0,07 de `reward` sur un seed, nul/négatif sur l'autre) ;
+`learning_rate` sans effet mesurable (suites de récompense identiques au bit près sur le seed
+« propre ») ; seul signal robuste : `exploration_epsilon` ≤ 0,2. Aucune configuration
+n'oscille. Sous-cas « porte des mûres » non ajouté (Phase 3/4 ne l'a pas motivé). Décision de
+suite reportée à `signals.md` : bifurcation à trancher (affiner la discrétisation 1B, ou acter
+que 1B ne rend pas en une vie et arbitrer 1A / 1C). Détail :
+`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md` (sections Phase 4).
+
+---
+
+**Roadmap terminée côté code (4 phases).** Suite de l'axe : voir action P1 de `signals.md`.
 
 ## Points ouverts / hors scope
 

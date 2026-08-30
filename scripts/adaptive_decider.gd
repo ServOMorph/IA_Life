@@ -14,9 +14,14 @@ extends RefCounted
 ## La direction, elle, est recalculée à chaque frame à partir de l'action tenue : c'est
 ## l'action qui est figée, pas la trajectoire.
 ##
-## Phase 1 : la table est initialisée neutre et n'est jamais mise à jour. La décision en
-## cours est mémorisée (pending) pour que la Phase 2 puisse calculer la récompense sur la
-## fenêtre d'engagement.
+## Phase 2 : à chaque reprise de décision en situation de faim, la cellule
+## (situation, action) qui vient d'être tenue est créditée de la variation de faim
+## observée sur sa fenêtre d'engagement, normalisée par REWARD_HUNGER_SCALE et bornée
+## à [-1, 1], puis mise à jour en moyenne mobile (score += learning_rate * (reward -
+## score)). La mort de faim ajoute une pénalité terminale unique sur la dernière cellule
+## tenue. Trois événements sont journalisés : apprentissage_decision (à chaque nouvelle
+## décision), apprentissage_maj (à chaque mise à jour de score), apprentissage_table
+## (dump de la table en fin de vie).
 
 const SITUATION_RONCE_VISIBLE := "S1_ronce_visible"
 const SITUATION_MEMOIRE := "S2_memoire"
@@ -33,6 +38,12 @@ const ACTIONS_BY_SITUATION := {
 	SITUATION_INCONNU: [ACTION_ERRANCE],
 }
 const INITIAL_SCORE := 0.0
+# Échelle de normalisation de la variation de faim en récompense. À 5,0 : perdre une
+# fenêtre d'engagement complète aux réglages par défaut (~1,2 de faim sur 2,0 s) vaut
+# environ -0,24 ; une fenêtre où l'agent a mangé sature à +1,0. Valeur à régler en
+# Phase 4 si la pente d'apprentissage plafonne ou oscille.
+const REWARD_HUNGER_SCALE := 5.0
+const TERMINAL_REWARD := -1.0
 
 var learning_rate := 0.2
 var exploration_epsilon := 0.2
@@ -43,6 +54,7 @@ var last_situation := ""
 var last_action := ""
 var last_explored := false
 var decisions_total := 0
+var updates_total := 0
 
 var _scores: Dictionary = {}
 var _rng := RandomNumberGenerator.new()
@@ -50,6 +62,7 @@ var _pending: Dictionary = {}
 var _engaged_situation := ""
 var _engaged_action := ""
 var _engagement_timer := 0.0
+var _terminal_applied := false
 
 func _init() -> void:
 	reset_table()
@@ -105,11 +118,13 @@ func decide(observation: Dictionary) -> Dictionary:
 	var actions := available_actions(situation, observation)
 	_engagement_timer -= float(observation.get("delta", 0.0))
 	if _must_decide(situation, actions):
+		_apply_online_reward(float(observation["hunger"]), float(observation.get("elapsed_seconds", 0.0)))
 		_engaged_situation = situation
 		_engaged_action = _select_action(situation, actions)
 		_engagement_timer = decision_interval_seconds
 		decisions_total += 1
 		_record_pending(situation, _engaged_action, observation)
+		_log_decision(situation, _engaged_action)
 
 	var targeted := _build_targeted_action(_engaged_action, observation)
 	if not targeted.is_empty():
@@ -187,6 +202,61 @@ func _record_pending(situation: String, action: String, observation: Dictionary)
 		"hunger": float(observation["hunger"]),
 		"elapsed_seconds": float(observation.get("elapsed_seconds", 0.0)),
 	}
+
+## Crédite la cellule (situation, action) tenue jusqu'ici de la variation de faim
+## observée sur sa fenêtre d'engagement. Sans décision précédente en attente, rien à
+## faire (première décision de la vie).
+func _apply_online_reward(hunger_now: float, elapsed_now: float) -> void:
+	if _pending.is_empty():
+		return
+	var reward := clampf((hunger_now - float(_pending["hunger"])) / REWARD_HUNGER_SCALE, -1.0, 1.0)
+	var window := elapsed_now - float(_pending.get("elapsed_seconds", elapsed_now))
+	_commit_reward(String(_pending["situation"]), String(_pending["action"]), reward, window, false)
+
+## Pénalité terminale : appliquée une seule fois, sur la dernière cellule tenue, quand
+## l'agent meurt de faim. character.gd::_die() en est l'appelant.
+func on_terminal_starvation() -> void:
+	if _terminal_applied:
+		return
+	_terminal_applied = true
+	if _pending.is_empty():
+		return
+	_commit_reward(String(_pending["situation"]), String(_pending["action"]), TERMINAL_REWARD, 0.0, true)
+
+func _commit_reward(situation: String, action: String, reward: float, window_seconds: float, terminal: bool) -> void:
+	var old_score := get_score(situation, action)
+	var new_score := old_score + learning_rate * (reward - old_score)
+	set_score(situation, action, new_score)
+	updates_total += 1
+	GameLogger.log_event_data("apprentissage_maj", "%s : %s/%s reward %.3f  score %.3f -> %.3f%s" % [agent_name, situation, action, reward, old_score, new_score, "  (terminal)" if terminal else ""], {
+		"agent": agent_name,
+		"situation": situation,
+		"action": action,
+		"reward": reward,
+		"old_score": old_score,
+		"new_score": new_score,
+		"window_seconds": window_seconds,
+		"terminal": terminal,
+	})
+
+func _log_decision(situation: String, action: String) -> void:
+	GameLogger.log_event_data("apprentissage_decision", "%s : %s -> %s%s" % [agent_name, situation, action, "  (exploration)" if last_explored else ""], {
+		"agent": agent_name,
+		"situation": situation,
+		"action": action,
+		"explored": last_explored,
+		"score": get_score(situation, action),
+	})
+
+## Dump complet de la table apprise, en fin de vie (mort de faim ou fin de simulation).
+func log_table(reason: String) -> void:
+	GameLogger.log_event_data("apprentissage_table", "%s : table apprise (%s) — %d décisions, %d mises à jour" % [agent_name, reason, decisions_total, updates_total], {
+		"agent": agent_name,
+		"reason": reason,
+		"table": table_snapshot(),
+		"decisions_total": decisions_total,
+		"updates_total": updates_total,
+	})
 
 ## Renvoie un dictionnaire vide quand l'action tenue n'impose pas de cible : le flux
 ## retombe alors sur le comportement de repli (social puis errance), identique à

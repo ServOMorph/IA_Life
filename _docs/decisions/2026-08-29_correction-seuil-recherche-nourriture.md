@@ -139,3 +139,33 @@ plusieurs allers-retours dans la zone de collision, d'où la hausse de cueillett
 survie à distance parcourue quasi identique. Les cinq autres campagnes non-LLM sont
 rejouées pour confirmation (voir tableau global à compléter) ; `llm_vs_automate` reste à
 traiter séparément (appels Ollama réels).
+
+## `llm_vs_automate_v1` rejouée (2026-08-30)
+
+15 runs (5 seeds × {`automate`, `llm_mock`, `llm`}), `gemma3:1b`, 180 s simulées.
+Pré-correction conservé dans `results/llm_vs_automate_v1/`, post-correction dans
+`results/llm_vs_automate_v1__post_correction/`.
+
+| décideur | métrique | pré | post |
+|---|---|---|---|
+| `automate` | survie | 65 % | 65 % |
+| `automate` | cueilli / mangé | 1,65 / 1,50 | **2,60 / 2,15** |
+| `automate` | distance | 373,9 | 376,1 |
+| `llm_mock` | survie | 40 % | **50 %** |
+| `llm_mock` | cueilli / mangé | 1,20 / 1,10 | **1,95 / 1,65** |
+| `llm_mock` | distance | 385,5 | 399,2 |
+| `llm` (Ollama) | survie | 40 % | 35 % |
+| `llm` (Ollama) | cueilli / mangé | 1,25 / 1,25 | 1,40 / 1,15 |
+| `llm` (Ollama) | distance | 188,8 | 132,0 |
+| `llm` (Ollama) | mémorisés | 0,40 | 0,15 |
+| `llm` (Ollama) | latence / taux erreur | 1409 ms / 0,4 % | 1704 ms / 0,7 % |
+
+`automate` et `llm_mock` suivent les six autres campagnes : cueillette et consommation en
+hausse nette à survie stable ou meilleure. Le décideur `llm` réel ne profite pas de la
+correction du seuil — attendu : son prompt transmet la faim brute sans mention de
+`pickup_hunger_threshold` (cf. section « Décision »), seules la cueillette continue et le
+gating inventaire le touchent. Les écarts observés côté `llm` (survie −1 agent sur 20,
+distance −30 %, mémorisés −0,15) restent dans le bruit d'un modèle 1 B sur 5 seeds ; le
+taux d'erreur (0,7 %) et la latence sont sans effet fonctionnel. Aucune régression
+imputable à la correction. La baisse de distance côté `llm` mériterait un replay ciblé si
+`llm_vs_automate` redevient un scénario de référence actif.

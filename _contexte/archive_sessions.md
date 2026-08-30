@@ -246,3 +246,38 @@ variables au registre, ε-greedy seedé, pas de MAJ) + tests dans `tools/run_man
 
 ## Question bloquante pour la session suivante
 Aucune (roadmap validée dans son principe ; démarrage Phase 1 en attente de feu vert).
+
+---
+
+# Session du 2026-08-30 (matin)
+
+## Décisions prises
+- Correction du seuil de recherche de nourriture (automate + LLM mock) : `hunger <=
+  pickup_hunger_threshold` au lieu de `>`, alignée sur la mécanique de cueillette réelle.
+- Correction de la mécanique de cueillette : cueillette continue tant que l'agent est au contact
+  d'un roncier (`ronce.gd`), et les trois décideurs cessent de cibler un roncier quand
+  l'inventaire est plein (`max_berries_carried` ajouté à l'observation).
+- Décideur adaptatif : l'action choisie est tenue pendant un intervalle de décision
+  (`adaptive_decision_interval_seconds`) plutôt que retirée à chaque frame physique.
+- `_docs/captures/` purgé ; `ROBERTO/com_telephone/voice-code-bridge/` retiré du disque.
+
+## Livrables produits ou modifiés
+- `scripts/adaptive_decider.gd` : créé (Phase 1 complète de `roadmap_apprentissage.md`).
+- `scripts/baseline_decider.gd`, `scripts/llm_decider.gd`, `scripts/character.gd`,
+  `scripts/ronce.gd`, `scripts/variable_registry.gd`, `scripts/main.gd` : corrections seuil +
+  mécanique de cueillette + engagement adaptatif.
+- `tools/run_manual_checks.gd` : 15 nouvelles vérifications ; suite complète verte.
+- `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`,
+  `_docs/decisions/2026-08-29_engagement-decision-adaptatif.md` : créés, indexés.
+- `roadmap_apprentissage.md` : Phase 1 passée à [FAIT].
+
+## Hypothèses validées / invalidées
+- VALIDE : la correction de mécanique restaure ou dépasse les six campagnes de référence
+  rejouées à seeds identiques.
+- EN ATTENTE : `llm_vs_automate_v1` non rejoué (Ollama injoignable).
+
+## Prochaine étape exacte
+Vérifier qu'Ollama tourne, rejouer `llm_vs_automate_v1`. Puis démarrer la Phase 2.
+
+## Question bloquante pour la session suivante
+Aucune.

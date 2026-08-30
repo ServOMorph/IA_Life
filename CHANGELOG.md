@@ -1,3 +1,32 @@
+## v0.24 — 2026-08-30
+
+### Ajouté
+- `roadmap_apprentissage.md` Phase 2 : récompense sur la fenêtre d'engagement (variation de
+  faim normalisée, bornée `[-1, 1]`), mise à jour en ligne `score += lr × (reward − score)`,
+  pénalité terminale unique à la mort de faim, logs `apprentissage_decision` /
+  `apprentissage_maj` / `apprentissage_table`. Hooks fin de vie dans `character.gd` et
+  `main.gd`. 2 tests dans `tools/run_manual_checks.gd`.
+- `tools/aggregate_results.py --learning-curve` : courbe d'apprentissage du décideur
+  adaptatif à partir des `.jsonl` (taux de décisions de faim réussies et `reward` moyen en
+  fenêtre glissante, pentes, volatilité fenêtre-à-fenêtre, `reward` 1re vs 2e moitié de vie,
+  test d'égalité stricte des suites de récompense par bras de campagne).
+- `tools/plot_learning_curve.py` : courbes SVG sans dépendance (taux de réussite et `reward`
+  moyen vs temps simulé, une ligne par bras).
+- `experiments/apprentissage_faim_v1.json` + `campaigns/apprentissage_faim_v1.json` (Phase 3,
+  learner vs contrôle aléatoire au même seed) ; `experiments/apprentissage_faim_v2.json` +
+  `campaigns/apprentissage_faim_v2_sweep.json` (Phase 4, balayage `learning_rate` ×
+  `exploration_epsilon` sur 2 seeds).
+- `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md` (Phases 3-4) + ligne INDEX.
+
+### Modifié
+- `roadmap_apprentissage.md` : Phases 2, 3, 4 passées à [FAIT] ; roadmap terminée côté code.
+  Phase 3 gate recalibré (bras de contrôle `exploration_epsilon` 1,0, `vision_range` 15) :
+  franchi sur le seed testé. Phase 4 : l'avantage intra-vie ne généralise pas sur 2 seeds,
+  `learning_rate` sans effet mesurable — bifurcation d'axe à trancher (`signals.md`).
+- `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md` : tableau
+  `llm_vs_automate_v1` rejoué post-correction (15 runs, Ollama réel) — pas de régression.
+- `experiments/README.md` : section « Courbe d'apprentissage du décideur adaptatif ».
+
 ## v0.23 — 2026-08-30
 
 ### Ajouté

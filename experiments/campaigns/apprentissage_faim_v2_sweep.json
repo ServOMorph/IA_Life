@@ -1,0 +1,12 @@
+{
+  "campaign_id": "apprentissage-faim-v2-sweep",
+  "base_config": "../apprentissage_faim_v2.json",
+  "parameter_grid": {
+    "agents.individual.Rouge.learning_rate": [0.1, 0.2, 0.4],
+    "agents.individual.Rouge.exploration_epsilon": [0.1, 0.2, 0.4, 1.0]
+  },
+  "seeds": [20260830, 20260831],
+  "repetitions": 1,
+  "python_timeout_seconds": 500,
+  "output_dir": "../../results/apprentissage_faim_v2_sweep"
+}

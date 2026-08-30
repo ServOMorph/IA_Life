@@ -1,0 +1,9 @@
+{
+  "campaign_id": "apprentissage-faim-v1",
+  "base_config": "../apprentissage_faim_v1.json",
+  "parameter_grid": {"agents.individual.Rouge.exploration_epsilon": [0.2, 1.0]},
+  "seeds": [20260830],
+  "repetitions": 2,
+  "python_timeout_seconds": 600,
+  "output_dir": "../../results/apprentissage_faim_v1"
+}
