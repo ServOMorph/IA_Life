@@ -46,24 +46,57 @@ C'est le premier pas concret de l'axe « Apprentissage » (option 1B). 1A (séle
   la mort de faim.
 - **Portée** : la table repart de zéro à chaque naissance.
 
-## Phase 1 — Squelette du décideur adaptatif  [EN COURS]
+## Phase 1 — Squelette du décideur adaptatif  [FAIT]
 
 - `scripts/adaptive_decider.gd` : nouvelle classe (`extends RefCounted`, aligné sur
   `BaselineDecider`). `decide()` reproduit exactement `BaselineDecider` pour manuel / social /
   errance ; seule la branche « faim » change : discrétisation en S1/S2/S3, table initialisée
   neutre, sélection ε-greedy, mémorisation de `(situation, action, hunger, temps)` pour la MAJ
   ultérieure (pas encore de MAJ en Phase 1).
-- `scripts/variable_registry.gd` : ajouter `"adaptatif"` à l'enum `decider_type` (L39) ;
-  nouvelles variables `learning_rate` et `exploration_epsilon` (scope `individuelle`, catégorie
-  `décision`, `live_editable` false).
-- `scripts/character.gd::_build_decider()` : ajouter l'arm `"adaptatif"` → `AdaptiveDecider.new()`.
-- Vérifier que l'observation porte tout le nécessaire ; ajouter `berries_carried`,
-  `eat_hunger_threshold` et un compteur de temps/step si absents.
-- RNG : instance `RandomNumberGenerator` seedée par personnage (aligné sur la façon dont le
-  projet sème l'aléatoire ailleurs).
-- Tests (`tools/run_manual_checks.gd`) : discrétisation correcte des 3 situations ; `epsilon = 0`
-  → renvoie toujours l'action au meilleur score ; manuel / social / errance strictement
-  identiques à `BaselineDecider` ; deux exécutions à seed fixe → mêmes tirages ε-greedy.
+- `scripts/variable_registry.gd` : `"adaptatif"` ajouté à l'enum `decider_type` (L39) ;
+  variables `learning_rate`, `exploration_epsilon` et `adaptive_decision_interval_seconds`
+  ajoutées (scope `individuelle`, catégorie `décision`, `live_editable` false).
+- `scripts/character.gd::_build_decider()` : arm `"adaptatif"` → `AdaptiveDecider.new()`.
+  Observation complétée : `berries_carried`, `max_berries_carried`, `eat_hunger_threshold`,
+  `elapsed_seconds`.
+- RNG : instance `RandomNumberGenerator` seedée par personnage (`decider_seed` du run + hash du
+  nom), aligné sur la façon dont le projet sème l'aléatoire ailleurs. Déterminisme vérifié par
+  `tools/check_reproducibility.py` sur un run réel.
+- **Ajout non prévu au périmètre initial : engagement sur l'action.** Interroger le décideur à
+  chaque frame physique avec un ε-greedy produisait un changement d'avis plusieurs dizaines de
+  fois par seconde (409 transitions de goal sur un run de 120 s), rendant toute mesure de
+  récompense en Phase 2 inexploitable. `adaptive_decision_interval_seconds` (défaut 2,0 s) fait
+  tenir l'action choisie ; la direction reste recalculée à chaque frame. Décision :
+  `_docs/decisions/2026-08-29_engagement-decision-adaptatif.md`.
+- Tests (`tools/run_manual_checks.gd`) : discrétisation des 3 situations, sélection gloutonne à
+  ε=0, équivalence stricte à `BaselineDecider` hors situation de faim, déterminisme à seed fixe,
+  registre + dispatch, engagement sur l'intervalle (6 vérifications), gating sur l'inventaire
+  plein (voir correctif ci-dessous).
+
+### Correctif de mécanique découvert pendant la Phase 1 (2026-08-29/30)
+
+En alignant `AdaptiveDecider` sur la condition réelle de cueillette
+(`try_pick_berry_from_ronce`), deux bugs préexistants dans **tout** le projet (automate et LLM
+mock, pas seulement l'adaptatif) sont apparus :
+
+1. `baseline_decider.gd` ciblait un roncier au-dessus du seuil de faim (`>`) alors que la
+   cueillette n'est autorisée qu'en dessous (`<=`) — l'automate de référence ne cherchait
+   jamais sa nourriture quand il avait faim.
+2. Corriger (1) a révélé qu'aucun mécanisme ne fait sortir un agent d'un objectif de cueillette
+   atteint : la récolte ne se déclenchait qu'une fois sur `body_entered`, et le décideur pouvait
+   cibler un roncier même l'inventaire plein. Un agent qui ciblait enfin un roncier s'y figeait.
+
+Corrigé : condition `<=` dans `baseline_decider.gd` et `llm_decider.gd::_resolve_mock` ; cueillette
+continue tant que l'agent est au contact (`ronce.gd::_physics_process`) ; `max_berries_carried`
+ajouté à l'observation et aux trois décideurs pour ne plus cibler un roncier quand l'inventaire
+est plein. Six campagnes de référence rejouées à seeds identiques pour validation — la plus
+sensible (`social_cooperation_multiseed_v1`, effondrée à 0 % de survie dans l'état intermédiaire)
+remonte à 85 % de survie, au-dessus des 75 % d'origine. Détail et tableau complet :
+`_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`.
+
+**Non traité, hors périmètre de cette roadmap** : `experiments/campaigns/llm_vs_automate_v1.json`
+(15 runs, dont 5 appels Ollama réels) pas rejoué — Ollama injoignable en fin de session
+(`127.0.0.1:11434` refuse la connexion, contrairement à la note précédente de `signals.md`).
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
@@ -126,6 +159,8 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 - **Discrétisation trop grossière** → plateau bas. Si Phase 3 plafonne, revoir les situations
   avant de conclure à un échec de la méthode.
 - **Fenêtre de récompense mal calée** (trop courte : bruit ; trop longue : mauvaise attribution
-  du mérite). Paramétrable, à régler en Phase 2/4.
-- **Déterminisme de l'ε-greedy** : doit être 100 % reproductible à seed fixe, sinon la courbe de
-  Phase 3 n'est pas exploitable.
+  du mérite). Le risque structurel (aucune fenêtre du tout) est levé en Phase 1
+  (`adaptive_decision_interval_seconds`) ; reste à régler sa valeur en Phase 2/4.
+- ~~Déterminisme de l'ε-greedy~~ : levé en Phase 1, vérifié par
+  `tools/check_reproducibility.py` sur un run réel (deux exécutions à seed fixe strictement
+  identiques).

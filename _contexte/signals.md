@@ -1,80 +1,89 @@
-# Signals — ia_life (MAJ 2026-08-29)
+# Signals — ia_life (MAJ 2026-08-30)
 
 ## Actions ouvertes
 
-- [P1|ouvert] Démarrer la Phase 1 de `roadmap_apprentissage.md` : squelette
-  `scripts/adaptive_decider.gd` (3ᵉ valeur `"adaptatif"` de `decider_type`, dispatch dans
-  `character.gd::_build_decider()`, variables `learning_rate`/`exploration_epsilon` au registre,
-  ε-greedy seedé, pas encore de mise à jour), + tests dans `tools/run_manual_checks.gd`.
-  fait quand: Phase 1 faite, tests verts, checkpoint `/compact` atteint.
-  réf: roadmap_apprentissage.md (Phase 1), scripts/baseline_decider.gd, scripts/character.gd (L114, L210), scripts/variable_registry.gd (L39)
-- [P3|ouvert] Supprimer le dossier vide `ROBERTO/com_telephone/voice-code-bridge/` (rmdir bloqué
-  par un handle Windows pendant la session du 2026-08-28).
-  fait quand: `rmdir` réussit (fermer l'IDE si besoin pour libérer le handle).
-  réf: ROBERTO/com_telephone/.gitignore (commentaire)
-- [P3|ouvert] `_docs/captures/` (captures d'écran envoyées depuis le téléphone) non tracké et
-  non ignoré — décider gitignore ou purge.
-  fait quand: entrée ajoutée au `.gitignore` racine, ou dossier vidé.
-  réf: .gitignore racine
+- [P1|ouvert] Rejouer `experiments/campaigns/llm_vs_automate_v1.json` (15 runs, dont 5 appels
+  Ollama réels) avec les corrections de mécanique du 2026-08-29/30, pour compléter la
+  revalidation des campagnes de référence. Ollama injoignable en fin de session
+  (`127.0.0.1:11434` refuse la connexion) — vérifier qu'il tourne avant de lancer.
+  fait quand: campagne rejouée, résultats comparés à `results/llm_vs_automate_v1/` (état
+  pré-correction, conservé), tableau ajouté à la décision référencée.
+  réf: _docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md, experiments/campaigns/llm_vs_automate_v1.json
+- [P1|ouvert] Démarrer la Phase 2 de `roadmap_apprentissage.md` (récompense et mise à jour en
+  ligne de la table adaptative) — Phase 1 faite et validée, checkpoint atteint, feu vert
+  utilisateur en attente pour la phase suivante.
+  fait quand: Phase 2 faite, tests verts, checkpoint `/compact` atteint.
+  réf: roadmap_apprentissage.md (Phase 2), scripts/adaptive_decider.gd
 
 ## Contexte chaud
 
-- Axe d'évolution suivant retenu (2026-08-29) : **apprentissage individuel**, option 1B
-  (« heuristiques apprises ») — le personnage apprend pendant sa vie quelle action de recherche
-  de nourriture marche selon sa situation de faim, via une table `(situation, action) → score`.
-  Options 1A (évolution/sélection) et 1C (RL formel) écartées pour l'instant. Plan :
-  `roadmap_apprentissage.md`, Phase 1 non démarrée.
-- Périmètre 1B figé : besoin = faim uniquement (seul besoin implémenté) ; situations S1 roncier
-  visible / S2 en mémoire seulement / S3 rien de connu ; actions = goals `ronce_visible`,
-  `ronce_memorisee`, `errance` ; ε-greedy seedé par perso ; MAJ en moyenne mobile ; un seul
-  apprenant (perso 0) ; pas de persistance entre vies.
-- Risque principal de 1B : si la discrétisation en 3 situations est trop grossière,
-  l'apprentissage plafonnera bas — à réévaluer avant de conclure si le gate Phase 3 stagne.
-- 2026-08-28 : le pont vocal `com_telephone` est hébergé par le projet Roberto
-  (`D:\ServOMorph\Roberto\com_telephone\`). IA_Life en est un projet **raccordé** : `POST /send`
-  exige `"project": "ia_life"` et un `"text"` non vide. Mise en écoute : commande `/roberto`
-  (surveille `...\Roberto\...\logs\messages_ia_life.log`, verrou `_commands/monitor_ia_life.lock`).
-  Détail : `D:\ServOMorph\Roberto\roadmap_com_telephone_hub.md`.
-- Convention `!<commande>` et règle des deux canaux : dans `.claude/CLAUDE.md` (section
-  "Bridge ROBERTO", chemins Roberto).
-- Message "salut" reçu du log téléphone → répondre avec une phrase de
-  `...\Roberto\...\server\salutations.json`, pas une formule générique (préférence utilisateur).
+- **Deux bugs de mécanique corrigés (2026-08-29/30), affectant automate et LLM mock, pas
+  seulement l'axe apprentissage** : (1) `baseline_decider.gd` ciblait un roncier au-dessus du
+  seuil de faim au lieu d'en dessous — l'automate ne cherchait jamais sa nourriture en ayant
+  faim ; (2) aucune condition ne faisait sortir un agent d'un objectif de cueillette atteint
+  (cueillette une fois sur `body_entered`, pas de check d'inventaire plein dans les décideurs) —
+  un agent qui ciblait enfin un roncier s'y figeait. Corrigés ensemble (cueillette continue au
+  contact + `max_berries_carried` dans l'observation). Six campagnes de référence rejouées à
+  seeds identiques : toutes les métriques reviennent dans la plage d'origine ou la dépassent
+  (`social_cooperation_multiseed_v1` : 75 % → 85 % de survie). Détail complet et tableau :
+  `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`. `llm_vs_automate_v1`
+  reste à rejouer (action P1 ci-dessus).
+- Décideur adaptatif (`scripts/adaptive_decider.gd`, Phase 1 de `roadmap_apprentissage.md`) :
+  fait et vert. Ajout non prévu au périmètre initial : engagement sur l'action
+  (`adaptive_decision_interval_seconds`, défaut 2,0 s) — sans lui, l'ε-greedy à chaque frame
+  changeait d'avis ~60 fois/s, rendant la récompense de Phase 2 inexploitable. Décision :
+  `_docs/decisions/2026-08-29_engagement-decision-adaptatif.md`.
+- Ollama ne répondait plus en fin de session (`127.0.0.1:11434` refuse la connexion) — ne pas
+  supposer qu'il tourne sans revérifier ; la note précédente de ce fichier l'affirmait à tort.
 - Écart connu : `scripts/check_kit.py` toujours absent (étape 10 de `/close` non exécutable) —
-  reconfirmé le 2026-08-29 (neuvième fois).
+  reconfirmé le 2026-08-30 (dixième fois).
 - `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`, `.rl_godot_pid` : résidus des bridges RL tiers
   abandonnés ; non trackés, à nettoyer manuellement si souhaité.
 - `_docs/Analyse du projet/` (dossier vide daté 2026-08-17) : non tracké, ne pas committer.
 - `DOCUMENTATION/RL/report-source.md` : non tracké, à trier avec l'agent documentaire.
-- Ollama tourne en arrière-plan (`gemma3:1b`, référence stable du décideur LLM).
-- Simulation : Phases 1 à 8 du laboratoire closes ; `roadmap_experimentation.md` n'a plus de
-  phase suivante — le prochain axe est `roadmap_apprentissage.md`.
+- `results/` (gitignoré) contient les dossiers de comparaison avant/pendant/après correction de
+  chaque campagne rejouée (suffixes `__pre_correction`, `__seuil_seul`) — utiles pour la session
+  suivante, à purger une fois `llm_vs_automate` traité et la décision validée.
 
-## Dernière session (2026-08-29)
+## Dernière session (2026-08-30)
 
-# Session du 2026-08-29
+# Session du 2026-08-30
 
 ## Décisions prises
-- Axe d'évolution du projet retenu : apprentissage individuel (option 1B, « heuristiques
-  apprises »). Le personnage apprend pendant sa vie quelle action de recherche de nourriture
-  marche selon sa situation de faim. Options 1A (évolution/sélection) et 1C (RL formel) écartées
-  pour l'instant.
-- Périmètre du premier chantier figé : besoin = faim uniquement, 3 situations, 3 actions (goals
-  `ronce_visible` / `ronce_memorisee` / `errance`), ε-greedy seedé, MAJ en moyenne mobile, un
-  seul apprenant (perso 0), pas de persistance entre vies.
+- Correction du seuil de recherche de nourriture (automate + LLM mock) : `hunger <=
+  pickup_hunger_threshold` au lieu de `>`, alignée sur la mécanique de cueillette réelle.
+- Correction de la mécanique de cueillette : cueillette continue tant que l'agent est au contact
+  d'un roncier (`ronce.gd`), et les trois décideurs cessent de cibler un roncier quand
+  l'inventaire est plein (`max_berries_carried` ajouté à l'observation).
+- Décideur adaptatif : l'action choisie est tenue pendant un intervalle de décision
+  (`adaptive_decision_interval_seconds`) plutôt que retirée à chaque frame physique.
+- `_docs/captures/` purgé (3 captures, non versionnées) ;
+  `ROBERTO/com_telephone/voice-code-bridge/` retiré du disque, `.gitignore` local mis à jour.
 
 ## Livrables produits ou modifiés
-- `roadmap_apprentissage.md` : créé (4 phases, Phase 1 [EN COURS] non démarrée, checkpoints /compact).
-- `roadmap_experimentation.md` : section « Prochain sprint » renvoie vers `roadmap_apprentissage.md`.
+- `scripts/adaptive_decider.gd` : créé (Phase 1 complète de `roadmap_apprentissage.md`).
+- `scripts/baseline_decider.gd`, `scripts/llm_decider.gd`, `scripts/character.gd`,
+  `scripts/ronce.gd`, `scripts/variable_registry.gd`, `scripts/main.gd` : corrections seuil +
+  mécanique de cueillette + engagement adaptatif.
+- `tools/run_manual_checks.gd` : 15 nouvelles vérifications (adaptatif, engagement, cueillette
+  continue, gating inventaire) ; suite complète verte.
+- `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`,
+  `_docs/decisions/2026-08-29_engagement-decision-adaptatif.md` : créés, indexés.
+- `roadmap_apprentissage.md` : Phase 1 passée à [FAIT], correctif documenté, risques mis à jour.
 
 ## Hypothèses validées / invalidées
-- EN ATTENTE : la discrétisation en 3 situations est-elle assez fine pour que l'apprentissage
-  progresse (gate Phase 3) — risque principal identifié.
+- VALIDE : la correction de mécanique (seuil + cueillette continue + inventaire) restaure ou
+  dépasse les six campagnes de référence rejouées à seeds identiques.
+- EN ATTENTE : `llm_vs_automate_v1` non rejoué (Ollama injoignable) — pas de garantie que la
+  correction se comporte de même avec le vrai LLM.
+- EN ATTENTE (reportée de la session précédente) : la discrétisation en 3 situations est-elle
+  assez fine pour l'apprentissage (gate Phase 3) — non réévaluée, Phase 2 non démarrée.
 
 ## Prochaine étape exacte
-Lancer la Phase 1 de `roadmap_apprentissage.md` : squelette `adaptive_decider.gd` (dispatch,
-variables au registre, ε-greedy seedé, pas de MAJ) + tests dans `tools/run_manual_checks.gd`.
+Vérifier qu'Ollama tourne, rejouer `llm_vs_automate_v1`. Puis, sur confirmation utilisateur,
+démarrer la Phase 2 de `roadmap_apprentissage.md` (récompense et mise à jour en ligne).
 
 ## Question bloquante pour la session suivante
-Aucune (roadmap validée dans son principe ; démarrage Phase 1 en attente de feu vert).
+Aucune (prochaine étape actée ; feu vert Phase 2 à recueillir en séance).
 
 <!-- Écrasé intégralement par /close. Synthèse < 25 lignes. -->

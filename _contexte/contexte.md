@@ -12,21 +12,16 @@ Le prototype est un laboratoire headless reproductible : configurations versionn
 résumés et campagnes. Les Phases 1 à 8 sont closes fonctionnellement : temps simulé déterministe,
 traits comportementaux mesurés, interactions sociales avancées, Inspecteur générique, décideur
 interchangeable automate/LLM, et vision générique (portée/angle/occlusion) qui absorbe la
-perception sociale par code partagé. Aucune Phase 9 définie pour l'instant.
+perception sociale par code partagé.
 Assistant vocal `com_telephone` : le pont n'est plus hébergé ici — migré vers le projet Roberto
 le 2026-08-28. IA_Life est un projet raccordé (README léger + commande `/roberto`).
-Axe suivant : apprentissage individuel (option 1B, `roadmap_apprentissage.md`) — un décideur
-`adaptive_decider.gd` qui apprend en une vie sur la faim. Phase 1 non démarrée.
+Axe suivant : apprentissage individuel (option 1B, `roadmap_apprentissage.md`). Phase 1 close
+(`adaptive_decider.gd`, dispatch, engagement sur l'action). A révélé et corrigé deux bugs de
+mécanique préexistants (seuil de recherche de nourriture, sortie d'objectif de cueillette) sur
+tout le projet, revalidés sur six campagnes de référence. `llm_vs_automate_v1` reste à rejouer
+(Ollama injoignable en fin de session). Phase 2 non démarrée, feu vert utilisateur en attente.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-25 : Phase 5 close — Inspecteur générique dans `ui_manager.gd` piloté par
-  `VariableRegistry` (sélecteur agent/catégorie, tags live/dynamique/nécessite-relancer),
-  sliders dupliqués retirés des panneaux de coin, confirmation avant Relancer. Validé
-  manuellement par l'utilisateur (tests 15/16).
-- 2026-08-25 : ROBERTO (`voice-code-bridge`, hors git) — script de salutation automatique
-  retiré (le message "salut" remonte désormais normalement vers l'agent) ; bouton copier
-  ajouté sur les bulles de réponse de l'appli mobile. Les deux validés en direct par
-  l'utilisateur via le bridge.
 - 2026-08-25 : Phase 6 close — communication (partage inconditionnel de position mémorisée),
   coopération (partage de nourriture si faim critique de l'autre) et agressivité (répulsion
   imposée) implémentées, chacune validée par un scénario de simulation dédié — voir
@@ -58,3 +53,9 @@ Axe suivant : apprentissage individuel (option 1B, `roadmap_apprentissage.md`) �
   « heuristiques apprises ») : le personnage apprend en une vie quelle action de recherche de
   nourriture marche selon sa situation de faim (table `(situation, action) → score`). 1A
   (évolution/sélection) et 1C (RL formel) écartées pour l'instant. Plan : `roadmap_apprentissage.md`.
+- 2026-08-30 : Phase 1 de `roadmap_apprentissage.md` close (décideur adaptatif + engagement sur
+  l'action) ; correction de deux bugs de mécanique préexistants (seuil de recherche de
+  nourriture inversé, aucune sortie d'objectif de cueillette atteint) affectant automate et LLM
+  mock, revalidée sur six campagnes de référence rejouées à seeds identiques — voir
+  `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md` et
+  `_docs/decisions/2026-08-29_engagement-decision-adaptatif.md`.

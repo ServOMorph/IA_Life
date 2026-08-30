@@ -1,3 +1,22 @@
+## v0.23 — 2026-08-30
+
+### Ajouté
+- `scripts/adaptive_decider.gd` : Phase 1 de `roadmap_apprentissage.md` close — décideur
+  adaptatif (discrétisation S1/S2/S3, table ε-greedy, engagement sur l'action choisie via
+  `adaptive_decision_interval_seconds` plutôt qu'une décision à chaque frame physique). 15
+  vérifications ajoutées à `tools/run_manual_checks.gd`.
+
+### Corrigé
+- `scripts/baseline_decider.gd`, `scripts/llm_decider.gd` : seuil de recherche de nourriture
+  inversé (`hunger > pickup_hunger_threshold` au lieu de `<=`) — l'automate de référence ne
+  cherchait jamais sa nourriture en ayant faim.
+- `scripts/ronce.gd`, `scripts/character.gd` : aucune condition ne faisait sortir un agent d'un
+  objectif de cueillette atteint (récolte déclenchée une seule fois à l'entrée en zone, pas de
+  vérification d'inventaire plein dans les décideurs) — cueillette rendue continue tant que
+  l'agent est au contact, `max_berries_carried` ajouté à l'observation. Six campagnes de
+  référence rejouées à seeds identiques pour validation — détail :
+  `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`.
+
 ## v0.22 — 2026-08-29
 
 ### Ajouté

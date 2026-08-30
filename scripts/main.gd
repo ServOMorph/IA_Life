@@ -806,6 +806,7 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 	character.set_script(load("res://scripts/character.gd"))
 	character.position = Vector3(x, _terrain_height(x, z) + 1.0, z)
 	character.set("display_name", char_name)
+	character.set("decider_seed", _experiment_seed)
 	character.add_to_group("agents")
 	var half := MAP_SIZE / 2.0 - WALL_THICKNESS / 2.0 - 0.4
 	character.set("map_half_x", half)

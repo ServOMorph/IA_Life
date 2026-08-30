@@ -5,8 +5,18 @@ var solid_body: StaticBody3D = null
 
 var _berry_meshes: Array = []
 
-func _ready() -> void:
-	body_entered.connect(_on_body_entered)
+## La cueillette ne se limite pas à l'instant d'entrée dans la zone : sans reprise
+## continue, un agent qui cueille une mûre puis reste au contact (buisson pas encore
+## vide, inventaire pas encore plein) n'a plus jamais l'occasion de récolter le reste et
+## se fige sur place. `_on_ronce_contact` est idempotent au-delà des seuils autorisés
+## (character.gd::try_pick_berry_from_ronce), donc l'appeler à chaque frame de contact
+## est sans effet une fois le buisson vide ou l'inventaire plein. Remplace le signal
+## body_entered (déclenché une seule fois) pour éviter aussi un double appel la frame
+## où le corps entre dans la zone.
+func _physics_process(_delta: float) -> void:
+	for body in get_overlapping_bodies():
+		if body.has_method("_on_ronce_contact"):
+			body._on_ronce_contact(self)
 
 func setup_visual(berry_positions: Array, berry_mat: StandardMaterial3D) -> void:
 	var berry_container := Node3D.new()
@@ -23,10 +33,6 @@ func setup_visual(berry_positions: Array, berry_mat: StandardMaterial3D) -> void
 		berry.position = pos
 		berry_container.add_child(berry)
 		_berry_meshes.append(berry)
-
-func _on_body_entered(body: Node) -> void:
-	if body.has_method("_on_ronce_contact"):
-		body._on_ronce_contact(self)
 
 func harvest_one() -> bool:
 	if berries <= 0:

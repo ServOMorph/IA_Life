@@ -23,6 +23,7 @@ func _run() -> void:
 	_test_game_data_settings()
 	_test_manual_berry_harvest()
 	_test_memory_navigation()
+	_test_memory_ignores_empty_ronce()
 	_test_memory_decay()
 	_test_memory_replacement()
 	_test_memory_slider()
@@ -33,8 +34,17 @@ func _run() -> void:
 	_test_vision_memorization()
 	_test_vision_memory_capacity_no_churn()
 	_test_vision_priority_over_memory()
+	_test_adaptive_situations()
+	_test_adaptive_greedy_selection()
+	_test_adaptive_matches_baseline_outside_hunger()
+	_test_adaptive_determinism()
+	_test_adaptive_engagement()
+	_test_adaptive_registry_and_dispatch()
+	_test_continuous_harvest_while_in_contact()
+	_test_baseline_ignores_full_inventory()
+	_test_adaptive_ignores_full_inventory()
 	if _failures.is_empty():
-		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig et vision (Phase 8) validés automatiquement.")
+		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig, vision (Phase 8) et décideur adaptatif (Phase 1) validés automatiquement.")
 		get_tree().quit(0)
 	else:
 		for failure in _failures:
@@ -133,8 +143,10 @@ func _test_vision_priority_over_memory() -> void:
 	var observation := {
 		"manual_control": false,
 		"manual_direction": Vector3.ZERO,
-		"hunger": 95.0,
+		"hunger": 85.0,
 		"pickup_hunger_threshold": 90.0,
+		"berries_carried": 0,
+		"max_berries_carried": 3,
 		"has_memories": true,
 		"memory_direction": memory_direction,
 		"has_visible_ronce": true,
@@ -242,7 +254,7 @@ func _test_memory_navigation() -> void:
 	ronce.position = Vector3(10.0, 0.0, 0.0)
 	get_tree().root.add_child(ronce)
 	character.position = Vector3.ZERO
-	character.hunger = 95.0
+	character.hunger = 85.0
 	character.manual_control = false
 	GameConfig.pickup_hunger_threshold = 90.0
 	character._remember_ronce(ronce)
@@ -364,3 +376,281 @@ func _test_memory_slider() -> void:
 	ui.queue_free()
 	camera.queue_free()
 	character.queue_free()
+
+func _adaptive_observation(overrides: Dictionary = {}) -> Dictionary:
+	var observation := {
+		"manual_control": false,
+		"manual_direction": Vector3.ZERO,
+		"hunger": 50.0,
+		"pickup_hunger_threshold": 90.0,
+		"eat_hunger_threshold": 50.0,
+		"berries_carried": 0,
+		"max_berries_carried": 3,
+		"elapsed_seconds": 0.0,
+		"has_memories": false,
+		"memory_direction": Vector3(0, 0, -1),
+		"has_visible_ronce": false,
+		"visible_ronce_direction": Vector3(1, 0, 0),
+		"social_goal": "",
+		"social_direction": Vector3.ZERO,
+		"current_direction": Vector3(0, 0, 1),
+		"wander_timer": 5.0,
+		"delta": 0.1,
+	}
+	for key in overrides:
+		observation[key] = overrides[key]
+	return observation
+
+func _test_adaptive_situations() -> void:
+	var decider := AdaptiveDecider.new()
+	var visible := _adaptive_observation({"has_visible_ronce": true, "has_memories": true})
+	var memorized := _adaptive_observation({"has_memories": true})
+	var unknown := _adaptive_observation()
+	_expect(decider.classify(visible) == AdaptiveDecider.SITUATION_RONCE_VISIBLE, "Adaptatif S1 : un roncier visible doit donner la situation S1.")
+	_expect(decider.classify(memorized) == AdaptiveDecider.SITUATION_MEMOIRE, "Adaptatif S2 : un souvenir sans roncier visible doit donner la situation S2.")
+	_expect(decider.classify(unknown) == AdaptiveDecider.SITUATION_INCONNU, "Adaptatif S3 : ni visible ni mémorisé doit donner la situation S3.")
+
+	_expect(decider.available_actions(AdaptiveDecider.SITUATION_RONCE_VISIBLE, visible).size() == 3, "Adaptatif S1 : trois actions valides attendues avec un souvenir disponible.")
+	var visible_no_memory := _adaptive_observation({"has_visible_ronce": true})
+	_expect(not decider.available_actions(AdaptiveDecider.SITUATION_RONCE_VISIBLE, visible_no_memory).has(AdaptiveDecider.ACTION_RONCE_MEMORISEE), "Adaptatif S1 : viser un souvenir inexistant ne doit pas être une action valide.")
+	_expect(decider.available_actions(AdaptiveDecider.SITUATION_MEMOIRE, memorized).size() == 2, "Adaptatif S2 : deux actions valides attendues.")
+	_expect(decider.available_actions(AdaptiveDecider.SITUATION_INCONNU, unknown) == [AdaptiveDecider.ACTION_ERRANCE], "Adaptatif S3 : l'errance doit être la seule action valide.")
+
+	var neutral_score := decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE)
+	_expect(is_equal_approx(neutral_score, AdaptiveDecider.INITIAL_SCORE), "Adaptatif : la table doit être initialisée neutre.")
+
+func _test_adaptive_greedy_selection() -> void:
+	var decider := AdaptiveDecider.new()
+	decider.configure(0.2, 0.0, 0.0, 42, "Test")
+	var observation := _adaptive_observation({"has_visible_ronce": true, "has_memories": true})
+	decider.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_MEMORISEE, 0.9)
+	for i in 20:
+		var action: Dictionary = decider.decide(observation)
+		_expect(action["goal"] == AdaptiveDecider.ACTION_RONCE_MEMORISEE, "Adaptatif ε=0 : l'action au meilleur score doit toujours être choisie.")
+		_expect(not decider.last_explored, "Adaptatif ε=0 : aucune décision ne doit être marquée comme exploration.")
+	_expect(decider.pending_decision()["situation"] == AdaptiveDecider.SITUATION_RONCE_VISIBLE, "Adaptatif : la décision en attente doit mémoriser la situation.")
+	_expect(is_equal_approx(float(decider.pending_decision()["hunger"]), 50.0), "Adaptatif : la décision en attente doit mémoriser la faim du moment.")
+
+	decider.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE, 1.5)
+	var best_action: Dictionary = decider.decide(observation)
+	_expect(best_action["goal"] == AdaptiveDecider.ACTION_RONCE_VISIBLE, "Adaptatif ε=0 : le changement de meilleur score doit changer l'action choisie.")
+
+func _test_adaptive_matches_baseline_outside_hunger() -> void:
+	var adaptive := AdaptiveDecider.new()
+	adaptive.configure(0.2, 0.5, 0.0, 7, "Test")
+	var baseline := BaselineDecider.new()
+
+	var manual := _adaptive_observation({"manual_control": true, "manual_direction": Vector3(1, 0, 0)})
+	_expect(adaptive.decide(manual) == baseline.decide(manual), "Adaptatif : le contrôle manuel doit être identique à l'automate.")
+
+	var social := _adaptive_observation({"hunger": 95.0, "social_goal": "suivi", "social_direction": Vector3(0, 0, -1)})
+	_expect(adaptive.decide(social) == baseline.decide(social), "Adaptatif : hors situation de faim, le but social doit être identique à l'automate.")
+
+	var wander := _adaptive_observation({"hunger": 95.0, "wander_timer": 0.05})
+	_expect(adaptive.decide(wander) == baseline.decide(wander), "Adaptatif : hors situation de faim, l'errance doit être identique à l'automate.")
+
+	var wander_no_renew := _adaptive_observation({"hunger": 95.0})
+	_expect(adaptive.decide(wander_no_renew) == baseline.decide(wander_no_renew), "Adaptatif : hors situation de faim, l'errance sans réorientation doit être identique à l'automate.")
+
+	var hungry_social := _adaptive_observation({"hunger": 20.0, "social_goal": "suivi", "social_direction": Vector3(0, 0, -1)})
+	_expect(adaptive.decide(hungry_social)["goal"] == "suivi", "Adaptatif S3 : l'action errance doit laisser jouer le but social.")
+
+func _test_adaptive_determinism() -> void:
+	var observation := _adaptive_observation({"has_visible_ronce": true, "has_memories": true})
+	var first: Array[String] = []
+	var second: Array[String] = []
+	var diverging: Array[String] = []
+
+	var run_a := AdaptiveDecider.new()
+	run_a.configure(0.2, 1.0, 0.0, 4321, "Test")
+	for i in 40:
+		first.append(String(run_a.decide(observation)["goal"]))
+
+	var run_b := AdaptiveDecider.new()
+	run_b.configure(0.2, 1.0, 0.0, 4321, "Test")
+	for i in 40:
+		second.append(String(run_b.decide(observation)["goal"]))
+
+	var run_c := AdaptiveDecider.new()
+	run_c.configure(0.2, 1.0, 0.0, 9999, "Test")
+	for i in 40:
+		diverging.append(String(run_c.decide(observation)["goal"]))
+
+	_expect(first == second, "Adaptatif : deux exécutions à seed identique doivent produire les mêmes tirages ε-greedy.")
+	_expect(first != diverging, "Adaptatif : deux seeds différents doivent produire des tirages différents.")
+	_expect(first.has(AdaptiveDecider.ACTION_ERRANCE) and first.has(AdaptiveDecider.ACTION_RONCE_VISIBLE), "Adaptatif ε=1 : l'exploration doit couvrir plusieurs actions valides.")
+
+func _test_adaptive_registry_and_dispatch() -> void:
+	var options: Array = VariableRegistry.CHARACTER["decider_type"]["options"]
+	_expect(options.has("adaptatif"), "Adaptatif registre : 'adaptatif' doit figurer dans les options de decider_type.")
+	_expect(VariableRegistry.CHARACTER.has("learning_rate") and VariableRegistry.CHARACTER.has("exploration_epsilon") and VariableRegistry.CHARACTER.has("adaptive_decision_interval_seconds"), "Adaptatif registre : learning_rate, exploration_epsilon et adaptive_decision_interval_seconds doivent être déclarés.")
+
+	var config := ExperimentConfig.from_raw({"agents": {"defaults": {"decider_type": "adaptatif", "learning_rate": 0.3, "exploration_epsilon": 0.1, "adaptive_decision_interval_seconds": 3.0}}})
+	_expect(config.is_valid(), "Adaptatif config : une configuration adaptative valide a été rejetée.")
+
+	var character := _make_character()
+	character.display_name = "Test"
+	character.decider_type = "adaptatif"
+	character.learning_rate = 0.3
+	character.exploration_epsilon = 0.0
+	character.adaptive_decision_interval_seconds = 4.0
+	character.decider_seed = 1337
+	var decider = character._build_decider()
+	_expect(decider is AdaptiveDecider, "Adaptatif dispatch : decider_type 'adaptatif' doit construire un AdaptiveDecider.")
+	_expect(is_equal_approx(decider.learning_rate, 0.3) and is_equal_approx(decider.exploration_epsilon, 0.0) and is_equal_approx(decider.decision_interval_seconds, 4.0), "Adaptatif dispatch : les variables du registre doivent être transmises au décideur.")
+	character.decider_type = "automate"
+	_expect(character._build_decider() is BaselineDecider, "Adaptatif dispatch : les autres valeurs de decider_type ne doivent pas être affectées.")
+	character.queue_free()
+
+func _test_adaptive_engagement() -> void:
+	var stable := _adaptive_observation({"has_visible_ronce": true, "has_memories": true, "delta": 0.1})
+
+	var held := AdaptiveDecider.new()
+	held.configure(0.2, 1.0, 2.0, 31, "Test")
+	for i in 20:
+		held.decide(stable)
+	_expect(held.decisions_total == 1, "Adaptatif engagement : l'action doit être tenue pendant l'intervalle (1 décision attendue sur 2,0 s).")
+
+	var unheld := AdaptiveDecider.new()
+	unheld.configure(0.2, 1.0, 0.0, 31, "Test")
+	for i in 20:
+		unheld.decide(stable)
+	_expect(unheld.decisions_total == 20, "Adaptatif engagement : un intervalle nul doit faire redécider à chaque frame.")
+
+	for i in 3:
+		held.decide(stable)
+	_expect(held.decisions_total == 2, "Adaptatif engagement : une nouvelle décision doit être prise à l'expiration de l'intervalle.")
+
+	# La direction est recalculée à chaque frame : c'est l'action qui est tenue, pas la trajectoire.
+	var tracker := AdaptiveDecider.new()
+	tracker.configure(0.2, 0.0, 10.0, 31, "Test")
+	tracker.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE, 1.0)
+	var first: Dictionary = tracker.decide(stable)
+	_expect(first["direction"].is_equal_approx(Vector3(1, 0, 0)), "Adaptatif engagement : la direction initiale ne suit pas le roncier visible.")
+	var moved := _adaptive_observation({"has_visible_ronce": true, "has_memories": true, "delta": 0.1, "visible_ronce_direction": Vector3(0, 0, -1)})
+	var second: Dictionary = tracker.decide(moved)
+	_expect(tracker.decisions_total == 1, "Adaptatif engagement : suivre une cible qui bouge ne doit pas déclencher une nouvelle décision.")
+	_expect(second["direction"].is_equal_approx(Vector3(0, 0, -1)), "Adaptatif engagement : la direction doit être recalculée pendant l'engagement.")
+
+	# Un changement de situation reprend la décision, pour que le crédit d'une cellule
+	# corresponde à une période où sa situation était réelle.
+	var situation_change := AdaptiveDecider.new()
+	situation_change.configure(0.2, 0.0, 10.0, 31, "Test")
+	situation_change.decide(stable)
+	_expect(situation_change.decisions_total == 1, "Adaptatif engagement : la première décision n'a pas été enregistrée.")
+	var without_visible := _adaptive_observation({"has_memories": true, "delta": 0.1})
+	situation_change.decide(without_visible)
+	_expect(situation_change.decisions_total == 2, "Adaptatif engagement : un changement de situation doit reprendre la décision.")
+	_expect(situation_change.pending_decision()["situation"] == AdaptiveDecider.SITUATION_MEMOIRE, "Adaptatif engagement : la décision en attente doit porter la nouvelle situation.")
+
+	# Une action devenue inapplicable est reprise même à situation constante.
+	var invalidated := AdaptiveDecider.new()
+	invalidated.configure(0.2, 0.0, 10.0, 31, "Test")
+	invalidated.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_MEMORISEE, 1.0)
+	invalidated.decide(stable)
+	_expect(invalidated.engaged_action() == AdaptiveDecider.ACTION_RONCE_MEMORISEE, "Adaptatif engagement : l'action au meilleur score n'a pas été retenue.")
+	var memory_lost := _adaptive_observation({"has_visible_ronce": true, "delta": 0.1})
+	invalidated.decide(memory_lost)
+	_expect(invalidated.decisions_total == 2, "Adaptatif engagement : une action devenue invalide doit être reprise.")
+	_expect(invalidated.engaged_action() != AdaptiveDecider.ACTION_RONCE_MEMORISEE, "Adaptatif engagement : l'action reprise ne doit pas rester celle qui est invalide.")
+
+	# Sortir de la situation de faim libère l'engagement.
+	var released := AdaptiveDecider.new()
+	released.configure(0.2, 0.0, 10.0, 31, "Test")
+	released.decide(stable)
+	released.decide(_adaptive_observation({"hunger": 95.0, "has_visible_ronce": true, "has_memories": true}))
+	_expect(released.engaged_action() == "", "Adaptatif engagement : sortir de la situation de faim doit libérer l'engagement.")
+	released.decide(stable)
+	_expect(released.decisions_total == 2, "Adaptatif engagement : revenir en situation de faim doit déclencher une nouvelle décision.")
+
+## Un roncier mémorisé mais vidé ne doit plus être une cible : sinon l'agent affamé qui
+## vient de le vider y reste collé (distance nulle) jusqu'à l'estompement du souvenir.
+func _test_memory_ignores_empty_ronce() -> void:
+	var saved_threshold := GameConfig.pickup_hunger_threshold
+	GameConfig.pickup_hunger_threshold = 90.0
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.hunger = 85.0
+	character.manual_control = false
+
+	var emptied := TestRonce.new()
+	emptied.berries = 0
+	emptied.position = Vector3(1.0, 0.0, 0.0)
+	get_tree().root.add_child(emptied)
+	var stocked := TestRonce.new()
+	stocked.berries = 2
+	stocked.position = Vector3(0.0, 0.0, 10.0)
+	get_tree().root.add_child(stocked)
+
+	character._remember_ronce(emptied)
+	_expect(not character._has_usable_memory(), "Mémoire : un roncier mémorisé sans mûres ne doit pas compter comme cible exploitable.")
+
+	character._remember_ronce(stocked)
+	_expect(character._has_usable_memory(), "Mémoire : un roncier mémorisé avec des mûres doit compter comme cible exploitable.")
+	_expect(character._nearest_usable_memory() == stocked, "Mémoire : le roncier vide, pourtant plus proche, ne doit pas être choisi comme cible.")
+	character._physics_process(0.0)
+	_expect(character._direction.is_equal_approx(Vector3(0, 0, 1)), "Mémoire : l'agent affamé doit viser le roncier mémorisé encore pourvu, pas le plus proche vidé.")
+
+	_expect(character.memorized_ronces_count() == 2, "Mémoire : le filtre de ciblage ne doit pas effacer les souvenirs eux-mêmes.")
+
+	GameConfig.pickup_hunger_threshold = saved_threshold
+	character.queue_free()
+	emptied.queue_free()
+	stocked.queue_free()
+
+## Sans reprise continue, un agent au contact d'un roncier ne cueille qu'une mûre puis se
+## fige (ronce.gd::_physics_process appelle _on_ronce_contact à chaque frame de contact,
+## exactement comme un agent réel resterait dans la zone de collision plusieurs frames de
+## suite). Le buisson a plus de mûres que la capacité de l'agent : la cueillette doit
+## s'arrêter à la capacité, pas au buisson vide.
+func _test_continuous_harvest_while_in_contact() -> void:
+	var character := _make_character()
+	character.hunger = 50.0
+	GameConfig.max_berries_carried = 3
+	var ronce := TestRonce.new()
+	ronce.berries = 5
+	get_tree().root.add_child(ronce)
+
+	for i in 6:
+		character._on_ronce_contact(ronce)
+
+	_expect(character.berries_carried == 3, "Cueillette continue : l'inventaire doit se remplir jusqu'à sa capacité sur plusieurs frames de contact.")
+	_expect(ronce.berries == 2, "Cueillette continue : le buisson ne doit perdre que les mûres effectivement prises.")
+
+	character.queue_free()
+	ronce.queue_free()
+
+## Un roncier ciblé alors que l'inventaire est plein est un piège : la cueillette y est
+## refusée (character.gd::try_pick_berry_from_ronce), donc l'agent s'y fige sans jamais
+## pouvoir récolter. Le décideur ne doit plus le cibler dans ce cas.
+func _test_baseline_ignores_full_inventory() -> void:
+	var full_inventory := _adaptive_observation({
+		"has_visible_ronce": true,
+		"has_memories": true,
+		"berries_carried": 3,
+		"max_berries_carried": 3,
+	})
+	var action: Dictionary = BaselineDecider.new().decide(full_inventory)
+	_expect(action["goal"] == "errance", "Automate inventaire plein : un roncier ne doit plus être ciblé quand la cueillette y est impossible.")
+
+	var room_left := _adaptive_observation({
+		"has_visible_ronce": true,
+		"has_memories": true,
+		"berries_carried": 2,
+		"max_berries_carried": 3,
+	})
+	var still_targets: Dictionary = BaselineDecider.new().decide(room_left)
+	_expect(still_targets["goal"] == "ronce_visible", "Automate inventaire non plein : le roncier visible doit rester ciblé.")
+
+func _test_adaptive_ignores_full_inventory() -> void:
+	var decider := AdaptiveDecider.new()
+	decider.configure(0.2, 0.0, 0.0, 11, "Test")
+	var full_inventory := _adaptive_observation({
+		"has_visible_ronce": true,
+		"has_memories": true,
+		"berries_carried": 3,
+		"max_berries_carried": 3,
+	})
+	var action: Dictionary = decider.decide(full_inventory)
+	_expect(action["goal"] == AdaptiveDecider.ACTION_ERRANCE, "Adaptatif inventaire plein : un roncier ne doit plus être ciblé quand la cueillette y est impossible.")
+	_expect(decider.engaged_action() == "", "Adaptatif inventaire plein : aucun engagement ne doit être pris hors situation de faim exploitable.")

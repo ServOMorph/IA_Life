@@ -89,7 +89,8 @@ func _start_request(observation: Dictionary) -> void:
 		_fail("connexion_refusee", "request() a échoué avec le code %d" % error)
 
 func _resolve_mock(observation: Dictionary) -> void:
-	var wants_food: bool = observation.get("has_memories", false) and float(observation.get("hunger", 0.0)) > float(observation.get("pickup_hunger_threshold", 90.0))
+	var can_pick_up: bool = int(observation.get("berries_carried", 0)) < int(observation.get("max_berries_carried", 3))
+	var wants_food: bool = observation.get("has_memories", false) and can_pick_up and float(observation.get("hunger", 0.0)) <= float(observation.get("pickup_hunger_threshold", 90.0))
 	var intention := "manger" if wants_food else "explorer"
 	var direction: String = COMPASS_DIRECTIONS[calls_total % COMPASS_DIRECTIONS.size()]
 	_apply_success(intention, direction, 0.0)

@@ -26,10 +26,16 @@ extends CharacterBody3D
 @export_range(0.0, 1.0, 0.01) var cooperation_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["cooperation_probability"])
 @export_range(0.0, 1.0, 0.01) var aggression_probability: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["aggression_probability"])
 @export var decider_type: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["decider_type"])
+@export_range(0.0, 1.0, 0.01) var learning_rate: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["learning_rate"])
+@export_range(0.0, 1.0, 0.01) var exploration_epsilon: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["exploration_epsilon"])
+@export var adaptive_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["adaptive_decision_interval_seconds"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
 @export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
 @export var display_name: String = ""
+# Seed de l'expérience, injecté par main.gd avant _ready() ; combiné au nom de l'agent
+# pour donner au décideur adaptatif un RNG propre et reproductible.
+@export var decider_seed: int = 0
 @export var manual_control: bool = false
 @export var immortal: bool = false
 @export var rl_controlled: bool = false
@@ -118,6 +124,10 @@ func _build_decider():
 			decider.configure(llm_model, llm_decision_interval_seconds, llm_timeout_seconds, decider_type == "llm_mock", display_name)
 			add_child(decider)
 			return decider
+		"adaptatif":
+			var adaptive := AdaptiveDecider.new()
+			adaptive.configure(learning_rate, exploration_epsilon, adaptive_decision_interval_seconds, decider_seed + hash(display_name), display_name)
+			return adaptive
 		_:
 			return BaselineDecider.new()
 
@@ -212,7 +222,11 @@ func _apply_decision(scaled_delta: float) -> void:
 		"manual_direction": _manual_direction,
 		"hunger": hunger,
 		"pickup_hunger_threshold": GameConfig.pickup_hunger_threshold,
-		"has_memories": not _memories.is_empty(),
+		"eat_hunger_threshold": GameConfig.eat_hunger_threshold,
+		"berries_carried": berries_carried,
+		"max_berries_carried": GameConfig.max_berries_carried,
+		"elapsed_seconds": _now_elapsed_seconds(),
+		"has_memories": _has_usable_memory(),
 		"memory_direction": _direction_to_nearest_memory(),
 		"has_visible_ronce": visible_ronce_direction != Vector3.ZERO,
 		"visible_ronce_direction": visible_ronce_direction,
@@ -703,16 +717,29 @@ func _decay_memories(scaled_delta: float) -> void:
 func memorized_ronces_count() -> int:
 	return _memories.size()
 
-func _direction_to_nearest_memory() -> Vector3:
+## Un roncier mémorisé vidé de ses mûres n'est plus une cible : sans ce filtre, un agent
+## affamé qui vient de vider un roncier le garde comme souvenir le plus proche (il est
+## dessus, distance nulle) et y reste collé jusqu'à ce que le souvenir s'estompe.
+## Aligné sur la vision, qui écarte déjà les ronciers sans mûres (_direction_to_nearest_visible_ronce).
+func _has_usable_memory() -> bool:
+	return _nearest_usable_memory() != null
+
+func _nearest_usable_memory():
 	var nearest = null
 	var nearest_dist := INF
 	for m in _memories:
 		if not is_instance_valid(m.ronce):
 			continue
+		if "berries" in m.ronce and int(m.ronce.berries) <= 0:
+			continue
 		var dist := position.distance_squared_to(m.ronce.position)
 		if dist < nearest_dist:
 			nearest_dist = dist
 			nearest = m.ronce
+	return nearest
+
+func _direction_to_nearest_memory() -> Vector3:
+	var nearest = _nearest_usable_memory()
 	if nearest == null:
 		return _direction
 	var to_target: Vector3 = nearest.position - position

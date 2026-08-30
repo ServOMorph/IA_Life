@@ -218,3 +218,31 @@ pont depuis le téléphone, supprimer le dossier vide `voice-code-bridge/`.
 
 ## Question bloquante pour la session suivante
 Aucune.
+
+---
+
+# Session du 2026-08-29
+
+## Décisions prises
+- Axe d'évolution du projet retenu : apprentissage individuel (option 1B, « heuristiques
+  apprises »). Le personnage apprend pendant sa vie quelle action de recherche de nourriture
+  marche selon sa situation de faim. Options 1A (évolution/sélection) et 1C (RL formel) écartées
+  pour l'instant.
+- Périmètre du premier chantier figé : besoin = faim uniquement, 3 situations, 3 actions (goals
+  `ronce_visible` / `ronce_memorisee` / `errance`), ε-greedy seedé, MAJ en moyenne mobile, un
+  seul apprenant (perso 0), pas de persistance entre vies.
+
+## Livrables produits ou modifiés
+- `roadmap_apprentissage.md` : créé (4 phases, Phase 1 [EN COURS] non démarrée, checkpoints /compact).
+- `roadmap_experimentation.md` : section « Prochain sprint » renvoie vers `roadmap_apprentissage.md`.
+
+## Hypothèses validées / invalidées
+- EN ATTENTE : la discrétisation en 3 situations est-elle assez fine pour que l'apprentissage
+  progresse (gate Phase 3) — risque principal identifié.
+
+## Prochaine étape exacte
+Lancer la Phase 1 de `roadmap_apprentissage.md` : squelette `adaptive_decider.gd` (dispatch,
+variables au registre, ε-greedy seedé, pas de MAJ) + tests dans `tools/run_manual_checks.gd`.
+
+## Question bloquante pour la session suivante
+Aucune (roadmap validée dans son principe ; démarrage Phase 1 en attente de feu vert).

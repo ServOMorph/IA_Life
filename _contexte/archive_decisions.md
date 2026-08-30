@@ -35,3 +35,11 @@
   `resource_scarcity`, `contrasted_profiles`) formalisées, exécutées sur seeds 1/2/3,
   agrégées (`tools/aggregate_results.py`) et graphiques (`tools/plot_campaign.py`, SVG sans
   dépendance). Résultats documentés dans `experiments/README.md`, validés par l'utilisateur.
+- 2026-08-25 : Phase 5 close — Inspecteur générique dans `ui_manager.gd` piloté par
+  `VariableRegistry` (sélecteur agent/catégorie, tags live/dynamique/nécessite-relancer),
+  sliders dupliqués retirés des panneaux de coin, confirmation avant Relancer. Validé
+  manuellement par l'utilisateur (tests 15/16).
+- 2026-08-25 : ROBERTO (`voice-code-bridge`, hors git) — script de salutation automatique
+  retiré (le message "salut" remonte désormais normalement vers l'agent) ; bouton copier
+  ajouté sur les bulles de réponse de l'appli mobile. Les deux validés en direct par
+  l'utilisateur via le bridge.

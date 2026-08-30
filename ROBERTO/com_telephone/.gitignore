@@ -1,6 +1,4 @@
 # Ancien hebergement du pont, migre vers Roberto le 2026-08-28
-# (cf. Roberto\roadmap_com_telephone_hub.md). Contenu supprime ; le dossier
-# vide voice-code-bridge/ resiste au rmdir (handle Windows) -> le retirer
-# manuellement quand il se libere.
+# (cf. Roberto\roadmap_com_telephone_hub.md). Contenu supprime.
 voice-code-bridge/
 specification_assistant_vocal_claude_code.pdf
