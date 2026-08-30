@@ -1,5 +1,9 @@
 # Roadmap — Apprentissage intra-vie (heuristiques apprises sur la faim)
 
+> **Roadmap close (2026-08-30).** Les 4 phases sont [FAIT] côté code. L'apprentissage intra-vie
+> 1B ne rend pas de façon fiable en une vie (effet non généralisé sur 2 seeds, `learning_rate`
+> sans levier). Diagnostic racine et suite de l'axe : `roadmap_apprentissage_v2.md`.
+
 ## Objectif
 
 Ajouter un troisième décideur `adaptive_decider.gd` qui **apprend pendant une seule vie** quelle

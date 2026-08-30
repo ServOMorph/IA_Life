@@ -8,23 +8,14 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 `gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
-Le prototype est un laboratoire headless reproductible (configs versionnées, logs JSONL, résumés,
-campagnes). Phases 1 à 8 closes ; assistant vocal migré vers Roberto le 2026-08-28.
-Axe apprentissage individuel (option 1B) : `roadmap_apprentissage.md` terminée côté code (4
-phases). Décideur adaptatif complet — discrétisation S1/S2/S3, table ε-greedy, engagement sur
-l'action, récompense sur la fenêtre d'engagement, MAJ en ligne, pénalité terminale, logs
-`apprentissage_*`. Phase 3 : gate (learner vs contrôle aléatoire, même seed) franchi sur un seed.
-Phase 4 : l'avantage intra-vie **ne généralise pas** sur 2 seeds, `learning_rate` sans levier —
-discrétisation probablement trop grossière. Bifurcation à trancher : affiner 1B, ou basculer
-1A/1C (`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`).
-Corrections de mécanique du 2026-08-29/30 entièrement revalidées (`llm_vs_automate_v1` rejoué
-post-correction inclus : pas de régression).
+Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes). Phases 1 à 8
+closes ; assistant vocal migré vers Roberto (2026-08-28). Axe apprentissage : `roadmap_apprentissage.md`
+close (1B intra-vie, effet non généralisé — diagnostic racine : ~1 bit apprenable par vie, signal
+quasi constant, pas de propagation du crédit, S3 sans choix). Suite = `roadmap_apprentissage_v2.md`
+(créée 2026-08-30 : 7 phases gatées sur métrique de résultat, benchmark avant/après à 6 bras
+figés), Phase 0 (débit expérimental) à démarrer.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-25 : Phase 6 close — communication (partage inconditionnel de position mémorisée),
-  coopération (partage de nourriture si faim critique de l'autre) et agressivité (répulsion
-  imposée) implémentées, chacune validée par un scénario de simulation dédié — voir
-  `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`. Phase 7 débloquée.
 - 2026-08-26 : Phase 7 — décideur LLM interchangeable (`scripts/llm_decider.gd`), backend
   Ollama local (`gemma3:1b`, `gemma3:4b` écarté après effondrement), repli automatique sur
   l'automate en cas d'erreur, campagne comparative validée — voir
@@ -66,3 +57,8 @@ post-correction inclus : pas de régression).
   apprendre en une vie. Bifurcation d'axe à trancher (affiner 1B, ou 1A/1C). Voir
   `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`. `llm_vs_automate_v1` rejoué
   post-correction : pas de régression avec le vrai LLM.
+- 2026-08-30 : bifurcation de l'axe apprentissage tranchée — approche par étapes plutôt que
+  « affiner la discrétisation » seul ou bascule 1C immédiate. `roadmap_apprentissage_v2.md` créée
+  (diagnostic en 5 défauts structurels, 7 phases gatées sur métrique de résultat, benchmark
+  avant/après à 6 bras figés). `roadmap_apprentissage.md` close ; `roadmap_roberto_multiprojet.md`
+  et `roadmap_experimentation.md` archivées dans `_docs/archives/`.

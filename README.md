@@ -62,15 +62,16 @@ la perception sociale par code partagé (`Character._perceive`).
 
 Axe d'évolution suivant (retenu le 2026-08-29) : l'apprentissage individuel — un troisième
 décideur (`scripts/adaptive_decider.gd`) qui apprend, pendant une seule vie, quelle action de
-recherche de nourriture marche selon la situation de faim. `roadmap_apprentissage.md` est
-terminée côté code (4 phases) : discrétisation S1/S2/S3, table ε-greedy, engagement sur
-l'action, récompense sur la fenêtre d'engagement, mise à jour en ligne, pénalité terminale,
-logs `apprentissage_*`. Phase 3 : un gate comparant l'apprenant à un bras de contrôle
-aléatoire (même seed) est franchi sur le seed testé. Phase 4 (balayage `learning_rate` ×
-`exploration_epsilon`, 2 seeds) : l'avantage **ne généralise pas** — `learning_rate` sans
-levier, la discrétisation est probablement trop grossière pour apprendre en une seule vie.
-Bifurcation à trancher (affiner le modèle, ou basculer vers sélection entre vies / RL) —
-`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`.
+recherche de nourriture marche selon la situation de faim. `roadmap_apprentissage.md` est close
+(4 phases [FAIT]) : l'apprentissage intra-vie 1B ne rend pas de façon fiable en une vie
+(effet non généralisé sur 2 seeds, `learning_rate` sans levier). Un diagnostic racine identifie
+cinq défauts structurels (≈ 1 bit apprenable par vie, récompense quasi constante hors repas,
+aucune propagation du crédit, S3 sans choix sur 63 % des décisions, gate posé sur le `reward`
+interne). La suite est `roadmap_apprentissage_v2.md` (créée le 2026-08-30) : approche par
+étapes gatées sur une métrique de résultat — débit expérimental, calibrage de l'environnement +
+oracle de politiques fixes, récompense événementielle + amorçage TD, élargissement de l'espace
+d'action, persistance de table entre vies, protocole statistique — avec un benchmark avant/après
+à bras figés (`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`).
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

@@ -213,3 +213,15 @@ Décision de bifurcation à consigner dans `signals.md` par `/close`.
   `run_000{3,4}` (contrôle), `curve/`, `charts/`.
 - Phase 4 : `results/apprentissage_faim_v2_sweep/` (gitignoré) — 24 runs, `curve/`,
   `agents.csv`, `report.json`.
+
+## Suite (2026-08-30)
+
+Statut passé à **invalidé** pour l'hypothèse « 1B apprend de façon fiable en une vie ». Un
+diagnostic racine (session du 2026-08-30) identifie cinq défauts structurels, pas un problème
+de réglage : ~1 bit apprenable par vie, récompense quasi constante hors repas (−0,32 fixe),
+aucune propagation du crédit (moyenne mobile de la récompense immédiate), S3 sans choix
+(63 % des décisions de faim), gate posé sur le `reward` interne. La bifurcation d'axe est
+tranchée par `roadmap_apprentissage_v2.md` (approche par étapes : calibrage environnement +
+oracle de politiques fixes, refonte du signal avec amorçage TD, élargissement de l'espace
+d'action, persistance de table entre vies, protocole statistique verrouillé), avec un
+benchmark avant/après à bras figés.

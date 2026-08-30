@@ -43,3 +43,7 @@
   retiré (le message "salut" remonte désormais normalement vers l'agent) ; bouton copier
   ajouté sur les bulles de réponse de l'appli mobile. Les deux validés en direct par
   l'utilisateur via le bridge.
+- 2026-08-25 : Phase 6 close — communication (partage inconditionnel de position mémorisée),
+  coopération (partage de nourriture si faim critique de l'autre) et agressivité (répulsion
+  imposée) implémentées, chacune validée par un scénario de simulation dédié — voir
+  `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`. Phase 7 débloquée.

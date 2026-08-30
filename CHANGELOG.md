@@ -1,3 +1,25 @@
+## v0.25 — 2026-08-30
+
+### Ajouté
+- `roadmap_apprentissage_v2.md` : succède à `roadmap_apprentissage.md`. Diagnostic en 5 défauts
+  structurels de l'apprentissage intra-vie (≈ 1 bit apprenable par vie, récompense quasi
+  constante hors repas, aucune propagation du crédit, S3 sans choix sur 63 % des décisions,
+  gate posé sur le `reward` interne). 7 phases : débit expérimental (parallélisme reproductible),
+  calibrage de l'environnement + oracle de politiques fixes, récompense événementielle +
+  amorçage TD, élargissement de l'espace d'action, persistance de table entre vies, protocole
+  statistique verrouillé, approximation de fonction conditionnelle. Section benchmark
+  avant/après : 6 bras figés, 12 seeds d'entraînement + 12 réservés, mesures M0 à Mf, critère
+  de succès écrit à l'avance, budget ≈ 2000 runs.
+
+### Modifié
+- `roadmap_apprentissage.md` : bandeau de renvoi vers la v2 (roadmap close).
+- `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md` + `INDEX.md` : statut `invalidé`,
+  section « Suite » pointant vers `roadmap_apprentissage_v2.md`.
+- `roadmap_roberto_multiprojet.md` -> `_docs/archives/2026-08-28_roadmap_roberto_multiprojet.md`
+  (pont assistant vocal migré vers le projet Roberto le 2026-08-28).
+- `roadmap_experimentation.md` -> `_docs/archives/2026-08-29_roadmap_experimentation.md`
+  (Phases 0-8 closes ; points d'attention orphelins repris dans la roadmap v2).
+
 ## v0.24 — 2026-08-30
 
 ### Ajouté
