@@ -56,3 +56,9 @@
   notification push validées en conditions réelles. Convention `!<commande>` (commande à
   distance depuis le téléphone, git compris) créée et inlinée dans `CLAUDE.md` en plus du
   README — un simple renvoi au README s'est avéré insuffisant.
+
+---
+
+- 2026-08-26 : Phase 8 (vision et perception générique) ajoutée à la roadmap en [TODO] ; défaut
+  `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`, désaligné de la décision
+  Phase 7).

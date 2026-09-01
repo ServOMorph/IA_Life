@@ -14,6 +14,12 @@ que le signal d'apprentissage est exploitable.
 > conservé (gates (a) et (b) passés, tests verts). Phases 4-5 et Phase 6 non engagées.
 > Détail : `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
 > Rouvrir la Phase 6 (approximation de fonction) ou une v3 seulement sur décision explicite.
+>
+> **Préalable v3 planifié (2026-09-01), sans levée de suspension.**
+> `roadmap_environnement_apprenable_v3.md` doit d'abord démontrer qu'une politique fixe
+> d'évitement de zones dangereuses bat le hasard sur 12 seeds réservés. Si toutes ses Phases 0-5
+> passent, cette roadmap sera amendée avec une Phase 3b, une baseline v3, puis reprendra à la
+> Phase 4. Jusque-là, ne pas relancer M2 v2, M3 ou les Phases 4-6.
 
 ## Diagnostic — pourquoi l'apprentissage actuel ne peut pas tenir
 

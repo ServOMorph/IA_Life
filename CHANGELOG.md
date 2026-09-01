@@ -1,3 +1,18 @@
+## v0.28 — 2026-09-01
+
+### Ajouté
+- `roadmap_environnement_apprenable_v3.md` : plan en six phases pour introduire des zones
+  dangereuses localisées, prouver leur valeur stratégique par un oracle fixe, calibrer sur
+  12 seeds et confirmer sur 12 seeds réservés avant toute reprise de l'apprentissage.
+- Décision `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md` et entrée
+  d'index : la v2 reste suspendue tant que le gate réservé v3 n'est pas franchi.
+
+### Modifié
+- `roadmap_apprentissage_v2.md` : chemin de déblocage documenté (Phase 3b danger, baseline v3,
+  reprise à la Phase 4 seulement après validation de l'environnement).
+- `roadmap_apprentissage.md` close déplacée dans `_docs/archives/` ; résidus temporaires de la
+  racine supprimés et action correspondante close.
+
 ## v0.27 — 2026-09-01
 
 ### Modifié

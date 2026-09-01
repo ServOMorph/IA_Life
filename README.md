@@ -60,10 +60,11 @@ interchangeable automate/LLM (Ollama local, repli automatique sur erreur), et un
 générique (portée, angle, occlusion) qui remplace la découverte par contact seul et absorbe
 la perception sociale par code partagé (`Character._perceive`).
 
-Axe d'évolution suivant (retenu le 2026-08-29) : l'apprentissage individuel — un troisième
-décideur (`scripts/adaptive_decider.gd`) qui apprend, pendant une seule vie, quelle action de
-recherche de nourriture marche selon la situation de faim. `roadmap_apprentissage.md` est close
-(4 phases [FAIT]) : l'apprentissage intra-vie 1B ne rend pas de façon fiable en une vie
+L'axe d'apprentissage individuel a commencé avec un troisième décideur
+(`scripts/adaptive_decider.gd`) qui apprend, pendant une seule vie, quelle action de recherche de
+nourriture marche selon la situation de faim. La première roadmap, désormais archivée dans
+`_docs/archives/roadmap_apprentissage.md`, est close (4 phases [FAIT]) : l'apprentissage intra-vie
+1B ne rend pas de façon fiable en une vie
 (effet non généralisé sur 2 seeds, `learning_rate` sans levier). Un diagnostic racine identifie
 cinq défauts structurels (≈ 1 bit apprenable par vie, récompense quasi constante hors repas,
 aucune propagation du crédit, S3 sans choix sur 63 % des décisions, gate posé sur le `reward`
@@ -89,6 +90,13 @@ aléatoire ni du décideur gelé au seed apparié**. Une table `(situation, acti
 bat pas le hasard sur cette tâche. Le code des Phases 2-3 est conservé (tests verts, gates de
 la Phase 3 passés) ; les Phases 4-6 ne sont pas engagées. Détail :
 `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
+
+La suite planifiée est `roadmap_environnement_apprenable_v3.md` : introduire des zones dangereuses
+localisées qui ajoutent un coût de faim, puis démontrer avec des politiques fixes
+`eviter|ignorer|viser` que le choix de direction bat réellement le hasard. La calibration utilise
+12 seeds et la confirmation 12 seeds réservés. Aucun danger n'est encore implémenté et la roadmap
+v2 reste suspendue jusqu'à ce gate ; sa reprise commencerait par un raccord explicite du danger au
+reward, puis une nouvelle baseline v3.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

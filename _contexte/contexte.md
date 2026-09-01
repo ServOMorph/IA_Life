@@ -9,17 +9,12 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
-Phases 1 à 8 closes ; assistant vocal migré vers Roberto (2026-08-28). **Axe apprentissage
-individuel suspendu (2026-09-01, branche « Échec »)** : `roadmap_apprentissage_v2.md` Phases 0-3
-closes, mais après refonte du signal (récompense événementielle + amorçage TD), espace d'action
-S3 ×5 et enrichissement + re-gel de l'environnement (`apprentissage_env_ref_v2.json`), le décideur
-adaptatif reste à égalité statistique avec la sélection aléatoire au seed apparié (M1 v2). Code
-Phases 2-3 conservé (gates (a)/(b) passés, tests verts) ; M2-M5 et Phase 6 non engagées.
+Phases 1 à 8 closes ; axe apprentissage v2 suspendu après égalité statistique avec le hasard.
+`roadmap_environnement_apprenable_v3.md` planifie des zones dangereuses comme préalable causal :
+oracle fixe sur 12 seeds de calibration puis 12 réservés, avant tout raccord au learner.
+Mécanique non implémentée ; prochaine étape : Phase 0 v3. La v2 reste interdite jusqu'au gate.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-26 : Phase 8 (vision et perception générique) ajoutée à la roadmap en [TODO] ; défaut
-  `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`, désaligné de la décision
-  Phase 7).
 - 2026-08-27 : Phase 8 (vision) close — primitive de perception, vision portée/angle/occlusion,
   `social_radius` absorbé comme cas particulier de la vision (code partagé, équivalence
   démontrée sur les scénarios sociaux Phase 6) — voir
@@ -68,3 +63,7 @@ Phases 2-3 conservé (gates (a)/(b) passés, tests verts) ; M2-M5 et Phase 6 non
   `adaptatif_courant` (0,67) ne se sépare pas de `aleatoire` (0,58) ni de `adaptatif_v1` au
   seed apparié → suspension, M2-M5 et Phase 6 non engagées. Voir
   `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
+- 2026-09-01 : environnement apprenable v3 planifié avant toute reprise du learner. Zones
+  dangereuses localisées avec coût de faim, oracle fixe `eviter|ignorer|viser`, calibration puis
+  validation sur 12 seeds réservés. La v2 ne sera débloquée qu'après ce gate — voir
+  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
