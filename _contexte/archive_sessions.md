@@ -281,3 +281,33 @@ Vérifier qu'Ollama tourne, rejouer `llm_vs_automate_v1`. Puis démarrer la Phas
 
 ## Question bloquante pour la session suivante
 Aucune.
+
+---
+
+# Session du 2026-08-30
+
+## Décisions prises
+- Bifurcation d'axe P1 tranchée : ni « affiner la discrétisation » seul, ni bascule 1C immédiate.
+  Approche par étapes + benchmark avant/après verrouillé -> `roadmap_apprentissage_v2.md`.
+- 2 roadmaps archivées : `roadmap_roberto_multiprojet.md` (pont migré chez Roberto),
+  `roadmap_experimentation.md` (Phases 0-8 closes) -> `_docs/archives/`.
+
+## Livrables produits ou modifiés
+- `roadmap_apprentissage_v2.md` : créé — diagnostic 5 défauts, 7 phases, benchmark avant/après
+  (6 bras, 24 seeds, M0 -> Mf), budget ~2000 runs.
+- `roadmap_apprentissage.md` : bandeau de renvoi vers la v2 (roadmap close).
+- `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md` + INDEX : statut `invalidé`,
+  note « Suite -> v2 ».
+
+## Hypothèses validées / invalidées
+- INVALIDE (diagnostic racine) : « 1B apprend de façon fiable en une vie ». ~1 bit apprenable/vie,
+  récompense quasi constante (−0,32 hors repas), pas de propagation du crédit, S3 sans choix
+  (63 % des décisions), gate posé sur le `reward` interne — défauts structurels, pas un réglage.
+- EN ATTENTE : la tâche est-elle apprenable dans un environnement calibré ? -> Phase 1 de la v2.
+
+## Prochaine étape exacte
+Phase 0 de la v2 : parallélisme reproductible de `tools/run_campaign.py` + gel du bras
+`adaptatif_v1` (`scripts/adaptive_decider_v1.gd`). `game_speed`/P2 hors chemin critique.
+
+## Question bloquante pour la session suivante
+Aucune — roadmap v2 validée, Phase 0 prête.

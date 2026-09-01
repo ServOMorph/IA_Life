@@ -1,75 +1,83 @@
-# Signals — ia_life (MAJ 2026-08-30)
+# Signals — ia_life (MAJ 2026-09-01)
 
 ## Actions ouvertes
 
-- [P1|ouvert] Exécuter `roadmap_apprentissage_v2.md`, en commençant par la Phase 0 (débit
-  expérimental : parallélisme reproductible de `tools/run_campaign.py` + gel du bras
-  `adaptatif_v1`). La bifurcation d'axe est tranchée : approche par étapes (calibrage
-  environnement + oracle de politiques fixes, refonte du signal avec amorçage TD, élargissement
-  de l'espace d'action, persistance de table entre vies, protocole statistique), chaque phase
-  gatée sur une métrique de résultat, benchmark avant/après à bras figés (M0 en fin de Phase 1,
-  Mf en fin de Phase 5).
+- [P1|ouvert] Exécuter `roadmap_apprentissage_v2.md`. Phases 0 (débit expérimental) et 1
+  (calibrage environnement + oracle) closes. Environnement de référence gelé, gate Phase 1
+  franchi à n=12, mesure M0 prise. Prochaine phase : Phase 2 (refonte du signal : récompense
+  événementielle + amorçage TD), après checkpoint /compact.
   fait quand: Mf pris et verdict M0 -> Mf prononcé (succès / succès partiel / échec).
-  réf: roadmap_apprentissage_v2.md
-- [P2|ouvert] Divergence `game_speed` x4 vs x1 : simulations différentes à config et seed
-  identiques (séries de récompense divergentes, spans différents) sur le chemin du décideur
-  adaptatif. Sortie du chemin critique de la v2 (la Phase 0 vise le débit par le parallélisme,
-  pas par l'accélération), mais reste à solder : contredit la note mémoire
-  `2026-08-17 — Vitesse de jeu = accélérateur de temps pur`.
-  fait quand: divergence documentée comme limite connue (via /create_memory) ou corrigée.
-  réf: `.claude/memory.md` (note 2026-08-17), roadmap_apprentissage_v2.md (Phase 0),
-  scripts/character.gd::_physics_process, scripts/main.gd, scripts/game_speed.gd
+  réf: roadmap_apprentissage_v2.md, _docs/decisions/2026-08-31_calibrage-environnement-oracle.md
+- [P2|surveillance] `aleatoire` (survie M0 0,92) plafonne au-dessus d'`adaptatif_v1` (0,83) :
+  la bande utile pour le critère de succès Mf sur la métrique primaire (survie) est étroite en
+  haut. Les métriques secondaires (mûres mangées, vie médiane) devront porter la comparaison.
+  fait quand: statué à M1 (Phase 2) — soit la survie discrimine encore, soit bascule explicite
+  sur une métrique secondaire consignée dans la décision de phase.
+  réf: _docs/decisions/2026-08-31_calibrage-environnement-oracle.md (section Angles morts),
+  results/_benchmark_apprentissage_m0/oracle_report.json
 
 ## Contexte chaud
 
-- `roadmap_apprentissage_v2.md` : nouvelle roadmap, toutes phases [TODO], Phase 0 à démarrer.
-  7 phases (0 à 6, la 6 conditionnelle). Section benchmark : 6 bras (`automate`, `adaptatif_v1`
-  gelé, `aleatoire`, `politique_fixe_max_v1`, `politique_fixe_max`, `adaptatif_courant`),
-  12 seeds d'entraînement + 12 réservés, budget ~2000 runs.
-- `roadmap_apprentissage.md` : close (4 phases [FAIT]), supersedée par la v2. Bandeau de renvoi
-  ajouté en tête. Archivable dans `_docs/archives/` quand souhaité — laissée à la racine pour
-  l'instant.
-- 2 roadmaps archivées cette session : `_docs/archives/2026-08-28_roadmap_roberto_multiprojet.md`
-  (pont migré chez Roberto), `_docs/archives/2026-08-29_roadmap_experimentation.md` (Phases 0-8
-  closes ; points d'attention orphelins repris dans la v2).
-- Ollama : ne pas supposer qu'il tourne (le `com_manager.py status` de Roberto ne le couvre pas).
-  Binaire `D:\Ollama\ollama.exe`, `gemma3:1b` présent, `ollama serve` si besoin.
-- `scripts/check_kit.py` toujours absent (étape 10 de `/close` non exécutable) — 12e confirmation.
-- `results/` (gitignoré) : `apprentissage_faim_v1/` et `apprentissage_faim_v2_sweep/` conservés.
-  Dossiers `__pre_correction` / `__seuil_seul` + `llm_vs_automate_v1/` purgeables (revalidation
-  close).
+- `roadmap_apprentissage_v2.md` : Phases 0 et 1 [FAIT], Phase 2 [TODO] (prochaine). Benchmark :
+  `politique_fixe_max_v1` identifié = `pf_er_rm` (S1 errance / S2 souvenir), survie M0 0,83.
+  `pf_rv_rm` ≡ `automate` bit à bit (ne pas le compter comme bras distinct). Bit apprenable
+  identifié = décision S2 (« souvenir utilisable, pas de roncier visible → viser le souvenir »
+  vs errer) : `pf_er_rm` 0,83 vs `pf_er_er` 0,17.
+- Environnement gelé `experiments/apprentissage_env_ref.json` : `vision_range` 15,
+  `hunger_depletion_rate` 0,7, `ronce_count` 30, 300 s. Toute mesure M0..Mf tourne dessus ;
+  tout changement invalide les comparaisons et doit être consigné.
+- `experiments/campaigns/benchmark_apprentissage.json` : 9 bras, seeds d'entraînement
+  20260901-12, seeds réservés 20270101-12 (non joués avant Phases 3-4). Fichier non modifiable
+  une fois écrit.
+- Note parquée dans `roadmap_apprentissage_v2.md` (Phase 1) : « manger au contact » (retrait
+  consommation différée, Variante C = `eat_hunger_threshold` = `pickup_hunger_threshold`).
+  Conditionnelle à un échec de gate ; gate franchi donc inactive, la Phase 2 gère le timing.
+- `pf_er_er` crashe Godot sporadiquement sous forte charge (jobs 6+) — mode d'échec Phase 0.
+  Contourné par `--retries` + `--jobs` réduit. 10 cellules `pf_er_er` de la campagne de
+  faisabilité (environnements non retenus) laissées non rejouées.
+- `results/` gitignoré : `_p1_oracle_probe/`, `_p1_oracle_feasibility/`,
+  `_benchmark_apprentissage_m0/` conservés (données M0). Anciens dossiers purgeables inchangés.
+- `game_speed` x1/x4 : divergence sur le décideur adaptatif documentée comme limite connue
+  (`.claude/memory.md`, note 2026-08-31). Hors chemin critique v2. Action P2 précédente close.
+- Ollama : ne pas supposer qu'il tourne. `D:\Ollama\ollama.exe`, `gemma3:1b`, `ollama serve`.
+- `scripts/check_kit.py` toujours absent (étape 10 de `/close` non exécutable) — 13e confirmation.
 - Résidus non trackés à nettoyer manuellement : `.tmp_gdrl_smoke/`, `.tmp_native_rl_smoke/`,
-  `.rl_godot_pid` (bridges RL abandonnés), `_docs/Analyse du projet/` (dossier vide daté),
-  `DOCUMENTATION/RL/report-source.md` (à trier avec l'agent documentaire).
+  `.rl_godot_pid`, `_docs/Analyse du projet/`, `DOCUMENTATION/RL/report-source.md`.
 
-## Dernière session (2026-08-30)
+## Dernière session (2026-09-01)
 
-# Session du 2026-08-30
+# Session du 2026-09-01
 
 ## Décisions prises
-- Bifurcation d'axe P1 tranchée : ni « affiner la discrétisation » seul, ni bascule 1C immédiate.
-  Approche par étapes + benchmark avant/après verrouillé -> `roadmap_apprentissage_v2.md`.
-- 2 roadmaps archivées : `roadmap_roberto_multiprojet.md` (pont migré chez Roberto),
-  `roadmap_experimentation.md` (Phases 0-8 closes) -> `_docs/archives/`.
+- Phase 1 v2 close : environnement de référence gelé (`vision` 15 / `hunger` 0,7 / `ronce` 30),
+  gate franchi à n=12, mesure M0 prise. Décision
+  `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md` (proposé).
+- Phase 0 v2 close (parallélisme reproductible + gel `adaptatif_v1`) — reportée de la session
+  précédente, actée formellement ici.
 
 ## Livrables produits ou modifiés
-- `roadmap_apprentissage_v2.md` : créé — diagnostic 5 défauts, 7 phases, benchmark avant/après
-  (6 bras, 24 seeds, M0 -> Mf), budget ~2000 runs.
-- `roadmap_apprentissage.md` : bandeau de renvoi vers la v2 (roadmap close).
-- `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md` + INDEX : statut `invalidé`,
-  note « Suite -> v2 ».
+- `scripts/fixed_policy_decider.gd`, `scripts/adaptive_decider_v1.gd` : créés (bras oracle + gelé).
+- `scripts/variable_registry.gd`, `scripts/character.gd` : `politique_fixe`, `adaptatif_v1`,
+  `fixed_policy_s1/s2`.
+- `tools/run_campaign.py` : parallélisme (`--jobs/--retries/--warmup`) + bras nommés (`arms`).
+- `tools/oracle_report.py`, `check_fixed_policy.py`, `check_campaign_parallelism.py`,
+  `check_adaptive_v1_equivalence.py` : créés. `aggregate_results.py` : `arm` au regroupement.
+- `experiments/apprentissage_env_ref.json` (gelé), `experiments/campaigns/benchmark_apprentissage.json`.
+- `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md` + INDEX. `.claude/memory.md`
+  (note game_speed). `roadmap_apprentissage_v2.md` (statuts + note « manger au contact »).
 
 ## Hypothèses validées / invalidées
-- INVALIDE (diagnostic racine) : « 1B apprend de façon fiable en une vie ». ~1 bit apprenable/vie,
-  récompense quasi constante (−0,32 hors repas), pas de propagation du crédit, S3 sans choix
-  (63 % des décisions), gate posé sur le `reward` interne — défauts structurels, pas un réglage.
-- EN ATTENTE : la tâche est-elle apprenable dans un environnement calibré ? -> Phase 1 de la v2.
+- VALIDE : la tâche est apprenable dans un environnement calibré — `pf_er_rm` 0,83 vs
+  `pf_er_er` 0,17, écart 0,67, accord 9/12. Bit apprenable = décision S2.
+- VALIDE : `pf_rv_rm` ≡ `automate` bit à bit (n=12) ; `automate` code une mauvaise priorité.
+- EN ATTENTE : `aleatoire` (0,92) > `adaptatif_v1` (0,83) → bande Mf étroite sur la survie.
 
 ## Prochaine étape exacte
-Phase 0 de la v2 : parallélisme reproductible de `tools/run_campaign.py` + gel du bras
-`adaptatif_v1` (`scripts/adaptive_decider_v1.gd`). `game_speed`/P2 hors chemin critique.
+Phase 2 v2 : récompense événementielle (+1 cueillette, coût survie −c·Δt, −1 terminal) +
+amorçage TD (Q(s,a) += α[r + γ·maxQ(s',·) − Q(s,a)], γ ~0,9) + versionnage format de table.
+Tests d'attribution du crédit + mesure M1.
 
 ## Question bloquante pour la session suivante
-Aucune — roadmap v2 validée, Phase 0 prête.
+Aucune — checkpoint Phase 1 posé, /compact fait, Phase 2 prête.
 
 <!-- Écrasé intégralement par /close. Synthèse < 25 lignes. -->

@@ -47,3 +47,7 @@
   coopération (partage de nourriture si faim critique de l'autre) et agressivité (répulsion
   imposée) implémentées, chacune validée par un scénario de simulation dédié — voir
   `_docs/decisions/2026-08-25_phase6-mecaniques-sociales-avancees.md`. Phase 7 débloquée.
+- 2026-08-26 : Phase 7 — décideur LLM interchangeable (`scripts/llm_decider.gd`), backend
+  Ollama local (`gemma3:1b`, `gemma3:4b` écarté après effondrement), repli automatique sur
+  l'automate en cas d'erreur, campagne comparative validée — voir
+  `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`.

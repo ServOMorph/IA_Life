@@ -1,0 +1,18 @@
+{
+  "campaign_id": "p1-oracle-probe",
+  "base_config": "../p1_oracle_env.json",
+  "arms": [
+    {"name": "pf_rv_rm", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_visible", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee"}},
+    {"name": "pf_er_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "errance"}},
+    {"name": "automate", "overrides": {"agents.individual.Rouge.decider_type": "automate"}}
+  ],
+  "parameter_grid": {
+    "agents.individual.Rouge.vision_range": [20.0, 40.0, 80.0],
+    "environment.game_config.ronce_count": [15, 40],
+    "agents.individual.Rouge.hunger_depletion_rate": [1.0]
+  },
+  "seeds": [20260901, 20260902, 20260903],
+  "repetitions": 1,
+  "python_timeout_seconds": 500,
+  "output_dir": "../../results/_p1_oracle_probe"
+}

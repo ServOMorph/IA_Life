@@ -133,13 +133,15 @@ def flatten_rows(summaries: list[dict[str, Any]]) -> list[dict[str, Any]]:
         metadata = experiment.get("metadata", {})
         campaign_id = metadata.get("campaign_id", experiment["experiment_id"])
         campaign_parameters = metadata.get("campaign_parameters", {})
-        comparison_group = "%s | %s" % (campaign_id, json.dumps(campaign_parameters, ensure_ascii=False, sort_keys=True))
+        arm = metadata.get("arm", "")
+        comparison_group = "%s | %s | %s" % (campaign_id, arm, json.dumps(campaign_parameters, ensure_ascii=False, sort_keys=True))
         for agent in summary["agents"]:
             rows.append({
                 "source": summary["_source"],
                 "session_id": summary["session_id"],
                 "experiment_id": experiment["experiment_id"],
                 "campaign_id": campaign_id,
+                "arm": arm,
                 "comparison_group": comparison_group,
                 "campaign_parameters": json.dumps(campaign_parameters, ensure_ascii=False, sort_keys=True),
                 "seed": experiment["seed"],
@@ -189,6 +191,7 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
         vision_to_contact_events_sum = sum(float(row["vision_to_contact_events_total"]) for row in group)
         experiments[comparison_group] = {
             "campaign_id": group[0]["campaign_id"],
+            "arm": group[0]["arm"],
             "campaign_parameters": json.loads(group[0]["campaign_parameters"]),
             "agent_records": len(group),
             "runs": len({row["session_id"] for row in group}),

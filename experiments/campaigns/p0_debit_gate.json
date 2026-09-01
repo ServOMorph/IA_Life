@@ -1,0 +1,12 @@
+{
+  "campaign_id": "p0-debit-gate",
+  "base_config": "../apprentissage_faim_v2.json",
+  "parameter_grid": {
+    "agents.individual.Rouge.learning_rate": [0.1, 0.2],
+    "agents.individual.Rouge.exploration_epsilon": [0.1, 0.2, 1.0]
+  },
+  "seeds": [20260901, 20260902, 20260903, 20260904, 20260905, 20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912],
+  "repetitions": 1,
+  "python_timeout_seconds": 500,
+  "output_dir": "../../results/_p0_debit_gate"
+}

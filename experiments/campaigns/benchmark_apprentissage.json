@@ -1,0 +1,22 @@
+{
+  "campaign_id": "benchmark-apprentissage",
+  "_comment": "Benchmark avant/apres de roadmap_apprentissage_v2. Environnement GELE = apprentissage_env_ref.json (vision 15, hunger 0.7, ronce 30, 300 s). Seeds d'entrainement et seeds reserves enumeres ici, non modifiables une fois le fichier ecrit (ajouter/remplacer un seed apres avoir vu les resultats invalide la comparaison). Les 3 agents non-apprenants (Bleu/Vert/Jaune, automate) sont figes par le base_config. politique_fixe_max_v1 = meilleur des 6 bras pf_* mesure a M0. 'aleatoire' = adaptatif_v1 a epsilon 1.0 (table jamais lue). Reserved_seeds : non joues avant les Phases 3-4 (evaluation sur seeds reserves).",
+  "base_config": "../apprentissage_env_ref.json",
+  "arms": [
+    {"name": "automate", "overrides": {"agents.individual.Rouge.decider_type": "automate"}},
+    {"name": "adaptatif_v1", "overrides": {"agents.individual.Rouge.decider_type": "adaptatif_v1", "agents.individual.Rouge.learning_rate": 0.2, "agents.individual.Rouge.exploration_epsilon": 0.2}},
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.decider_type": "adaptatif_v1", "agents.individual.Rouge.learning_rate": 0.2, "agents.individual.Rouge.exploration_epsilon": 1.0}},
+    {"name": "pf_rv_rm", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_visible", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee"}},
+    {"name": "pf_rv_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_visible", "agents.individual.Rouge.fixed_policy_s2": "errance"}},
+    {"name": "pf_rm_rm", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee"}},
+    {"name": "pf_rm_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "errance"}},
+    {"name": "pf_er_rm", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee"}},
+    {"name": "pf_er_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "errance"}}
+  ],
+  "parameter_grid": {},
+  "seeds": [20260901, 20260902, 20260903, 20260904, 20260905, 20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912],
+  "reserved_seeds": [20270101, 20270102, 20270103, 20270104, 20270105, 20270106, 20270107, 20270108, 20270109, 20270110, 20270111, 20270112],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_benchmark_apprentissage_m0"
+}

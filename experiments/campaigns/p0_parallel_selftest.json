@@ -1,0 +1,11 @@
+{
+  "campaign_id": "p0-parallel-selftest",
+  "base_config": "../p0_parallel_selftest.json",
+  "parameter_grid": {
+    "agents.individual.Rouge.exploration_epsilon": [0.1, 0.2, 1.0]
+  },
+  "seeds": [20260831, 20260901],
+  "repetitions": 1,
+  "python_timeout_seconds": 150,
+  "output_dir": "../../results/_p0_parallel_selftest"
+}

@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "experiment_id": "p1-fixed-policy-selftest",
+  "seed": 20260901,
+  "environment": {
+    "game_config": {"ronce_count": 60, "berries_per_ronce": 4}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 40.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "politique_fixe",
+        "fixed_policy_s1": "ronce_visible",
+        "fixed_policy_s2": "ronce_memorisee",
+        "vision_range": 60.0,
+        "hunger_depletion_rate": 0.8,
+        "adaptive_decision_interval_seconds": 2.0,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 200.0,
+    "quit_on_all_dead": false
+  }
+}

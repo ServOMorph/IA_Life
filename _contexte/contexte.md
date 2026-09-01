@@ -8,18 +8,14 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 `gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
-Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes). Phases 1 à 8
-closes ; assistant vocal migré vers Roberto (2026-08-28). Axe apprentissage : `roadmap_apprentissage.md`
-close (1B intra-vie, effet non généralisé — diagnostic racine : ~1 bit apprenable par vie, signal
-quasi constant, pas de propagation du crédit, S3 sans choix). Suite = `roadmap_apprentissage_v2.md`
-(créée 2026-08-30 : 7 phases gatées sur métrique de résultat, benchmark avant/après à 6 bras
-figés), Phase 0 (débit expérimental) à démarrer.
+Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
+Phases 1 à 8 closes ; assistant vocal migré vers Roberto (2026-08-28). Axe apprentissage :
+`roadmap_apprentissage_v2.md`, Phases 0 (débit) et 1 (calibrage + oracle) closes. Environnement
+de référence gelé (`vision` 15 / `hunger` 0,7 / `ronce` 30) ; gate Phase 1 franchi à n=12 (une
+politique fixe sur souvenir survit 0,83 vs 0,17 pour l'errance pure) ; mesure M0 « avant » prise
+(9 bras, 12 seeds). Prochaine : Phase 2 (récompense événementielle + amorçage TD).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-26 : Phase 7 — décideur LLM interchangeable (`scripts/llm_decider.gd`), backend
-  Ollama local (`gemma3:1b`, `gemma3:4b` écarté après effondrement), repli automatique sur
-  l'automate en cas d'erreur, campagne comparative validée — voir
-  `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`.
 - 2026-08-26 : ROBERTO — cause racine du bug "injoignable" identifiée et corrigée (clé VAPID
   codée en dur désynchronisée du serveur, pas un cache navigateur) ; reconnexion WebSocket et
   notification push validées en conditions réelles. Convention `!<commande>` (commande à
@@ -62,3 +58,9 @@ figés), Phase 0 (débit expérimental) à démarrer.
   (diagnostic en 5 défauts structurels, 7 phases gatées sur métrique de résultat, benchmark
   avant/après à 6 bras figés). `roadmap_apprentissage.md` close ; `roadmap_roberto_multiprojet.md`
   et `roadmap_experimentation.md` archivées dans `_docs/archives/`.
+- 2026-09-01 : Phases 0-1 de `roadmap_apprentissage_v2.md` closes. Phase 0 : parallélisme
+  reproductible de `run_campaign.py` (`--jobs/--retries`, bras nommés `arms`), bras gelé
+  `adaptatif_v1`. Phase 1 : décideur `politique_fixe`, environnement de référence gelé
+  (`vision` 15 / `hunger` 0,7 / `ronce` 30), gate franchi à n=12 (`pf_er_rm` 0,83 vs `pf_er_er`
+  0,17 ; bit apprenable = décision S2), mesure M0 prise. `pf_rv_rm` ≡ `automate` ; `aleatoire`
+  meilleur bras M0 (0,92). Voir `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md`.

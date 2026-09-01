@@ -1,0 +1,27 @@
+{
+  "format_version": 1,
+  "experiment_id": "p0-parallel-selftest",
+  "seed": 20260831,
+  "environment": {
+    "game_config": {"ronce_count": 24, "berries_per_ronce": 4}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 30.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "adaptatif",
+        "vision_range": 15.0,
+        "hunger_depletion_rate": 0.8,
+        "learning_rate": 0.2,
+        "exploration_epsilon": 0.2,
+        "adaptive_decision_interval_seconds": 2.0,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 45.0,
+    "quit_on_all_dead": false
+  }
+}

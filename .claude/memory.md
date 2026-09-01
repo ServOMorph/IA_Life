@@ -28,3 +28,15 @@ CollisionShape3D ou équivalent selon le type d'objet), sauf demande explicite c
 l'utilisateur. Une Area3D de détection ne suffit pas à elle seule si une collision physique
 bloquante est aussi pertinente pour l'objet — les deux ne sont pas interchangeables (ex: les
 ronces n'avaient qu'une Area3D de cueillette, sans bloquer physiquement les personnages).
+
+## 2026-08-31 — game_speed > 1.0 diverge sur le décideur adaptatif (limite connue)
+À config et seed identiques, `game_speed` > 1.0 (ex. x4) produit une simulation DIFFÉRENTE de x1
+sur le chemin du décideur adaptatif : séries de récompense divergentes, spans de fenêtre
+d'engagement différents. La note du 2026-08-17 (« accélérateur de temps pur ») reste valable pour
+les chemins non-adaptatifs (automate, LLM) mais est violée sur `adaptatif`/`adaptatif_v1`. Cause
+non instruite — hors chemin critique de `roadmap_apprentissage_v2.md`. Mitigation actée : toutes
+les campagnes de cette roadmap tournent à `game_speed` 1.0 ; le débit expérimental passe par le
+parallélisme de `tools/run_campaign.py` (`--jobs`, `--retries`), pas par l'accélération
+(Phase 0 close le 2026-08-31 : 72 runs de 300 s simulés en ~45 min à `--jobs 8`, égalité bit à
+bit séquentiel/parallèle vérifiée). À instruire à fond seulement si le débit parallélisé devient
+insuffisant. Origine : action P2 de `_contexte/signals.md`.

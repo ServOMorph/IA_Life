@@ -73,6 +73,17 @@ oracle de politiques fixes, récompense événementielle + amorçage TD, élargi
 d'action, persistance de table entre vies, protocole statistique — avec un benchmark avant/après
 à bras figés (`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`).
 
+Phases 0 et 1 de la v2 closes (2026-08-31). Phase 0 : `tools/run_campaign.py` parallélisé
+(`--jobs`, `--retries`, bras nommés `arms`), reproduction bit à bit vérifiée, bras gelé
+`adaptatif_v1`. Phase 1 : décideur `politique_fixe`, environnement de référence gelé
+(`experiments/apprentissage_env_ref.json` — `vision_range` 15, `hunger_depletion_rate` 0,7,
+`ronce_count` 30). Le gate est franchi à 12 seeds : dans cet environnement une politique fixe
+qui vise un roncier mémorisé survit à 83 % contre 17 % pour l'errance pure — la tâche porte
+donc bien un contraste apprenable (une décision, en situation « souvenir sans roncier
+visible »). Mesure M0 « avant » prise sur 9 bras
+(`_docs/decisions/2026-08-31_calibrage-environnement-oracle.md`). Prochaine phase : refonte du
+signal de récompense (événementielle + amorçage TD).
+
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne
 faisait sortir un agent d'un objectif de cueillette atteint. Corrigés et revalidés sur les

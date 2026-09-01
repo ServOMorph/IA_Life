@@ -29,6 +29,8 @@ extends CharacterBody3D
 @export_range(0.0, 1.0, 0.01) var learning_rate: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["learning_rate"])
 @export_range(0.0, 1.0, 0.01) var exploration_epsilon: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["exploration_epsilon"])
 @export var adaptive_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["adaptive_decision_interval_seconds"])
+@export var fixed_policy_s1: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s1"])
+@export var fixed_policy_s2: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s2"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
 @export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
@@ -128,6 +130,14 @@ func _build_decider():
 			var adaptive := AdaptiveDecider.new()
 			adaptive.configure(learning_rate, exploration_epsilon, adaptive_decision_interval_seconds, decider_seed + hash(display_name), display_name)
 			return adaptive
+		"adaptatif_v1":
+			var adaptive_v1 := AdaptiveDeciderV1.new()
+			adaptive_v1.configure(learning_rate, exploration_epsilon, adaptive_decision_interval_seconds, decider_seed + hash(display_name), display_name)
+			return adaptive_v1
+		"politique_fixe":
+			var fixed := FixedPolicyDecider.new()
+			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, adaptive_decision_interval_seconds, display_name)
+			return fixed
 		_:
 			return BaselineDecider.new()
 
@@ -313,7 +323,7 @@ func _die() -> void:
 		"berries_picked_total": berries_picked_total,
 		"berries_eaten_total": berries_eaten_total,
 	})
-	if _decider is AdaptiveDecider:
+	if _decider is AdaptiveDecider or _decider is AdaptiveDeciderV1:
 		_decider.on_terminal_starvation()
 	log_adaptive_table("starvation")
 	if _anim_player != null:
@@ -723,7 +733,7 @@ func memorized_ronces_count() -> int:
 ## Dump de la table apprise, pour les agents en décideur adaptatif uniquement. Appelé à
 ## la mort de faim et en fin de simulation (main.gd) pour les survivants.
 func log_adaptive_table(reason: String) -> void:
-	if _decider is AdaptiveDecider:
+	if _decider is AdaptiveDecider or _decider is AdaptiveDeciderV1:
 		_decider.log_table(reason)
 
 ## Un roncier mémorisé vidé de ses mûres n'est plus une cible : sans ce filtre, un agent

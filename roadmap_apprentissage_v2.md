@@ -169,7 +169,15 @@ plates, inutile d'attendre Mf pour le savoir.
 
 ---
 
-## Phase 0 — Débit expérimental  [TODO]
+## Phase 0 — Débit expérimental  [FAIT]
+
+Close le 2026-08-31. Parallélisme reproductible de `tools/run_campaign.py` (`--jobs`,
+`--retries`, `--warmup`, bras nommés `arms`), égalité bit à bit séquentiel/parallèle vérifiée
+(`tools/check_campaign_parallelism.py`), reprise après interruption. Bras gelé `adaptatif_v1`
+(`scripts/adaptive_decider_v1.gd`), équivalence à seed fixe vérifiée
+(`tools/check_adaptive_v1_equivalence.py`). Gate : 72 runs de 300 s en ~45 min à `--jobs 8`.
+`game_speed` x1/x4 : divergence sur le décideur adaptatif documentée comme limite connue
+(`.claude/memory.md`).
 
 Prérequis bloquant : les statistiques exigées par toutes les phases suivantes (≥ 12 seeds ×
 plusieurs bras) sont hors budget au débit actuel. `tools/run_campaign.py` est séquentiel (aucune
@@ -197,7 +205,17 @@ identiques au séquentiel.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 1 — Calibrer l'environnement et établir l'oracle  [TODO]
+## Phase 1 — Calibrer l'environnement et établir l'oracle  [FAIT]
+
+Close le 2026-08-31. Décideur `politique_fixe` (`scripts/fixed_policy_decider.gd`).
+Environnement de référence **gelé** : `vision_range` 15, `hunger_depletion_rate` 0,7,
+`ronce_count` 30 (`experiments/apprentissage_env_ref.json`). Gate franchi à n=12 : meilleure
+politique fixe `pf_er_rm` survie 0,83, pire `pf_er_er` 0,17, écart 0,67, accord 9/12. Bit
+apprenable identifié = décision S2 (viser souvenir vs errer). `pf_rv_rm` ≡ `automate` bit à
+bit ; `politique_fixe_max_v1` = `pf_er_rm`. Mesure M0 prise (9 bras, 12 seeds d'entraînement).
+Décision : `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md`. Angle mort :
+`aleatoire` (0,92) plafonne au-dessus d'`adaptatif_v1` (0,83) — bande Mf étroite sur la survie,
+métriques secondaires à mobiliser dès M1.
 
 Fusion de « la tâche est-elle apprenable ? » et « l'environnement discrimine-t-il ? » : les deux
 questions se répondent avec la **même** campagne. Séparer les phases forcerait à rejouer l'oracle
@@ -220,6 +238,24 @@ ou environnement mal réglé ?).
   réservés).
 - La campagne du point retenu **est** la mesure **M0 « avant »** (`automate`, `adaptatif_v1`,
   `aleatoire`, `politique_fixe_max_v1`). Consigner le tableau dans la décision de la phase.
+
+> **Note de travail (2026-08-31, à analyser après la campagne de faisabilité) — « manger au
+> contact »**
+> Le buffer de 3 mûres (cueillette à `hunger ≤ 90` sac non plein, consommation différée à
+> `hunger ≤ 50`) atténue massivement le signal de récompense : une maraude qui rapporte ~50
+> points de faim est créditée ~+0,4 au lieu de +1,0, parce que la digestion se fait pendant que
+> `_is_hunger_situation` est false (sac plein) et que `_apply_online_reward` ne tourne pas alors.
+> Retirer la consommation différée fait retomber le gain de faim dans la fenêtre d'engagement de
+> la décision d'approche — c'est le « +1 à la cueillette » de la Phase 2 obtenu sans toucher à la
+> formule, et un prérequis de cohérence pour cette Phase 2.
+> - Créneau : **conditionnel au gate**. Gate passe → garder le buffer, laisser la Phase 2 gérer.
+>   Gate échoue → candidat d'enrichissement d'environnement, sous forme **Variante C** :
+>   `eat_hunger_threshold = pickup_hunger_threshold` en config d'env (zéro code), re-probe avec
+>   `hunger_depletion_rate` plus bas, re-run de l'oracle.
+> - Procéduralement permis seulement **pré-M0** (env encore non gelé), décision explicite à
+>   consigner dans `apprentissage_env_ref.json`. Après M0 = violation du bras gelé.
+> - Variante A (suppression de l'inventaire) écartée : surface code trop large en cours de
+>   roadmap (schéma summary, `aggregate_results.py`, HUD, vecteur RL, tous les `experiments/*.json`).
 
 **Gate** : dans l'environnement retenu, il existe une paire de politiques fixes dont l'écart de
 résultat va dans le même sens sur ≥ 9 seeds sur 12, la meilleure survit ≥ 70 % et la pire ≤ 30 %.

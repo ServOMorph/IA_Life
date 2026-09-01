@@ -1,3 +1,34 @@
+## v0.26 — 2026-09-01
+
+### Ajouté
+- `scripts/fixed_policy_decider.gd` : `FixedPolicyDecider` (extends `AdaptiveDecider`) —
+  politique déterministe figée sur l'espace d'action courant, aucune mise à jour de score.
+  `decider_type: politique_fixe`, variables `fixed_policy_s1` / `fixed_policy_s2`.
+- `scripts/adaptive_decider_v1.gd` : bras gelé « avant » du benchmark (`decider_type:
+  adaptatif_v1`), copie verrouillée de l'état 2026-08-30 du décideur adaptatif.
+- `tools/run_campaign.py` : parallélisme (`--jobs`, `--retries`, `--warmup`, isolation des
+  fichiers de sortie, reproduction bit à bit du séquentiel) et bras nommés (`"arms"` :
+  jeux d'overrides appliqués par-dessus la base, `metadata.arm`).
+- `tools/oracle_report.py` : évaluateur du gate Phase 1 (survie / vie médiane / mûres par bras
+  et environnement, meilleure vs pire politique fixe, test des signes apparié au seed).
+- `tools/check_fixed_policy.py`, `tools/check_campaign_parallelism.py`,
+  `tools/check_adaptive_v1_equivalence.py` : gates de non-régression.
+- `experiments/apprentissage_env_ref.json` : environnement de référence GELÉ de
+  `roadmap_apprentissage_v2` (`vision_range` 15, `hunger_depletion_rate` 0,7, `ronce_count` 30).
+- `experiments/campaigns/benchmark_apprentissage.json` : 9 bras, 12 seeds d'entraînement +
+  12 seeds réservés énumérés. Mesure M0 « avant » prise.
+- `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md` + `INDEX.md` : Phase 1 v2,
+  gate franchi (`pf_er_rm` 0,83 vs `pf_er_er` 0,17), bit apprenable = décision S2.
+
+### Modifié
+- `roadmap_apprentissage_v2.md` : Phases 0 et 1 passées à [FAIT] ; note de travail
+  « manger au contact » (Variante C, conditionnelle à un échec de gate) en Phase 1.
+- `scripts/variable_registry.gd`, `scripts/character.gd` : `decider_type` gagne
+  `adaptatif_v1` et `politique_fixe` ; dispatch et hooks de fin de vie associés.
+- `tools/aggregate_results.py` : `arm` intégré à la clé de regroupement et au CSV.
+- `.claude/memory.md` : note `game_speed` x1/x4 diverge sur le décideur adaptatif (limite
+  connue, campagnes de la roadmap à `game_speed` 1,0).
+
 ## v0.25 — 2026-08-30
 
 ### Ajouté

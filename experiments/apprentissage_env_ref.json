@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "experiment_id": "apprentissage-env-ref",
+  "_comment": "Environnement de reference GELE de roadmap_apprentissage_v2 (Phase 1). Point retenu par l'oracle de politiques fixes : vision_range 15, hunger_depletion_rate 0.7, ronce_count 30. Toute mesure du benchmark (M0..Mf), 'avant' comprise, tourne dessus. Tout changement ulterieur invalide les comparaisons et doit etre consigne dans une decision. Le decider_type de Rouge est fixe par le bras de campagne (benchmark_apprentissage.json), la valeur ci-dessous n'est qu'un defaut.",
+  "seed": 20260901,
+  "environment": {
+    "game_config": {"ronce_count": 30, "berries_per_ronce": 4}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 40.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "automate",
+        "fixed_policy_s1": "ronce_visible",
+        "fixed_policy_s2": "ronce_memorisee",
+        "vision_range": 15.0,
+        "hunger_depletion_rate": 0.7,
+        "adaptive_decision_interval_seconds": 2.0,
+        "learning_rate": 0.2,
+        "exploration_epsilon": 0.2,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 300.0,
+    "quit_on_all_dead": false
+  }
+}
