@@ -1,3 +1,31 @@
+## v0.27 — 2026-09-01
+
+### Modifié
+- **Axe apprentissage individuel suspendu** (branche « Échec » de `roadmap_apprentissage_v2.md`).
+  Après Phases 2-3 et enrichissement de l'environnement, `adaptatif_courant` ne se sépare pas de
+  la sélection aléatoire ni du bras gelé `adaptatif_v1` au seed apparié (M1 v2 : survie 4-3/12,
+  mûres 4-6/12 vs `aleatoire`). Une table `(situation, action)` discrète ne bat pas le hasard
+  sur cette tâche. Phases 4-6 non engagées, code Phases 2-3 conservé.
+
+### Ajouté
+- Phase 2 — `scripts/adaptive_decider.gd` : récompense événementielle (`PICK_REWARD` +1 par
+  cueillette, `survival_cost_rate` −c·Δt, `TERMINAL_REWARD` −1) et amorçage par différence
+  temporelle (`cible = r + td_discount_gamma·maxQ(s',·)`, γ 0,9) en remplacement de la moyenne
+  mobile de variation de faim. `TABLE_SCHEMA_VERSION`, `available_count` dans `apprentissage_decision`.
+- Phase 3 — S3 (inconnu) passe de 1 à 5 actions (`errance`, `cap_maintenu`, `demi_tour`,
+  `zone_inconnue`, `zone_connue`), S2 gagne `souvenir_ancien`. `fixed_policy_s3` pour
+  `politique_fixe`. `character.gd` : directions candidates (`old_memory_direction`,
+  `unknown_zone_direction`, `known_zone_direction`) dans l'observation.
+- `experiments/apprentissage_env_ref_v2.json` : environnement de référence GELÉ v2
+  (`eat_hunger_threshold` 90 — retrait du tampon de digestion différée, `hunger_depletion_rate`
+  0,9). Rupture de comparaison M0 v1 → Mf v1 assumée.
+- `tools/benchmark_report.py` : part multi-action réelle via `available_count` ; sign tests
+  appariés ; non-régression bras gelés vs baseline.
+- Campagnes : `p3_oracle`, `p3b_env_probe`, `benchmark_apprentissage_m0_v2`,
+  `benchmark_apprentissage_m1_v2` ; selftests `p2_adaptive_selftest`, `p3_adaptive_selftest`.
+- `_docs/decisions/2026-09-01_phase2-signal-recompense-td.md` (validé),
+  `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md` (validé) + INDEX.
+
 ## v0.26 — 2026-09-01
 
 ### Ajouté

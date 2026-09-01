@@ -1,0 +1,22 @@
+{
+  "campaign_id": "benchmark-apprentissage-m0-v2",
+  "_comment": "Nouveau M0 'avant' de roadmap_apprentissage_v2 apres bifurcation Phase 3 (env v1 sature dans la bande haute + sur le choix S3, gate (b) en echec). Environnement GELE v2 = apprentissage_env_ref_v2.json (eat_hunger_threshold 90, hunger_depletion_rate 0.9). Sert de reference oracle Phase 1 revisitee ET de M0 v2 : 6 politiques fixes de l'espace d'action ORIGINAL (S1 x S2, S3=errance) + automate (barre a battre) + adaptatif_v1 (bras gele 'avant') + aleatoire (adaptatif_v1 eps 1.0, plancher sans apprentissage). politique_fixe_max_v1 v2 = meilleure de ces 6 politiques fixes. Memes 12 seeds d'entrainement que le benchmark v1 ; seeds reserves inchanges. La comparaison M0 v1 -> Mf v1 est abandonnee, remplacee par M0 v2 -> Mf v2.",
+  "base_config": "../apprentissage_env_ref_v2.json",
+  "arms": [
+    {"name": "automate", "overrides": {"agents.individual.Rouge.decider_type": "automate"}},
+    {"name": "adaptatif_v1", "overrides": {"agents.individual.Rouge.decider_type": "adaptatif_v1", "agents.individual.Rouge.learning_rate": 0.2, "agents.individual.Rouge.exploration_epsilon": 0.2}},
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.decider_type": "adaptatif_v1", "agents.individual.Rouge.learning_rate": 0.2, "agents.individual.Rouge.exploration_epsilon": 1.0}},
+    {"name": "pf_rv_rm", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_visible", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee"}},
+    {"name": "pf_rv_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_visible", "agents.individual.Rouge.fixed_policy_s2": "errance"}},
+    {"name": "pf_rm_rm", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee"}},
+    {"name": "pf_rm_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "errance"}},
+    {"name": "pf_er_rm", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee"}},
+    {"name": "pf_er_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "errance"}}
+  ],
+  "parameter_grid": {},
+  "seeds": [20260901, 20260902, 20260903, 20260904, 20260905, 20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912],
+  "reserved_seeds": [20270101, 20270102, 20270103, 20270104, 20270105, 20270106, 20270107, 20270108, 20270109, 20270110, 20270111, 20270112],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_benchmark_apprentissage_m0_v2"
+}

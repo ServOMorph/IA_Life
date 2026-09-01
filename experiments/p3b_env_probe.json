@@ -1,0 +1,31 @@
+{
+  "format_version": 1,
+  "experiment_id": "p3b-env-probe",
+  "_comment": "Base du probe d'enrichissement d'environnement (bifurcation Phase 3 de roadmap_apprentissage_v2, gate (b) en echec + tripwire Phase 2). Variante C : eat_hunger_threshold = pickup_hunger_threshold (90) supprime le tampon de digestion differee qui amortit le signal de recompense. hunger_depletion_rate est balaye par la grille du probe pour trouver le point ou la meilleure politique fixe retombe dans 0.5-0.7 de survie, avec de la marge au-dessus pour un learner. NON GELE : ce fichier sert seulement a trouver le point ; l'environnement retenu sera fige dans un fichier dedie et une decision.",
+  "seed": 20260901,
+  "environment": {
+    "game_config": {"ronce_count": 30, "berries_per_ronce": 4, "eat_hunger_threshold": 90.0}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 40.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "automate",
+        "fixed_policy_s1": "ronce_visible",
+        "fixed_policy_s2": "ronce_memorisee",
+        "fixed_policy_s3": "errance",
+        "vision_range": 15.0,
+        "hunger_depletion_rate": 0.7,
+        "adaptive_decision_interval_seconds": 2.0,
+        "learning_rate": 0.2,
+        "exploration_epsilon": 0.2,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 300.0,
+    "quit_on_all_dead": false
+  }
+}

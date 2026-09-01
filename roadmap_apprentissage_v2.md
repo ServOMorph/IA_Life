@@ -6,6 +6,15 @@ Tranche l'action P1 de `signals.md` : **ni « affiner la discrétisation » seul
 immédiate** — les deux étaient prématurés faute d'avoir établi que la tâche est apprenable et
 que le signal d'apprentissage est exploitable.
 
+> **AXE SUSPENDU (2026-09-01).** Branche « Échec » du critère de succès. Phases 0-3 closes.
+> Après Phase 2 (signal événementiel + amorçage TD) et Phase 3 (espace d'action S3 ×5), et
+> après enrichissement + re-gel de l'environnement (`apprentissage_env_ref_v2.json`),
+> `adaptatif_courant` reste **à égalité statistique avec la sélection aléatoire** au seed
+> apparié (M1 v2 : survie 4-3/12, mûres 4-6/12 vs `aleatoire`). Le code Phases 2-3 est
+> conservé (gates (a) et (b) passés, tests verts). Phases 4-5 et Phase 6 non engagées.
+> Détail : `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
+> Rouvrir la Phase 6 (approximation de fonction) ou une v3 seulement sur décision explicite.
+
 ## Diagnostic — pourquoi l'apprentissage actuel ne peut pas tenir
 
 Constats établis en lisant `scripts/adaptive_decider.gd`, `scripts/character.gd`,
@@ -267,7 +276,15 @@ hétérogènes, coûts de déplacement) et suspendre l'axe.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 2 — Refonte du signal : récompense événementielle et amorçage  [TODO]
+## Phase 2 — Refonte du signal : récompense événementielle et amorçage  [FAIT]
+
+Close le 2026-09-01. Récompense événementielle (`PICK_REWARD` +1, `survival_cost_rate` −c·Δt,
+`TERMINAL_REWARD` −1), amorçage TD (`cible = r + γ·maxQ(s',·)`, γ 0,9), `TABLE_SCHEMA_VERSION`.
+Tests d'attribution du crédit verts, déterminisme préservé. M1 v1 : `adaptatif_courant` franchit
+le plateau (survie 1,00 vs `aleatoire` 0,92) mais le gate « ≥ 9/12 » est inatteignable, survie
+et vie médiane saturées au plafond de l'environnement v1. Décision utilisateur (option 1) :
+lire le gate comme franchi sur l'intention, poursuivre. Décision :
+`_docs/decisions/2026-09-01_phase2-signal-recompense-td.md`.
 
 Corrige les défauts 2 et 3 du diagnostic.
 
@@ -296,7 +313,17 @@ utile n'existe qu'à partir de la Phase 3, ce gate serait un faux négatif.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 3 — Élargir l'espace d'action là où les décisions se prennent  [TODO]
+## Phase 3 — Élargir l'espace d'action là où les décisions se prennent  [FAIT]
+
+Close le 2026-09-01. S3 passe de 1 à 5 actions (`errance`, `cap_maintenu`, `demi_tour`,
+`zone_inconnue`, `zone_connue`) ; S2 gagne `souvenir_ancien`. `politique_fixe` route S3
+(`fixed_policy_s3`). Gate (a) acquis (`adaptatif_courant` part multi-action = 1,00). Gate (b)
+en échec sur l'env v1 (métriques saturées) mais **franchi sur l'env v2** enrichi
+(`cap_maintenu` 0,50 vs `demi_tour` 0,17 = 9-1/12) — les nouvelles actions ne sont pas
+cosmétiques, mais aucune ne bat `errance` en politique fixe. Tripwire Phase 2 déclenché →
+bifurcation : environnement re-gelé en v2, nouveau M0 v2 / M1 v2. M1 v2 : `adaptatif_courant`
+ne se sépare pas de `aleatoire` ni de `adaptatif_v1` → **axe suspendu** (voir bandeau en tête).
+Décision : `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
 
 Corrige le défaut 1. Ajoute des actions en S3, pas des situations.
 
@@ -318,7 +345,7 @@ S3. Si (b) échoue, ces actions sont cosmétiques : les retirer plutôt que les 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Persistance entre vies  [TODO]
+## Phase 4 — Persistance entre vies  [NON ENGAGÉE — axe suspendu]
 
 Corrige le défaut 4. C'est le levier décisif : les Phases 2 et 3 densifient et élargissent le
 signal, mais une vie restera toujours courte devant le nombre d'échantillons nécessaires.
@@ -345,7 +372,7 @@ deviendrait alors une extension naturelle, hors périmètre de cette roadmap.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 5 — Protocole statistique et verrouillage  [TODO]
+## Phase 5 — Protocole statistique et verrouillage  [NON ENGAGÉE — axe suspendu]
 
 Corrige le défaut 5, et fige la méthode pour tout travail d'apprentissage ultérieur.
 
@@ -365,7 +392,7 @@ Corrige le défaut 5, et fige la méthode pour tout travail d'apprentissage ult�
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 6 — Approximation de fonction (conditionnelle)  [TODO]
+## Phase 6 — Approximation de fonction (conditionnelle)  [NON ENGAGÉE — conditionnelle, réouverture sur décision explicite]
 
 **À n'engager que si les Phases 2 à 5 plafonnent**, c'est-à-dire si le learner ne dépasse pas la
 meilleure politique fixe malgré un signal correct, un espace d'action large et la persistance.

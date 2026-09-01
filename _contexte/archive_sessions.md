@@ -311,3 +311,37 @@ Phase 0 de la v2 : parallélisme reproductible de `tools/run_campaign.py` + gel 
 
 ## Question bloquante pour la session suivante
 Aucune — roadmap v2 validée, Phase 0 prête.
+
+---
+
+# Session du 2026-09-01 (Phase 1 v2 close)
+
+## Décisions prises
+- Phase 1 v2 close : environnement de référence gelé (`vision` 15 / `hunger` 0,7 / `ronce` 30),
+  gate franchi à n=12, mesure M0 prise. Décision
+  `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md` (proposé).
+- Phase 0 v2 close (parallélisme reproductible + gel `adaptatif_v1`) — reportée de la session
+  précédente, actée formellement ici.
+
+## Livrables produits ou modifiés
+- `scripts/fixed_policy_decider.gd`, `scripts/adaptive_decider_v1.gd` : créés (bras oracle + gelé).
+- `scripts/variable_registry.gd`, `scripts/character.gd` : `politique_fixe`, `adaptatif_v1`,
+  `fixed_policy_s1/s2`.
+- `tools/run_campaign.py` : parallélisme (`--jobs/--retries/--warmup`) + bras nommés (`arms`).
+- `tools/oracle_report.py`, `check_fixed_policy.py`, `check_campaign_parallelism.py`,
+  `check_adaptive_v1_equivalence.py` : créés. `aggregate_results.py` : `arm` au regroupement.
+- `experiments/apprentissage_env_ref.json` (gelé), `experiments/campaigns/benchmark_apprentissage.json`.
+- `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md` + INDEX. `.claude/memory.md`
+  (note game_speed). `roadmap_apprentissage_v2.md` (statuts + note « manger au contact »).
+
+## Hypothèses validées / invalidées
+- VALIDE : la tâche est apprenable dans un environnement calibré — `pf_er_rm` 0,83 vs
+  `pf_er_er` 0,17, écart 0,67, accord 9/12. Bit apprenable = décision S2.
+- VALIDE : `pf_rv_rm` ≡ `automate` bit à bit (n=12) ; `automate` code une mauvaise priorité.
+- EN ATTENTE : `aleatoire` (0,92) > `adaptatif_v1` (0,83) → bande Mf étroite sur la survie.
+
+## Prochaine étape exacte
+Phase 2 v2 : récompense événementielle + amorçage TD + versionnage format de table.
+
+## Question bloquante pour la session suivante
+Aucune — checkpoint Phase 1 posé, /compact fait, Phase 2 prête.

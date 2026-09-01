@@ -73,16 +73,22 @@ oracle de politiques fixes, récompense événementielle + amorçage TD, élargi
 d'action, persistance de table entre vies, protocole statistique — avec un benchmark avant/après
 à bras figés (`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`).
 
-Phases 0 et 1 de la v2 closes (2026-08-31). Phase 0 : `tools/run_campaign.py` parallélisé
-(`--jobs`, `--retries`, bras nommés `arms`), reproduction bit à bit vérifiée, bras gelé
-`adaptatif_v1`. Phase 1 : décideur `politique_fixe`, environnement de référence gelé
-(`experiments/apprentissage_env_ref.json` — `vision_range` 15, `hunger_depletion_rate` 0,7,
-`ronce_count` 30). Le gate est franchi à 12 seeds : dans cet environnement une politique fixe
-qui vise un roncier mémorisé survit à 83 % contre 17 % pour l'errance pure — la tâche porte
-donc bien un contraste apprenable (une décision, en situation « souvenir sans roncier
-visible »). Mesure M0 « avant » prise sur 9 bras
-(`_docs/decisions/2026-08-31_calibrage-environnement-oracle.md`). Prochaine phase : refonte du
-signal de récompense (événementielle + amorçage TD).
+Phases 0 à 3 de la v2 closes ; **l'axe apprentissage individuel est suspendu (2026-09-01,
+branche « Échec » du critère de succès)**. Phase 0 : `tools/run_campaign.py` parallélisé
+(`--jobs`, `--retries`, bras nommés `arms`), bras gelé `adaptatif_v1`. Phase 1 : décideur
+`politique_fixe`, environnement de référence gelé, gate franchi à 12 seeds (politique fixe sur
+souvenir 83 % vs errance pure 17 %). Phase 2 : récompense événementielle (+1 cueillette,
+coût de survie −c·Δt, −1 terminal) + amorçage par différence temporelle (γ 0,9) — le décideur
+adaptatif franchit alors le plateau sans-apprentissage. Phase 3 : espace d'action S3 porté de
+1 à 5 actions de navigation (`errance`, `cap_maintenu`, `demi_tour`, `zone_inconnue`,
+`zone_connue`), S2 gagne `souvenir_ancien`. L'environnement a été enrichi et re-gelé en v2
+(`experiments/apprentissage_env_ref_v2.json` — digestion différée retirée, faim plus rapide)
+pour retrouver de la dynamique dans les métriques de résultat. Verdict M1 v2 : le décideur
+adaptatif (meilleur bras en agrégat, survie 0,67) **ne se sépare pas de la sélection d'action
+aléatoire ni du décideur gelé au seed apparié**. Une table `(situation, action)` discrète ne
+bat pas le hasard sur cette tâche. Le code des Phases 2-3 est conservé (tests verts, gates de
+la Phase 3 passés) ; les Phases 4-6 ne sont pas engagées. Détail :
+`_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

@@ -1,0 +1,22 @@
+{
+  "campaign_id": "benchmark-apprentissage-m1-v2",
+  "_comment": "M1 v2 de roadmap_apprentissage_v2 (env enrichi v2 apres bifurcation Phase 3). Mesure adaptatif_courant = decideur 'adaptatif' avec le signal Phase 2 (recompense evenementielle + amorcage TD) ET l'espace d'action Phase 3 (S3 : 5 actions, S2 : + souvenir_ancien), l'espace elargi etant deja dans le code. Bras coeur : automate, adaptatif_v1 (gele), aleatoire (adaptatif_v1 eps 1.0), pf_rm_er (= politique_fixe_max_v1 v2, meilleure fixe de l'espace original a M0 v2, sert aussi de base s3=errance), adaptatif_courant. Bras oracle S3 (re-test gate (b) Phase 3 sur un env qui discrimine) : pf_rm_er avec fixed_policy_s3 balaye sur cap_maintenu / demi_tour / zone_inconnue / zone_connue. Gate M1 v2 re-baselise : adaptatif_courant bat aleatoire ET adaptatif_v1 sur survie OU mures mangees, >= 9/12 seeds apparies, sans etre pire que pf_rm_er. Vie mediane abandonnee comme metrique de gate (saturee des que survie >= 0.5). Memes 12 seeds d'entrainement.",
+  "base_config": "../apprentissage_env_ref_v2.json",
+  "arms": [
+    {"name": "automate", "overrides": {"agents.individual.Rouge.decider_type": "automate"}},
+    {"name": "adaptatif_v1", "overrides": {"agents.individual.Rouge.decider_type": "adaptatif_v1", "agents.individual.Rouge.learning_rate": 0.2, "agents.individual.Rouge.exploration_epsilon": 0.2}},
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.decider_type": "adaptatif_v1", "agents.individual.Rouge.learning_rate": 0.2, "agents.individual.Rouge.exploration_epsilon": 1.0}},
+    {"name": "pf_rm_er", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "errance", "agents.individual.Rouge.fixed_policy_s3": "errance"}},
+    {"name": "adaptatif_courant", "overrides": {"agents.individual.Rouge.decider_type": "adaptatif", "agents.individual.Rouge.learning_rate": 0.2, "agents.individual.Rouge.exploration_epsilon": 0.2, "agents.individual.Rouge.survival_cost_rate": 0.05, "agents.individual.Rouge.td_discount_gamma": 0.9}},
+    {"name": "pf_rm_er_cap", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "errance", "agents.individual.Rouge.fixed_policy_s3": "cap_maintenu"}},
+    {"name": "pf_rm_er_demitour", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "errance", "agents.individual.Rouge.fixed_policy_s3": "demi_tour"}},
+    {"name": "pf_rm_er_zinconnue", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "errance", "agents.individual.Rouge.fixed_policy_s3": "zone_inconnue"}},
+    {"name": "pf_rm_er_zconnue", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s2": "errance", "agents.individual.Rouge.fixed_policy_s3": "zone_connue"}}
+  ],
+  "parameter_grid": {},
+  "seeds": [20260901, 20260902, 20260903, 20260904, 20260905, 20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912],
+  "reserved_seeds": [20270101, 20270102, 20270103, 20270104, 20270105, 20270106, 20270107, 20270108, 20270109, 20270110, 20270111, 20270112],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_benchmark_apprentissage_m1_v2"
+}

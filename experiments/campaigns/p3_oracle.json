@@ -1,0 +1,18 @@
+{
+  "campaign_id": "p3-oracle",
+  "_comment": "Oracle Phase 3 de roadmap_apprentissage_v2 : reevaluation des politiques fixes sur l'espace d'action elargi (S3 passe de 1 a 5 actions). Environnement GELE = apprentissage_env_ref.json, memes 12 seeds d'entrainement que le benchmark. On tient S1=errance et S2=ronce_memorisee (politique_fixe_max_v1 = pf_er_rm, meilleure politique de l'espace original mesuree a M0) et on balaye fixed_policy_s3 sur ses 5 valeurs. Gate (b) : au moins deux des nouvelles actions S3 doivent produire un ecart de resultat significatif. Le meilleur bras s3 devient politique_fixe_max pour M2. pf_er_rm_errance reproduit pf_er_rm bit a bit (s3 etait errance-only avant la Phase 3).",
+  "base_config": "../apprentissage_env_ref.json",
+  "arms": [
+    {"name": "automate", "overrides": {"agents.individual.Rouge.decider_type": "automate"}},
+    {"name": "pf_er_rm_errance", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s3": "errance"}},
+    {"name": "pf_er_rm_cap", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s3": "cap_maintenu"}},
+    {"name": "pf_er_rm_demitour", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s3": "demi_tour"}},
+    {"name": "pf_er_rm_zinconnue", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s3": "zone_inconnue"}},
+    {"name": "pf_er_rm_zconnue", "overrides": {"agents.individual.Rouge.decider_type": "politique_fixe", "agents.individual.Rouge.fixed_policy_s1": "errance", "agents.individual.Rouge.fixed_policy_s2": "ronce_memorisee", "agents.individual.Rouge.fixed_policy_s3": "zone_connue"}}
+  ],
+  "parameter_grid": {},
+  "seeds": [20260901, 20260902, 20260903, 20260904, 20260905, 20260906, 20260907, 20260908, 20260909, 20260910, 20260911, 20260912],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_p3_oracle"
+}

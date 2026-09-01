@@ -1,0 +1,30 @@
+{
+  "format_version": 1,
+  "experiment_id": "p2-adaptive-selftest",
+  "_comment": "Selftest Phase 2 de roadmap_apprentissage_v2 : decideur 'adaptatif' (recompense evenementielle + amorcage TD) sur l'environnement de reference GELE (apprentissage_env_ref.json). Sert a check_reproducibility.py (determinisme a seed fixe) et check_adaptive_v1_equivalence.py (ecart attendu vs adaptatif_v1 depuis la Phase 2).",
+  "seed": 20260901,
+  "environment": {
+    "game_config": {"ronce_count": 30, "berries_per_ronce": 4}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 40.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "adaptatif",
+        "vision_range": 15.0,
+        "hunger_depletion_rate": 0.7,
+        "adaptive_decision_interval_seconds": 2.0,
+        "learning_rate": 0.2,
+        "exploration_epsilon": 0.2,
+        "survival_cost_rate": 0.05,
+        "td_discount_gamma": 0.9,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 300.0,
+    "quit_on_all_dead": false
+  }
+}

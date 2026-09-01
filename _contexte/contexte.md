@@ -9,18 +9,14 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
-Phases 1 à 8 closes ; assistant vocal migré vers Roberto (2026-08-28). Axe apprentissage :
-`roadmap_apprentissage_v2.md`, Phases 0 (débit) et 1 (calibrage + oracle) closes. Environnement
-de référence gelé (`vision` 15 / `hunger` 0,7 / `ronce` 30) ; gate Phase 1 franchi à n=12 (une
-politique fixe sur souvenir survit 0,83 vs 0,17 pour l'errance pure) ; mesure M0 « avant » prise
-(9 bras, 12 seeds). Prochaine : Phase 2 (récompense événementielle + amorçage TD).
+Phases 1 à 8 closes ; assistant vocal migré vers Roberto (2026-08-28). **Axe apprentissage
+individuel suspendu (2026-09-01, branche « Échec »)** : `roadmap_apprentissage_v2.md` Phases 0-3
+closes, mais après refonte du signal (récompense événementielle + amorçage TD), espace d'action
+S3 ×5 et enrichissement + re-gel de l'environnement (`apprentissage_env_ref_v2.json`), le décideur
+adaptatif reste à égalité statistique avec la sélection aléatoire au seed apparié (M1 v2). Code
+Phases 2-3 conservé (gates (a)/(b) passés, tests verts) ; M2-M5 et Phase 6 non engagées.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-26 : ROBERTO — cause racine du bug "injoignable" identifiée et corrigée (clé VAPID
-  codée en dur désynchronisée du serveur, pas un cache navigateur) ; reconnexion WebSocket et
-  notification push validées en conditions réelles. Convention `!<commande>` (commande à
-  distance depuis le téléphone, git compris) créée et inlinée dans `CLAUDE.md` en plus du
-  README — un simple renvoi au README s'est avéré insuffisant.
 - 2026-08-26 : Phase 8 (vision et perception générique) ajoutée à la roadmap en [TODO] ; défaut
   `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`, désaligné de la décision
   Phase 7).
@@ -64,3 +60,11 @@ politique fixe sur souvenir survit 0,83 vs 0,17 pour l'errance pure) ; mesure M0
   (`vision` 15 / `hunger` 0,7 / `ronce` 30), gate franchi à n=12 (`pf_er_rm` 0,83 vs `pf_er_er`
   0,17 ; bit apprenable = décision S2), mesure M0 prise. `pf_rv_rm` ≡ `automate` ; `aleatoire`
   meilleur bras M0 (0,92). Voir `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md`.
+- 2026-09-01 : Phases 2-3 closes + **axe apprentissage suspendu** (branche « Échec »). Phase 2 :
+  récompense événementielle + amorçage TD (γ 0,9), franchit le plateau sans-apprentissage
+  (`adaptatif_v1` 0,50 < `aleatoire` 0,58) — mécanisme conservé. Phase 3 : espace d'action S3
+  ×5 + `souvenir_ancien` ; gates (a)/(b) passés (le second sur env v2 enrichi). Environnement
+  re-gelé en v2 (`eat_hunger_threshold` 90, `hunger` 0,9), rupture M0 v1 assumée. M1 v2 :
+  `adaptatif_courant` (0,67) ne se sépare pas de `aleatoire` (0,58) ni de `adaptatif_v1` au
+  seed apparié → suspension, M2-M5 et Phase 6 non engagées. Voir
+  `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.

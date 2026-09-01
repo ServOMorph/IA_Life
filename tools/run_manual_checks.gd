@@ -35,12 +35,16 @@ func _run() -> void:
 	_test_vision_memory_capacity_no_churn()
 	_test_vision_priority_over_memory()
 	_test_adaptive_situations()
+	_test_adaptive_navigation_actions()
 	_test_adaptive_greedy_selection()
 	_test_adaptive_matches_baseline_outside_hunger()
 	_test_adaptive_determinism()
 	_test_adaptive_engagement()
 	_test_adaptive_registry_and_dispatch()
 	_test_adaptive_online_reward()
+	_test_adaptive_credit_assignment_approach()
+	_test_adaptive_td_bootstrap()
+	_test_adaptive_flush_on_hunger_exit()
 	_test_adaptive_terminal_penalty()
 	_test_continuous_harvest_while_in_contact()
 	_test_baseline_ignores_full_inventory()
@@ -387,12 +391,16 @@ func _adaptive_observation(overrides: Dictionary = {}) -> Dictionary:
 		"pickup_hunger_threshold": 90.0,
 		"eat_hunger_threshold": 50.0,
 		"berries_carried": 0,
+		"berries_picked_total": 0,
 		"max_berries_carried": 3,
 		"elapsed_seconds": 0.0,
 		"has_memories": false,
 		"memory_direction": Vector3(0, 0, -1),
+		"old_memory_direction": Vector3.ZERO,
 		"has_visible_ronce": false,
 		"visible_ronce_direction": Vector3(1, 0, 0),
+		"unknown_zone_direction": Vector3.ZERO,
+		"known_zone_direction": Vector3.ZERO,
 		"social_goal": "",
 		"social_direction": Vector3.ZERO,
 		"current_direction": Vector3(0, 0, 1),
@@ -415,11 +423,42 @@ func _test_adaptive_situations() -> void:
 	_expect(decider.available_actions(AdaptiveDecider.SITUATION_RONCE_VISIBLE, visible).size() == 3, "Adaptatif S1 : trois actions valides attendues avec un souvenir disponible.")
 	var visible_no_memory := _adaptive_observation({"has_visible_ronce": true})
 	_expect(not decider.available_actions(AdaptiveDecider.SITUATION_RONCE_VISIBLE, visible_no_memory).has(AdaptiveDecider.ACTION_RONCE_MEMORISEE), "Adaptatif S1 : viser un souvenir inexistant ne doit pas être une action valide.")
-	_expect(decider.available_actions(AdaptiveDecider.SITUATION_MEMOIRE, memorized).size() == 2, "Adaptatif S2 : deux actions valides attendues.")
-	_expect(decider.available_actions(AdaptiveDecider.SITUATION_INCONNU, unknown) == [AdaptiveDecider.ACTION_ERRANCE], "Adaptatif S3 : l'errance doit être la seule action valide.")
+	_expect(decider.available_actions(AdaptiveDecider.SITUATION_MEMOIRE, memorized).size() == 3, "Adaptatif S2 : trois actions valides attendues (souvenir proche, souvenir ancien, errance).")
+	_expect(not decider.available_actions(AdaptiveDecider.SITUATION_MEMOIRE, unknown).has(AdaptiveDecider.ACTION_SOUVENIR_ANCIEN), "Adaptatif S2 : viser un souvenir ancien inexistant ne doit pas être une action valide.")
+	var s3_bare := decider.available_actions(AdaptiveDecider.SITUATION_INCONNU, unknown)
+	_expect(s3_bare.has(AdaptiveDecider.ACTION_ERRANCE) and s3_bare.has(AdaptiveDecider.ACTION_CAP_MAINTENU) and s3_bare.has(AdaptiveDecider.ACTION_DEMI_TOUR), "Adaptatif S3 : errance, cap_maintenu et demi_tour sont toujours valides.")
+	_expect(s3_bare.size() == 3, "Adaptatif S3 : sans direction de zone exploitable, S3 offre exactement trois actions.")
+	var s3_full := decider.available_actions(AdaptiveDecider.SITUATION_INCONNU, _adaptive_observation({"unknown_zone_direction": Vector3(1, 0, 0), "known_zone_direction": Vector3(0, 0, 1)}))
+	_expect(s3_full.size() == 5, "Adaptatif S3 : avec zone inconnue et zone connue exploitables, S3 offre cinq actions.")
 
 	var neutral_score := decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE)
 	_expect(is_equal_approx(neutral_score, AdaptiveDecider.INITIAL_SCORE), "Adaptatif : la table doit être initialisée neutre.")
+
+## Phase 3 : les actions de navigation de S3 portent une direction explicite issue de
+## l'observation ; le décideur les engage réellement au lieu de court-circuiter sur une
+## action unique, et retombe sur le repli quand leur direction est indisponible.
+func _test_adaptive_navigation_actions() -> void:
+	var decider := AdaptiveDecider.new()
+	decider.configure(0.2, 0.0, 10.0, 5, "Test")
+	var obs := _adaptive_observation({
+		"hunger": 20.0,
+		"current_direction": Vector3(0, 0, 1),
+		"unknown_zone_direction": Vector3(1, 0, 0),
+		"known_zone_direction": Vector3(-1, 0, 0),
+	})
+
+	_expect(decider._build_targeted_action(AdaptiveDecider.ACTION_CAP_MAINTENU, obs)["direction"].is_equal_approx(Vector3(0, 0, 1)), "Adaptatif nav : cap_maintenu suit la direction courante.")
+	_expect(decider._build_targeted_action(AdaptiveDecider.ACTION_DEMI_TOUR, obs)["direction"].is_equal_approx(Vector3(0, 0, -1)), "Adaptatif nav : demi_tour inverse la direction courante.")
+	_expect(decider._build_targeted_action(AdaptiveDecider.ACTION_ZONE_INCONNUE, obs)["direction"].is_equal_approx(Vector3(1, 0, 0)), "Adaptatif nav : zone_inconnue suit la direction de zone inconnue de l'observation.")
+	_expect(decider._build_targeted_action(AdaptiveDecider.ACTION_ZONE_CONNUE, obs)["direction"].is_equal_approx(Vector3(-1, 0, 0)), "Adaptatif nav : zone_connue suit la direction de zone connue de l'observation.")
+	_expect(decider._build_targeted_action(AdaptiveDecider.ACTION_ZONE_INCONNUE, _adaptive_observation({"hunger": 20.0})).is_empty(), "Adaptatif nav : zone_inconnue sans direction retombe sur le repli.")
+
+	# Une décision en S3 engage bien l'action au meilleur score, sans court-circuit.
+	decider.set_score(AdaptiveDecider.SITUATION_INCONNU, AdaptiveDecider.ACTION_ZONE_INCONNUE, 1.0)
+	var chosen: Dictionary = decider.decide(obs)
+	_expect(chosen["goal"] == AdaptiveDecider.ACTION_ZONE_INCONNUE, "Adaptatif nav : S3 engage l'action de navigation au meilleur score.")
+	_expect(chosen["direction"].is_equal_approx(Vector3(1, 0, 0)), "Adaptatif nav : la direction engagée en S3 est celle de l'action choisie.")
+	_expect(decider.decisions_total == 1 and decider.engaged_action() == AdaptiveDecider.ACTION_ZONE_INCONNUE, "Adaptatif nav : l'action de navigation S3 est tenue comme une décision engagée.")
 
 func _test_adaptive_greedy_selection() -> void:
 	var decider := AdaptiveDecider.new()
@@ -454,8 +493,12 @@ func _test_adaptive_matches_baseline_outside_hunger() -> void:
 	var wander_no_renew := _adaptive_observation({"hunger": 95.0})
 	_expect(adaptive.decide(wander_no_renew) == baseline.decide(wander_no_renew), "Adaptatif : hors situation de faim, l'errance sans réorientation doit être identique à l'automate.")
 
+	# S3, sélection gloutonne, table neutre : errance est en tête de liste et retombe sur
+	# le comportement de repli (but social puis errance), identique à l'automate.
+	var greedy_s3 := AdaptiveDecider.new()
+	greedy_s3.configure(0.2, 0.0, 0.0, 7, "Test")
 	var hungry_social := _adaptive_observation({"hunger": 20.0, "social_goal": "suivi", "social_direction": Vector3(0, 0, -1)})
-	_expect(adaptive.decide(hungry_social)["goal"] == "suivi", "Adaptatif S3 : l'action errance doit laisser jouer le but social.")
+	_expect(greedy_s3.decide(hungry_social)["goal"] == "suivi", "Adaptatif S3 : l'action errance doit laisser jouer le but social.")
 
 func _test_adaptive_determinism() -> void:
 	var observation := _adaptive_observation({"has_visible_ronce": true, "has_memories": true})
@@ -486,8 +529,9 @@ func _test_adaptive_registry_and_dispatch() -> void:
 	var options: Array = VariableRegistry.CHARACTER["decider_type"]["options"]
 	_expect(options.has("adaptatif"), "Adaptatif registre : 'adaptatif' doit figurer dans les options de decider_type.")
 	_expect(VariableRegistry.CHARACTER.has("learning_rate") and VariableRegistry.CHARACTER.has("exploration_epsilon") and VariableRegistry.CHARACTER.has("adaptive_decision_interval_seconds"), "Adaptatif registre : learning_rate, exploration_epsilon et adaptive_decision_interval_seconds doivent être déclarés.")
+	_expect(VariableRegistry.CHARACTER.has("survival_cost_rate") and VariableRegistry.CHARACTER.has("td_discount_gamma"), "Adaptatif registre : survival_cost_rate et td_discount_gamma (Phase 2) doivent être déclarés.")
 
-	var config := ExperimentConfig.from_raw({"agents": {"defaults": {"decider_type": "adaptatif", "learning_rate": 0.3, "exploration_epsilon": 0.1, "adaptive_decision_interval_seconds": 3.0}}})
+	var config := ExperimentConfig.from_raw({"agents": {"defaults": {"decider_type": "adaptatif", "learning_rate": 0.3, "exploration_epsilon": 0.1, "adaptive_decision_interval_seconds": 3.0, "survival_cost_rate": 0.1, "td_discount_gamma": 0.8}}})
 	_expect(config.is_valid(), "Adaptatif config : une configuration adaptative valide a été rejetée.")
 
 	var character := _make_character()
@@ -496,36 +540,62 @@ func _test_adaptive_registry_and_dispatch() -> void:
 	character.learning_rate = 0.3
 	character.exploration_epsilon = 0.0
 	character.adaptive_decision_interval_seconds = 4.0
+	character.survival_cost_rate = 0.2
+	character.td_discount_gamma = 0.7
 	character.decider_seed = 1337
 	var decider = character._build_decider()
 	_expect(decider is AdaptiveDecider, "Adaptatif dispatch : decider_type 'adaptatif' doit construire un AdaptiveDecider.")
 	_expect(is_equal_approx(decider.learning_rate, 0.3) and is_equal_approx(decider.exploration_epsilon, 0.0) and is_equal_approx(decider.decision_interval_seconds, 4.0), "Adaptatif dispatch : les variables du registre doivent être transmises au décideur.")
+	_expect(is_equal_approx(decider.survival_cost_rate, 0.2) and is_equal_approx(decider.td_discount_gamma, 0.7), "Adaptatif dispatch : survival_cost_rate et td_discount_gamma doivent être transmis au décideur.")
 	character.decider_type = "automate"
 	_expect(character._build_decider() is BaselineDecider, "Adaptatif dispatch : les autres valeurs de decider_type ne doivent pas être affectées.")
+
+	# Phase 3 : la politique fixe route désormais aussi S3 via fixed_policy_s3.
+	_expect(VariableRegistry.CHARACTER.has("fixed_policy_s3"), "Politique fixe registre : fixed_policy_s3 (Phase 3) doit être déclaré.")
+	_expect((VariableRegistry.CHARACTER["fixed_policy_s3"]["options"] as Array).has(AdaptiveDecider.ACTION_ZONE_INCONNUE), "Politique fixe registre : zone_inconnue doit figurer dans les options de fixed_policy_s3.")
+	character.decider_type = "politique_fixe"
+	character.fixed_policy_s3 = AdaptiveDecider.ACTION_DEMI_TOUR
+	var fixed = character._build_decider()
+	_expect(fixed is FixedPolicyDecider and fixed.fixed_action_s3 == AdaptiveDecider.ACTION_DEMI_TOUR, "Politique fixe dispatch : fixed_policy_s3 doit être transmis au décideur.")
+	var s3_pick: String = fixed._select_action(AdaptiveDecider.SITUATION_INCONNU, [AdaptiveDecider.ACTION_ERRANCE, AdaptiveDecider.ACTION_DEMI_TOUR])
+	_expect(s3_pick == AdaptiveDecider.ACTION_DEMI_TOUR, "Politique fixe S3 : l'action S3 configurée doit être choisie quand elle est valide.")
 	character.queue_free()
 
 func _test_adaptive_online_reward() -> void:
-	# Fenêtre 1 : décision prise en S1 sur l'action au meilleur score.
+	# Récompense événementielle (Phase 2) : +PICK_REWARD par cueillette dans la fenêtre,
+	# moins survival_cost_rate * durée, cible amorcée sur l'état suivant.
 	var decider := AdaptiveDecider.new()
 	decider.configure(0.5, 0.0, 2.0, 5, "Test")
 	decider.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE, 0.4)
-	decider.decide(_adaptive_observation({"hunger": 40.0, "has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": 0.0}))
+	decider.decide(_adaptive_observation({"hunger": 40.0, "has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": 0.0, "berries_picked_total": 0}))
 	_expect(decider.pending_decision()["action"] == AdaptiveDecider.ACTION_RONCE_VISIBLE, "Adaptatif reward : la première décision doit être mise en attente.")
 	_expect(decider.updates_total == 0, "Adaptatif reward : aucune mise à jour tant qu'une seule décision a été prise.")
 
-	# Fenêtre 2 : l'engagement expire, la faim a augmenté de 3 sur la fenêtre.
-	decider.decide(_adaptive_observation({"hunger": 43.0, "has_visible_ronce": true, "delta": 3.0, "elapsed_seconds": 3.0}))
-	var expected_reward := clampf(3.0 / AdaptiveDecider.REWARD_HUNGER_SCALE, -1.0, 1.0)
-	var expected_score := 0.4 + 0.5 * (expected_reward - 0.4)
+	# Fenêtre sans cueillette : r = -survival_cost_rate * durée, cible = r + gamma * maxQ(s').
+	decider.decide(_adaptive_observation({"hunger": 43.0, "has_visible_ronce": true, "delta": 2.0, "elapsed_seconds": 2.0, "berries_picked_total": 0}))
+	var r1 := clampf(0.0 * AdaptiveDecider.PICK_REWARD - decider.survival_cost_rate * 2.0, -1.0, 1.0)
+	var boot1 := 0.4
+	var target1 := r1 + decider.td_discount_gamma * boot1
+	var expected1 := 0.4 + 0.5 * (target1 - 0.4)
 	_expect(decider.updates_total == 1, "Adaptatif reward : une reprise de décision doit produire exactement une mise à jour.")
-	_expect(is_equal_approx(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE), expected_score), "Adaptatif reward : le score doit suivre score += lr * (reward - score).")
+	_expect(is_equal_approx(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE), expected1), "Adaptatif reward : le score doit suivre score += lr * (r + gamma * maxQ(s') - score).")
 
-	# Une faim en forte baisse donne une récompense négative saturée à -1.
-	var falling := AdaptiveDecider.new()
-	falling.configure(1.0, 0.0, 1.0, 5, "Test")
-	falling.decide(_adaptive_observation({"hunger": 30.0, "has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": 0.0}))
-	falling.decide(_adaptive_observation({"hunger": 0.5, "has_visible_ronce": true, "delta": 2.0, "elapsed_seconds": 2.0}))
-	_expect(is_equal_approx(falling.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE), -1.0), "Adaptatif reward : une faim en forte baisse doit donner une récompense bornée à -1.")
+	# Fenêtre avec une cueillette : picks = 1 -> r positif, cellule tirée vers le haut.
+	decider.decide(_adaptive_observation({"hunger": 80.0, "has_visible_ronce": true, "delta": 2.0, "elapsed_seconds": 4.0, "berries_picked_total": 1}))
+	var r2 := clampf(1.0 * AdaptiveDecider.PICK_REWARD - decider.survival_cost_rate * 2.0, -1.0, 1.0)
+	var target2 := r2 + decider.td_discount_gamma * expected1
+	var expected2 := expected1 + 0.5 * (target2 - expected1)
+	_expect(is_equal_approx(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE), expected2), "Adaptatif reward : une cueillette dans la fenêtre crédite la cellule tenue.")
+	_expect(r2 <= 1.0, "Adaptatif reward : la récompense immédiate reste bornée à +1.")
+	_expect(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE) > 0.0, "Adaptatif reward : la cellule finit positive après une cueillette.")
+
+	# Le coût de survie sature la récompense immédiate à -1 sur une longue fenêtre.
+	var starving := AdaptiveDecider.new()
+	starving.configure(1.0, 0.0, 1.0, 5, "Test")
+	starving.survival_cost_rate = 0.1
+	starving.decide(_adaptive_observation({"has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": 0.0, "berries_picked_total": 0}))
+	starving.decide(_adaptive_observation({"has_visible_ronce": true, "delta": 20.0, "elapsed_seconds": 20.0, "berries_picked_total": 0}))
+	_expect(is_equal_approx(starving.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE), -1.0), "Adaptatif reward : le coût de survie sature la récompense immédiate à -1.")
 
 func _test_adaptive_terminal_penalty() -> void:
 	var decider := AdaptiveDecider.new()
@@ -547,6 +617,66 @@ func _test_adaptive_terminal_penalty() -> void:
 	untouched.configure(0.5, 0.0, 5.0, 5, "Test")
 	untouched.on_terminal_starvation()
 	_expect(untouched.updates_total == 0, "Adaptatif terminal : sans décision mémorisée, la mort ne produit aucune mise à jour.")
+
+## Attribution du crédit 1 : un scénario scripté d'approche en S1 sur plusieurs fenêtres
+## d'engagement, terminé par une cueillette, doit rendre la cellule (S1, ronce_visible)
+## positive. Le mécanisme d'avant Phase 2 (variation de faim) la laissait nulle ou
+## négative, la faim montant pendant l'approche et le repas tombant hors fenêtre de faim.
+func _test_adaptive_credit_assignment_approach() -> void:
+	var decider := AdaptiveDecider.new()
+	decider.configure(0.5, 0.0, 2.0, 5, "Test")
+	decider.survival_cost_rate = 0.05
+	decider.td_discount_gamma = 0.9
+	# Ancrer l'errance en négatif : l'approche (ronce_visible) reste engagée sur toutes
+	# les fenêtres même après des crédits de fenêtre négatifs.
+	decider.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_ERRANCE, -1.0)
+	var elapsed := 0.0
+	decider.decide(_adaptive_observation({"hunger": 35.0, "has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": elapsed, "berries_picked_total": 0}))
+	# Trois fenêtres d'approche sans cueillette.
+	for i in 3:
+		elapsed += 2.0
+		decider.decide(_adaptive_observation({"hunger": 35.0, "has_visible_ronce": true, "delta": 2.0, "elapsed_seconds": elapsed, "berries_picked_total": 0}))
+	_expect(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE) < 0.0, "Adaptatif crédit : sans cueillette, l'approche reste créditée négativement.")
+	# Quatrième reprise : une cueillette est survenue dans la fenêtre écoulée.
+	elapsed += 2.0
+	decider.decide(_adaptive_observation({"hunger": 80.0, "has_visible_ronce": true, "delta": 2.0, "elapsed_seconds": elapsed, "berries_picked_total": 1}))
+	_expect(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE) > 0.0, "Adaptatif crédit : une approche terminée par une cueillette rend la cellule (S1, ronce_visible) positive.")
+
+## Attribution du crédit 2 : amorçage TD. Une fenêtre sans cueillette qui débouche sur un
+## état à forte valeur doit hériter de gamma * max Q(s', .), même récompense immédiate
+## nulle. Le mécanisme d'avant Phase 2 (moyenne mobile de la récompense immédiate) ne
+## propageait aucune valeur entre cellules.
+func _test_adaptive_td_bootstrap() -> void:
+	var decider := AdaptiveDecider.new()
+	decider.configure(1.0, 0.0, 2.0, 5, "Test")
+	decider.survival_cost_rate = 0.0
+	decider.td_discount_gamma = 0.9
+	decider.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE, 0.8)
+	# Décision en S2 (souvenir), aucune cueillette, puis passage en S1 : le roncier devient visible.
+	decider.decide(_adaptive_observation({"has_memories": true, "delta": 0.0, "elapsed_seconds": 0.0, "berries_picked_total": 0}))
+	_expect(decider.pending_decision()["situation"] == AdaptiveDecider.SITUATION_MEMOIRE, "Adaptatif TD : la décision en attente doit porter S2.")
+	decider.decide(_adaptive_observation({"has_visible_ronce": true, "has_memories": true, "delta": 2.0, "elapsed_seconds": 2.0, "berries_picked_total": 0}))
+	# r = 0, target = 0 + 0.9 * maxQ(S1) = 0.9 * 0.8 ; lr = 1 -> score = 0.72.
+	_expect(is_equal_approx(decider.get_score(AdaptiveDecider.SITUATION_MEMOIRE, AdaptiveDecider.ACTION_RONCE_MEMORISEE), 0.72), "Adaptatif TD : une fenêtre sans repas hérite de gamma * max Q(s').")
+
+## Sortie de la situation de faim (inventaire plein après cueillette) : la fenêtre en
+## cours est clôturée sur ses conséquences réelles, pas laissée en attente pour être
+## créditée plus tard sur une durée gonflée et sans ses cueillettes.
+func _test_adaptive_flush_on_hunger_exit() -> void:
+	var decider := AdaptiveDecider.new()
+	decider.configure(0.5, 0.0, 2.0, 5, "Test")
+	decider.survival_cost_rate = 0.05
+	decider.td_discount_gamma = 0.9
+	decider.set_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_ERRANCE, -1.0)
+	decider.decide(_adaptive_observation({"hunger": 40.0, "has_visible_ronce": true, "delta": 0.0, "elapsed_seconds": 0.0, "berries_picked_total": 0}))
+	_expect(decider.updates_total == 0, "Adaptatif flush : aucune mise à jour sur la seule décision d'ouverture.")
+	# La fenêtre a produit une cueillette ; l'agent sort de la situation de faim (sac plein).
+	decider.decide(_adaptive_observation({"hunger": 40.0, "has_visible_ronce": true, "berries_carried": 3, "max_berries_carried": 3, "delta": 2.0, "elapsed_seconds": 2.0, "berries_picked_total": 1}))
+	_expect(decider.updates_total == 1, "Adaptatif flush : sortir de la situation de faim clôture la fenêtre en cours.")
+	_expect(decider.get_score(AdaptiveDecider.SITUATION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_VISIBLE) > 0.0, "Adaptatif flush : une cueillette dans la fenêtre laisse la cellule positive même si l'épisode finit par une sortie de faim.")
+	_expect(decider.pending_decision().is_empty(), "Adaptatif flush : la décision en attente est purgée à la sortie de la situation de faim.")
+	decider.decide(_adaptive_observation({"hunger": 40.0, "has_visible_ronce": true, "berries_carried": 3, "max_berries_carried": 3, "delta": 2.0, "elapsed_seconds": 4.0, "berries_picked_total": 1}))
+	_expect(decider.updates_total == 1, "Adaptatif flush : aucune mise à jour supplémentaire hors situation de faim exploitable.")
 
 func _test_adaptive_engagement() -> void:
 	var stable := _adaptive_observation({"has_visible_ronce": true, "has_memories": true, "delta": 0.1})

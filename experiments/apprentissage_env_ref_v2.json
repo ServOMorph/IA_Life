@@ -1,0 +1,31 @@
+{
+  "format_version": 1,
+  "experiment_id": "apprentissage-env-ref-v2",
+  "_comment": "Environnement de reference GELE v2 de roadmap_apprentissage_v2 (bifurcation Phase 3 : gate (b) en echec + tripwire Phase 2, l'env v1 ne discriminait plus dans la bande haute ni sur le choix S3). Enrichissement retenu apres probe p3b_env_probe : eat_hunger_threshold = 90 (= pickup_hunger_threshold, supprime le tampon de digestion differee qui amortissait le signal) et hunger_depletion_rate 0.9. A ce point, meilleure politique fixe ~0.50 de survie, vie mediane NON saturee (~242-282 s), automate ~0.17 : plage dynamique retrouvee. Rupture de comparaison avec M0 v1 assumee et consignee (roadmap : risque principal). Toute mesure v2 (M0 v2 .. Mf v2) tourne dessus. Le decider_type de Rouge est fixe par le bras de campagne.",
+  "seed": 20260901,
+  "environment": {
+    "game_config": {"ronce_count": 30, "berries_per_ronce": 4, "eat_hunger_threshold": 90.0}
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 40.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "automate",
+        "fixed_policy_s1": "ronce_visible",
+        "fixed_policy_s2": "ronce_memorisee",
+        "fixed_policy_s3": "errance",
+        "vision_range": 15.0,
+        "hunger_depletion_rate": 0.9,
+        "adaptive_decision_interval_seconds": 2.0,
+        "learning_rate": 0.2,
+        "exploration_epsilon": 0.2,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 300.0,
+    "quit_on_all_dead": false
+  }
+}

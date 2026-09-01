@@ -51,3 +51,8 @@
   Ollama local (`gemma3:1b`, `gemma3:4b` écarté après effondrement), repli automatique sur
   l'automate en cas d'erreur, campagne comparative validée — voir
   `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`.
+- 2026-08-26 : ROBERTO — cause racine du bug "injoignable" identifiée et corrigée (clé VAPID
+  codée en dur désynchronisée du serveur, pas un cache navigateur) ; reconnexion WebSocket et
+  notification push validées en conditions réelles. Convention `!<commande>` (commande à
+  distance depuis le téléphone, git compris) créée et inlinée dans `CLAUDE.md` en plus du
+  README — un simple renvoi au README s'est avéré insuffisant.

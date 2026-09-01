@@ -8,7 +8,7 @@ Trois proprietes, sur un ExperimentConfig ou au moins un agent est en
   2. Aucun apprentissage : le run n'emet aucun evenement `apprentissage_maj` ni
                         `apprentissage_table` (la table reste figee), mais bien des
                         `apprentissage_decision` (le chemin de faim est exerce).
-  3. Politiques distinctes : forcer `fixed_policy_s1` et `fixed_policy_s2` a "errance"
+  3. Politiques distinctes : forcer `fixed_policy_s1`, `fixed_policy_s2` et `fixed_policy_s3` a "errance"
                         produit un comportement different de la config d'origine. Exige
                         qu'au moins une decision S1 ou S2 ait ete prise dans le run de
                         reference (sinon le choix de politique n'est pas exerce et le test
@@ -50,7 +50,7 @@ def force_wander(node):
     if isinstance(node, dict):
         out = {}
         for k, v in node.items():
-            if k in ("fixed_policy_s1", "fixed_policy_s2") and v != "errance":
+            if k in ("fixed_policy_s1", "fixed_policy_s2", "fixed_policy_s3") and v != "errance":
                 out[k] = "errance"
             else:
                 out[k] = force_wander(v)
@@ -145,7 +145,7 @@ def main() -> int:
         return 1
     config_wander = force_wander(config)
     if json.dumps(config, sort_keys=True) == json.dumps(config_wander, sort_keys=True):
-        print("Refuse : fixed_policy_s1 et fixed_policy_s2 valent deja 'errance', test 3 sans objet.", file=sys.stderr)
+        print("Refuse : fixed_policy_s1, fixed_policy_s2 et fixed_policy_s3 valent deja 'errance', test 3 sans objet.", file=sys.stderr)
         return 1
 
     try:

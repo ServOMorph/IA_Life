@@ -29,8 +29,11 @@ extends CharacterBody3D
 @export_range(0.0, 1.0, 0.01) var learning_rate: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["learning_rate"])
 @export_range(0.0, 1.0, 0.01) var exploration_epsilon: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["exploration_epsilon"])
 @export var adaptive_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["adaptive_decision_interval_seconds"])
+@export_range(0.0, 5.0, 0.01) var survival_cost_rate: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["survival_cost_rate"])
+@export_range(0.0, 1.0, 0.01) var td_discount_gamma: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["td_discount_gamma"])
 @export var fixed_policy_s1: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s1"])
 @export var fixed_policy_s2: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s2"])
+@export var fixed_policy_s3: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s3"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
 @export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
@@ -129,6 +132,8 @@ func _build_decider():
 		"adaptatif":
 			var adaptive := AdaptiveDecider.new()
 			adaptive.configure(learning_rate, exploration_epsilon, adaptive_decision_interval_seconds, decider_seed + hash(display_name), display_name)
+			adaptive.survival_cost_rate = survival_cost_rate
+			adaptive.td_discount_gamma = td_discount_gamma
 			return adaptive
 		"adaptatif_v1":
 			var adaptive_v1 := AdaptiveDeciderV1.new()
@@ -136,7 +141,7 @@ func _build_decider():
 			return adaptive_v1
 		"politique_fixe":
 			var fixed := FixedPolicyDecider.new()
-			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, adaptive_decision_interval_seconds, display_name)
+			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, fixed_policy_s3, adaptive_decision_interval_seconds, display_name)
 			return fixed
 		_:
 			return BaselineDecider.new()
@@ -234,12 +239,16 @@ func _apply_decision(scaled_delta: float) -> void:
 		"pickup_hunger_threshold": GameConfig.pickup_hunger_threshold,
 		"eat_hunger_threshold": GameConfig.eat_hunger_threshold,
 		"berries_carried": berries_carried,
+		"berries_picked_total": berries_picked_total,
 		"max_berries_carried": GameConfig.max_berries_carried,
 		"elapsed_seconds": _now_elapsed_seconds(),
 		"has_memories": _has_usable_memory(),
 		"memory_direction": _direction_to_nearest_memory(),
+		"old_memory_direction": _direction_to_oldest_memory(),
 		"has_visible_ronce": visible_ronce_direction != Vector3.ZERO,
 		"visible_ronce_direction": visible_ronce_direction,
+		"unknown_zone_direction": _direction_to_unknown_zone_candidate(_direction),
+		"known_zone_direction": _direction_to_nearest_known_zone(),
 		"social_goal": _social_goal_if_active(),
 		"social_direction": _social_direction(),
 		"current_direction": _direction,
@@ -765,6 +774,32 @@ func _direction_to_nearest_memory() -> Vector3:
 	to_target.y = 0.0
 	if to_target.length_squared() < 0.01:
 		return _direction
+	return to_target.normalized()
+
+## Souvenir utilisable le plus estompé (strength minimale) : le roncier connu que
+## l'agent n'a pas rafraîchi depuis le plus longtemps, cible de l'action souvenir_ancien
+## (Phase 3), distincte de ronce_memorisee qui vise le plus proche.
+func _oldest_usable_memory():
+	var oldest = null
+	var oldest_strength := INF
+	for m in _memories:
+		if not is_instance_valid(m.ronce):
+			continue
+		if "berries" in m.ronce and int(m.ronce.berries) <= 0:
+			continue
+		if m.strength < oldest_strength:
+			oldest_strength = m.strength
+			oldest = m.ronce
+	return oldest
+
+func _direction_to_oldest_memory() -> Vector3:
+	var oldest = _oldest_usable_memory()
+	if oldest == null:
+		return Vector3.ZERO
+	var to_target: Vector3 = oldest.position - position
+	to_target.y = 0.0
+	if to_target.length_squared() < 0.01:
+		return Vector3.ZERO
 	return to_target.normalized()
 
 func _try_eat_berry() -> void:
