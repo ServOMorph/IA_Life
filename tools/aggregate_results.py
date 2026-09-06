@@ -65,6 +65,11 @@ VISION_AGENT_FIELDS = {
     "vision_to_contact_delay_seconds_total": (int, float),
     "vision_to_contact_events_total": int,
 }
+DANGER_AGENT_FIELDS = {
+    "danger_entries_total": int,
+    "danger_exposure_seconds_total": (int, float),
+    "danger_hunger_cost_total": (int, float),
+}
 
 
 def summaries_in(source: Path) -> list[Path]:
@@ -96,6 +101,11 @@ def validate_summary(payload: Any) -> list[str]:
                 errors.append(f"agent {index} : champ manquant {field}")
             elif not isinstance(agent[field], expected):
                 errors.append(f"agent {index} : champ invalide {field}")
+        for field, expected in DANGER_AGENT_FIELDS.items():
+            if field not in agent:
+                errors.append(f"agent {index} : champ danger manquant {field}")
+            elif not isinstance(agent[field], expected):
+                errors.append(f"agent {index} : champ danger invalide {field}")
     return errors
 
 
@@ -155,6 +165,7 @@ def flatten_rows(summaries: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 **{key: agent.get(key, 0) for key in SOCIAL_AGENT_FIELDS},
                 **{key: agent.get(key, 0) for key in DECIDER_AGENT_FIELDS},
                 **{key: agent.get(key, 0) for key in VISION_AGENT_FIELDS},
+                **{key: agent.get(key, 0) for key in DANGER_AGENT_FIELDS},
             })
     return rows
 
@@ -178,6 +189,8 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
         memorized = [float(row["memorized_ronces"]) for row in group]
         berries_picked = [float(row["berries_picked_total"]) for row in group]
         berries_eaten = [float(row["berries_eaten_total"]) for row in group]
+        danger_exposure = [float(row["danger_exposure_seconds_total"]) for row in group]
+        danger_cost = [float(row["danger_hunger_cost_total"]) for row in group]
         social_shares = [float(row["social_shares_total"]) for row in group]
         food_shared = [float(row["food_shared_total"]) for row in group]
         aggression_incidents = [float(row["aggression_incidents_total"]) for row in group]
@@ -205,6 +218,8 @@ def make_report(rows: list[dict[str, Any]]) -> dict[str, Any]:
             "mean_memorized_ronces": mean(memorized),
             "mean_berries_picked": mean(berries_picked),
             "mean_berries_eaten": mean(berries_eaten),
+            "mean_danger_exposure_seconds": mean(danger_exposure),
+            "mean_danger_hunger_cost": mean(danger_cost),
             "mean_social_shares": mean(social_shares),
             "mean_food_shared": mean(food_shared),
             "mean_aggression_incidents": mean(aggression_incidents),

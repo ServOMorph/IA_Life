@@ -62,3 +62,12 @@
 - 2026-08-26 : Phase 8 (vision et perception générique) ajoutée à la roadmap en [TODO] ; défaut
   `llm_model` du registre corrigé (`gemma3:4b` -> `gemma3:1b`, désaligné de la décision
   Phase 7).
+
+---
+
+- 2026-08-27 : Phase 8 (vision) close — primitive de perception, vision portée/angle/occlusion,
+  `social_radius` absorbé comme cas particulier de la vision (code partagé, équivalence
+  démontrée sur les scénarios sociaux Phase 6) — voir
+  `_docs/decisions/2026-08-27_phase8-vision-perception.md`.
+- 2026-08-27 : Points ouverts Phase 7 clos — prompt few-shot LLM jugé non nécessaire, coopération
+  sociale validée statistiquement (5 seeds, jamais nulle).

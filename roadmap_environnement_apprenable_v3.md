@@ -80,7 +80,7 @@ la métrique de survie existante et permet de calibrer la difficulté sans ajout
 
 ## Plan d'action
 
-### Phase 0 — Spécification et tests de contrat [À FAIRE]
+### Phase 0 — Spécification et tests de contrat [FAIT — 2026-09-01]
 
 - Écrire les paramètres dans `VariableRegistry.GAME_CONFIG` : nombre, rayon, coût de faim,
   visibilité et rayon de sécurité du placement.
@@ -91,7 +91,12 @@ la métrique de survie existante et permet de calibrer la difficulté sans ajout
 **Gate** : la configuration est validée, les anciens JSON sans paramètres de danger restent
 acceptés avec un comportement strictement inchangé (`danger_zone_count = 0`).
 
-### Phase 1 — Mécanique déterministe et télémétrie [À FAIRE]
+**Livrables** : `DangerZoneContract` verrouille le calcul zéro zone / exposition / chevauchement /
+sortie ; `experiments/danger_zone_contract_v1.md` fixe le schéma de télémétrie ;
+`danger_zone_oracle_base_v1.json` et `campaigns/danger_zone_oracle_v3.json` fixent les cinq bras,
+la grille initiale et les 24 seeds (12 calibration + 12 réservés).
+
+### Phase 1 — Mécanique déterministe et télémétrie [FAIT — 2026-09-06]
 
 - Ajouter un composant `danger_zone.gd` minimal (`Area3D`) et sa génération dans `main.gd`.
 - Appliquer le coût dans `character.gd` en temps simulé, indépendamment du framerate.
@@ -103,6 +108,14 @@ acceptés avec un comportement strictement inchangé (`danger_zone_count = 0`).
 **Gate** : deux runs au même seed sont bit à bit identiques ; coût mesuré = taux × durée à la
 tolérance numérique près ; configuration avec zéro zone reproduit une trace de référence v2.
 
+**Livrables** : `danger_zone.gd` instancie les `Area3D` avec un RNG séparé, et `Character`
+applique le taux maximal des zones actives au temps simulé. Les événements et totaux sont validés
+par `danger_zone_smoke_v1.json` et `check_telemetry.py` ; deux runs headless au même seed sont
+identiques. Vérification fenêtrée faite le 2026-09-06 (rendu des disques rouges, placement hors
+décor, exposition/sortie, `danger_zone_count: 0` strict) via `run_danger_windowed.py` — gate
+complet passé. Outillage : autoload `DevState` + panneau dev (relance avec seed / nombre de zones
+choisis), `experiments/danger_zone_windowed_v1.json`.
+
 ### Phase 2 — Perception et oracle de politiques fixes [À FAIRE]
 
 - Raccorder les zones au système `_perceive` et produire une direction d'éloignement stable.
@@ -110,6 +123,10 @@ tolérance numérique près ; configuration avec zéro zone reproduit une trace 
 - La politique de danger est une surcouche : hors danger visible, tous les bras exécutent la même
   politique alimentaire. Cette isolation est nécessaire pour attribuer l'écart au danger.
 - Tester les cas danger devant, derrière, hors portée, occlus et zone déjà occupée.
+- Livrer une config smoke avec `events` scriptés amenant un agent dans une zone puis l'en sortant,
+  pour que `check_telemetry.py` couvre la séquence `danger_enter` / `danger_exposure` / `danger_exit`
+  en headless (la smoke Phase 1 a des agents immobiles ; point 15 de `tests_manuels.md` non
+  couvert sans manip fenêtrée).
 
 **Gate** : sur un scénario scripté, `eviter` réduit l'exposition, `viser` l'augmente et `ignorer`
 laisse la trajectoire inchangée ; aucun bras ne consomme un aléa supplémentaire au moment de la

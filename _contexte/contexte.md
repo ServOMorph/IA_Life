@@ -10,17 +10,11 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
 Phases 1 à 8 closes ; axe apprentissage v2 suspendu après égalité statistique avec le hasard.
-`roadmap_environnement_apprenable_v3.md` planifie des zones dangereuses comme préalable causal :
-oracle fixe sur 12 seeds de calibration puis 12 réservés, avant tout raccord au learner.
-Mécanique non implémentée ; prochaine étape : Phase 0 v3. La v2 reste interdite jusqu'au gate.
+`roadmap_environnement_apprenable_v3.md` : Phases 0-1 [FAIT] — zones dangereuses implémentées
+(placement déterministe, télémétrie `danger_*`, coût de faim), validées headless et fenêtré.
+Prochaine étape : Phase 2 (perception + oracle `fixed_policy_danger`). v2 interdite jusqu'au gate v3.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-27 : Phase 8 (vision) close — primitive de perception, vision portée/angle/occlusion,
-  `social_radius` absorbé comme cas particulier de la vision (code partagé, équivalence
-  démontrée sur les scénarios sociaux Phase 6) — voir
-  `_docs/decisions/2026-08-27_phase8-vision-perception.md`.
-- 2026-08-27 : Points ouverts Phase 7 clos — prompt few-shot LLM jugé non nécessaire, coopération
-  sociale validée statistiquement (5 seeds, jamais nulle).
 - 2026-08-28 : Pont `com_telephone` migré vers le projet Roberto (hôte du serveur + template de
   référence unique). IA_Life devient un projet raccordé (README léger + `/roberto` surveillant
   `messages_ia_life.log` chez Roberto). Serveur/PWA retirés du dépôt IA_Life. Clôt l'action
@@ -67,3 +61,8 @@ Mécanique non implémentée ; prochaine étape : Phase 0 v3. La v2 reste interd
   dangereuses localisées avec coût de faim, oracle fixe `eviter|ignorer|viser`, calibration puis
   validation sur 12 seeds réservés. La v2 ne sera débloquée qu'après ce gate — voir
   `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
+- 2026-09-06 : Phases 0-1 de `roadmap_environnement_apprenable_v3.md` closes — mécanique de zones
+  dangereuses (Area3D statiques, RNG dérivé de la seed, coût de faim au temps simulé = taux max,
+  télémétrie `danger_*`) validée headless + fenêtré. Outillage dev : autoload `DevState` (overrides
+  seed / nb de zones), `run_danger_windowed.py`, panneau dev enrichi ; fix `AnimationPlayer.speed_scale`
+  indexé sur `GameSpeed.time_scale`. Prochaine : Phase 2 (perception + oracle).

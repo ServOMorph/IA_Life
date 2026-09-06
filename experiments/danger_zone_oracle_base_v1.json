@@ -1,0 +1,33 @@
+{
+  "format_version": 1,
+  "experiment_id": "danger-zone-oracle-base-v1",
+  "_comment": "Base contractuelle v3. Elle conserve l'environnement v2 et désactive le danger par défaut : aucune campagne historique ne doit changer quand danger_zone_count vaut 0. Les valeurs de danger sont écrasées exclusivement par danger_zone_oracle_v3.json pendant la calibration de Phase 3.",
+  "seed": 20260921,
+  "environment": {
+    "game_config": {
+      "ronce_count": 30,
+      "berries_per_ronce": 4,
+      "eat_hunger_threshold": 90.0,
+      "danger_zone_count": 0,
+      "danger_zone_radius": 8.0,
+      "danger_hunger_cost_rate": 1.0,
+      "danger_zone_visible": true,
+      "danger_zone_safety_radius": 12.0
+    }
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 40.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "politique_fixe",
+        "fixed_policy_s1": "ronce_memorisee",
+        "fixed_policy_s2": "errance",
+        "fixed_policy_s3": "errance",
+        "vision_range": 15.0,
+        "hunger_depletion_rate": 0.9,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {"game_speed": 1.0, "max_simulation_seconds": 300.0, "quit_on_all_dead": false}
+}

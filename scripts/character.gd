@@ -1,5 +1,7 @@
 extends CharacterBody3D
 
+const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
+
 @export var map_half_x: float = 18.0
 @export var map_half_z: float = 18.0
 @export var move_speed: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["move_speed"])
@@ -76,6 +78,9 @@ var vision_detections_total: int = 0
 var ronces_discovered_by_vision_total: int = 0
 var vision_to_contact_delay_seconds_total: float = 0.0
 var vision_to_contact_events_total: int = 0
+var danger_entries_total: int = 0
+var danger_exposure_seconds_total: float = 0.0
+var danger_hunger_cost_total: float = 0.0
 
 var llm_calls_total: int:
 	get: return _decider.calls_total if _decider is LLMDecider else 0
@@ -100,6 +105,10 @@ var _visible_entities: Array = []
 var _active_vision_contacts: Dictionary = {}
 var _first_vision_time: Dictionary = {}
 var _first_contact_recorded: Dictionary = {}
+var _danger_zones: Array = []
+var _active_danger_zones: Dictionary = {}
+var _danger_unlogged_seconds: float = 0.0
+var _danger_unlogged_cost: float = 0.0
 
 var _body_mesh: MeshInstance3D
 var _head_mesh: MeshInstance3D
@@ -178,7 +187,16 @@ func reset_for_rl(spawn_position: Vector3) -> void:
 	_current_zone_id = ""
 	_last_position = position
 	_rl_direction = Vector3.ZERO
+	danger_entries_total = 0
+	danger_exposure_seconds_total = 0.0
+	danger_hunger_cost_total = 0.0
+	_active_danger_zones.clear()
+	_danger_unlogged_seconds = 0.0
+	_danger_unlogged_cost = 0.0
 	_set_goal("rl")
+
+func set_danger_zones(zones: Array) -> void:
+	_danger_zones = zones
 
 func _physics_process(delta: float) -> void:
 	var scaled_delta := delta * GameSpeed.time_scale
@@ -186,10 +204,11 @@ func _physics_process(delta: float) -> void:
 	if is_dead:
 		return
 
+	var danger_cost := _apply_danger_exposure(scaled_delta)
 	if immortal:
-		hunger = clamp(hunger - hunger_depletion_rate * aging_factor * scaled_delta, 1.0, 100.0)
+		hunger = clamp(hunger - hunger_depletion_rate * aging_factor * scaled_delta - danger_cost, 1.0, 100.0)
 	else:
-		hunger -= hunger_depletion_rate * aging_factor * scaled_delta
+		hunger -= hunger_depletion_rate * aging_factor * scaled_delta + danger_cost
 		if hunger <= 0.0:
 			hunger = 0.0
 			_die()
@@ -225,6 +244,68 @@ func _physics_process(delta: float) -> void:
 		_record_position_sample()
 	_update_facing(scaled_delta)
 	_update_walk_animation(scaled_delta)
+
+func _apply_danger_exposure(scaled_delta: float) -> float:
+	if _danger_zones.is_empty() or scaled_delta <= 0.0:
+		return 0.0
+	var active: Dictionary = {}
+	var rates: Array = []
+	for zone in _danger_zones:
+		if not is_instance_valid(zone) or not zone.is_character_exposed(global_position):
+			continue
+		active[zone.zone_id] = zone
+		rates.append(zone.hunger_cost_rate)
+	for zone_id in active:
+		if not _active_danger_zones.has(zone_id):
+			danger_entries_total += 1
+			GameLogger.log_event_data(DangerZoneContract.EVENT_ENTER, "%s entre dans %s" % [display_name, zone_id], _danger_event_data(active[zone_id]))
+	for zone_id in _active_danger_zones:
+		if not active.has(zone_id):
+			_flush_danger_exposure()
+			GameLogger.log_event_data(DangerZoneContract.EVENT_EXIT, "%s quitte %s" % [display_name, zone_id], _danger_event_data(_active_danger_zones[zone_id]))
+	_active_danger_zones = active
+	var cost := DangerZoneContract.hunger_cost(rates, scaled_delta)
+	if rates.is_empty():
+		return 0.0
+	danger_exposure_seconds_total += scaled_delta
+	danger_hunger_cost_total += cost
+	_danger_unlogged_seconds += scaled_delta
+	_danger_unlogged_cost += cost
+	if _danger_unlogged_seconds >= 1.0:
+		_flush_danger_exposure()
+	return cost
+
+func finish_danger_exposure() -> void:
+	_flush_danger_exposure()
+
+func _flush_danger_exposure() -> void:
+	if _danger_unlogged_seconds <= 0.0:
+		return
+	var zone_ids: Array = _active_danger_zones.keys()
+	zone_ids.sort()
+	var active_rates: Array = []
+	for zone in _active_danger_zones.values():
+		active_rates.append(zone.hunger_cost_rate)
+	GameLogger.log_event_data(DangerZoneContract.EVENT_EXPOSURE, "%s exposé au danger" % display_name, {
+		"agent": display_name,
+		"zone_ids": zone_ids,
+		"delta_seconds": _danger_unlogged_seconds,
+		"cost_rate": DangerZoneContract.effective_cost_rate(active_rates),
+		"hunger_cost_delta": _danger_unlogged_cost,
+		"exposure_seconds_total": danger_exposure_seconds_total,
+		"hunger_cost_total": danger_hunger_cost_total,
+	})
+	_danger_unlogged_seconds = 0.0
+	_danger_unlogged_cost = 0.0
+
+func _danger_event_data(zone) -> Dictionary:
+	return {
+		"agent": display_name,
+		"zone_id": zone.zone_id,
+		"position": [position.x, position.y, position.z],
+		"exposure_seconds_total": danger_exposure_seconds_total,
+		"hunger_cost_total": danger_hunger_cost_total,
+	}
 
 func _apply_decision(scaled_delta: float) -> void:
 	if rl_controlled:
@@ -296,6 +377,7 @@ func _play_anim(anim_name: String) -> void:
 
 func _update_walk_animation(scaled_delta: float) -> void:
 	if _anim_player != null:
+		_anim_player.speed_scale = GameSpeed.time_scale
 		var rig_speed := Vector2(velocity.x, velocity.z).length()
 		_play_anim("Walk" if rig_speed > 0.1 else "Idle")
 		return

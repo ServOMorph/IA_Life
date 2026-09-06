@@ -1,5 +1,8 @@
 extends Node3D
 
+const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
+const DangerZoneScript = preload("res://scripts/danger_zone.gd")
+
 const MAP_SIZE := 160.0
 const WALL_HEIGHT := 3.0
 const WALL_THICKNESS := 1.0
@@ -18,6 +21,8 @@ const CENTER_FLAT_RADIUS := 45.0
 const SPAWN_FLAT_RADIUS := 20.0
 const SPAWN_POINTS := [Vector2(-40, -40), Vector2(40, -40), Vector2(-40, 40), Vector2(40, 40)]
 const DEV_INTERACTION_RADIUS := 2.4
+const DANGER_RNG_SEED_OFFSET := 7919
+const DANGER_PLACEMENT_ATTEMPTS := 64
 
 var _character_defaults: Dictionary = {}
 var _character_overrides: Dictionary = {}
@@ -40,6 +45,7 @@ var _screenshot_delay: float = 0.0
 var _screenshot_clock: float = 0.0
 var _dev_mode: bool = false
 var _ronces: Array = []
+var _danger_zones: Array = []
 var _dev_frozen_scale: float = -1.0
 var _dev_step_frames: int = 0
 var _ui: CanvasLayer
@@ -58,6 +64,12 @@ var _rl_waiting := true
 func _ready() -> void:
 	_dev_mode = OS.get_environment(DEV_MODE_ENV_VAR) != ""
 	_load_headless_overrides()
+	if _dev_mode and DevState.seed_override >= 0:
+		_experiment_seed = DevState.seed_override
+	DevState.current_seed = _experiment_seed
+	if _dev_mode and DevState.danger_zone_count_override >= 0:
+		GameConfig.danger_zone_count = DevState.danger_zone_count_override
+	DevState.current_danger_zone_count = GameConfig.danger_zone_count
 	seed(_experiment_seed)
 	_init_terrain_noise()
 	_build_environment()
@@ -74,6 +86,9 @@ func _ready() -> void:
 		_spawn_character(40, 40, Color(0.9, 0.7, 0.1), "Jaune", "bottom_right"),
 	]
 	_spawn_ronces()
+	_spawn_danger_zones()
+	for character in characters:
+		character.node.set_danger_zones(_danger_zones)
 	_build_ui(characters, camera, light)
 	for c in characters:
 		_characters.append(c.node)
@@ -434,6 +449,7 @@ func _finish_headless_run(reason: String) -> void:
 		for character in _characters:
 			if not is_instance_valid(character):
 				continue
+			character.finish_danger_exposure()
 			if not character.is_dead:
 				character.log_adaptive_table("run_end")
 			var parameters := _character_defaults.duplicate(true)
@@ -472,6 +488,9 @@ func _finish_headless_run(reason: String) -> void:
 				"food_received_total": character.food_received_total,
 				"aggression_incidents_total": character.aggression_incidents_total,
 				"aggression_received_total": character.aggression_received_total,
+				"danger_entries_total": character.danger_entries_total,
+				"danger_exposure_seconds_total": character.danger_exposure_seconds_total,
+				"danger_hunger_cost_total": character.danger_hunger_cost_total,
 				"llm_calls_total": character.llm_calls_total,
 				"llm_errors_total": character.llm_errors_total,
 				"llm_total_latency_ms": character.llm_total_latency_ms,
@@ -896,6 +915,85 @@ func _spawn_ronces() -> void:
 			var x := randf_range(0.0, quadrant_half) * sign_vec.x
 			var z := randf_range(0.0, quadrant_half) * sign_vec.y
 			_spawn_ronce(Vector3(x, _terrain_height(x, z) + 0.5, z))
+
+func _spawn_danger_zones() -> void:
+	if GameConfig.danger_zone_count <= 0:
+		return
+	var rng := RandomNumberGenerator.new()
+	rng.seed = _experiment_seed + DANGER_RNG_SEED_OFFSET
+	var half := maxf(0.0, MAP_SIZE / 2.0 - WALL_THICKNESS - GameConfig.danger_zone_radius - GameConfig.danger_zone_safety_radius)
+	for index in GameConfig.danger_zone_count:
+		var placed := false
+		for attempt in DANGER_PLACEMENT_ATTEMPTS:
+			var x := rng.randf_range(-half, half)
+			var z := rng.randf_range(-half, half)
+			var candidate := Vector3(x, _terrain_height(x, z) + 0.05, z)
+			if not _danger_position_is_safe(candidate):
+				continue
+			_spawn_danger_zone(index, candidate, attempt + 1)
+			placed = true
+			break
+		if not placed:
+			GameLogger.log_event_data(DangerZoneContract.EVENT_PLACEMENT, "Zone dangereuse %d non placée" % index, {
+				"zone_id": "danger_%02d" % index,
+				"position": [],
+				"radius": GameConfig.danger_zone_radius,
+				"seed": _experiment_seed,
+				"placement_attempt": DANGER_PLACEMENT_ATTEMPTS,
+				"status": "failed",
+			})
+
+func _danger_position_is_safe(candidate: Vector3) -> bool:
+	var safety := GameConfig.danger_zone_safety_radius + GameConfig.danger_zone_radius
+	for spawn in SPAWN_POINTS:
+		if Vector2(candidate.x, candidate.z).distance_to(spawn) < safety:
+			return false
+	for ronce in _ronces:
+		if is_instance_valid(ronce) and candidate.distance_to(ronce.global_position) < safety:
+			return false
+	return true
+
+func _spawn_danger_zone(index: int, position: Vector3, attempt: int) -> void:
+	var zone := DangerZoneScript.new()
+	zone.name = "DangerZone_%02d" % index
+	zone.zone_id = "danger_%02d" % index
+	zone.radius = GameConfig.danger_zone_radius
+	zone.hunger_cost_rate = GameConfig.danger_hunger_cost_rate
+	zone.position = position
+
+	var mesh_instance := MeshInstance3D.new()
+	var mesh := CylinderMesh.new()
+	mesh.top_radius = zone.radius
+	mesh.bottom_radius = zone.radius
+	mesh.height = 0.08
+	mesh.radial_segments = 40
+	mesh_instance.mesh = mesh
+	var material := StandardMaterial3D.new()
+	material.albedo_color = Color(0.9, 0.12, 0.08, 0.42)
+	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mesh_instance.material_override = material
+	mesh_instance.visible = GameConfig.danger_zone_visible
+	zone.add_child(mesh_instance)
+
+	var collision := CollisionShape3D.new()
+	var shape := CylinderShape3D.new()
+	shape.radius = zone.radius
+	shape.height = 2.0
+	collision.shape = shape
+	collision.position.y = 1.0
+	zone.add_child(collision)
+	zone.add_to_group("danger_zone")
+	add_child(zone)
+	_danger_zones.append(zone)
+	GameLogger.log_event_data(DangerZoneContract.EVENT_PLACEMENT, "Zone dangereuse %s placée" % zone.zone_id, {
+		"zone_id": zone.zone_id,
+		"position": [position.x, position.y, position.z],
+		"radius": zone.radius,
+		"seed": _experiment_seed,
+		"placement_attempt": attempt,
+		"status": "placed",
+	})
 
 func _spawn_dev_spawn_ronces() -> void:
 	var offsets := [Vector2(6, 0), Vector2(-6, 0), Vector2(0, 6), Vector2(0, -6)]

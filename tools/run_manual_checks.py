@@ -12,7 +12,7 @@ def main() -> int:
         return 1
     return subprocess.run([
         str(GODOT_EXE), "--headless", "--path", str(PROJECT_DIR),
-        "res://tools/manual_checks.tscn",
+        "--scene", "tools/manual_checks.tscn",
     ]).returncode
 
 

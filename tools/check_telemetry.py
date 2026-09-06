@@ -46,6 +46,12 @@ def main() -> int:
         if discoveries != agent["zone_discoveries_total"] or revisits != agent["zone_revisits_total"]:
             print(f"Échec : métriques de zone incohérentes pour {name}.", file=sys.stderr)
             return 1
+        danger_events = [event for event in events if event.get("data", {}).get("agent") == name and event.get("category") == "danger_exposure"]
+        logged_seconds = sum(float(event["data"].get("delta_seconds", 0.0)) for event in danger_events)
+        logged_cost = sum(float(event["data"].get("hunger_cost_delta", 0.0)) for event in danger_events)
+        if abs(logged_seconds - float(agent.get("danger_exposure_seconds_total", 0.0))) > 0.001 or abs(logged_cost - float(agent.get("danger_hunger_cost_total", 0.0))) > 0.001:
+            print(f"Échec : métriques de danger incohérentes pour {name}.", file=sys.stderr)
+            return 1
     print(f"TÉLÉMÉTRIE VALIDE : {summary_path.name} correspond aux événements JSONL.")
     return 0
 

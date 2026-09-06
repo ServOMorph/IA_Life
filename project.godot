@@ -23,3 +23,4 @@ window/size/mode=3
 GameSpeed="*res://scripts/game_speed.gd"
 GameConfig="*res://scripts/game_config.gd"
 GameLogger="*res://scripts/game_logger.gd"
+DevState="*res://scripts/dev_state.gd"

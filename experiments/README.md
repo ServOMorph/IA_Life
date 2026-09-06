@@ -35,6 +35,14 @@ capture), un fichier `*.summary.json` voisin synthétise aussi le résultat fina
 `telemetry_smoke_v1.json` est un scénario très court (2 s) destiné à vérifier cette
 chaîne de résultats de bout en bout.
 
+`danger_zone_smoke_v1.json` exerce le placement déterministe de zones dangereuses. Pour valider
+leurs événements et leurs totaux :
+
+```powershell
+python tools/check_telemetry.py experiments/danger_zone_smoke_v1.json
+python tools/check_reproducibility.py experiments/danger_zone_smoke_v1.json
+```
+
 ## Métriques spatiales
 
 Les positions sont échantillonnées toutes les secondes simulées. Une zone est une cellule
@@ -80,6 +88,15 @@ actuellement disponibles : `remove_ronces_fraction` (`fraction` entre 0 et 1) et
 dans les événements `environment_event` et récapitulés dans `executed_events` du résumé.
 
 `resource_disruption_v1.json` retire 50 % des ronciers après 10 s simulées.
+
+## Zones dangereuses v3
+
+Le contrat préparatoire est dans `danger_zone_contract_v1.md`. Les paramètres sont déjà
+validés par `ExperimentConfig`, mais aucune zone n'est encore créée :
+`danger_zone_count = 0` conserve strictement le comportement historique. La campagne
+`campaigns/danger_zone_oracle_v3.json` fixe les 12 seeds de calibration, les 12 seeds
+réservés et les cinq bras de l'oracle ; elle ne doit pas être exécutée avant les Phases 1-2
+de `roadmap_environnement_apprenable_v3.md`.
 
 ## Perception sociale
 

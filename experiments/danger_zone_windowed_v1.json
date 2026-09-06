@@ -1,0 +1,18 @@
+{
+  "format_version": 1,
+  "experiment_id": "danger-zone-phase1-windowed-v1",
+  "seed": 4242,
+  "environment": {
+    "game_config": {
+      "ronce_count": 0,
+      "danger_zone_count": 12,
+      "danger_zone_radius": 20.0,
+      "danger_hunger_cost_rate": 1.5,
+      "danger_zone_safety_radius": 0.0
+    }
+  },
+  "agents": {
+    "defaults": {"hunger_depletion_rate": 0.0}
+  },
+  "simulation": {"game_speed": 1.0, "max_simulation_seconds": 86400, "quit_on_all_dead": false}
+}

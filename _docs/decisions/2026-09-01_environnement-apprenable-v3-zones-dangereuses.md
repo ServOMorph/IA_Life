@@ -1,7 +1,9 @@
 # Environnement apprenable v3 — zones dangereuses comme préalable
 
 Date : 2026-09-01
-Statut : validé pour planification ; mécanique non encore implémentée ni validée
+Statut : validé pour planification. Phases 0-1 closes le 2026-09-06 (mécanique de zones
+dangereuses implémentée, télémétrie et coût de faim validés headless + fenêtré). Oracle de
+politiques fixes (Phases 2-4) non encore exécuté.
 Roadmap : `roadmap_environnement_apprenable_v3.md`
 
 ## Décision

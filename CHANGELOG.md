@@ -1,3 +1,33 @@
+## v0.29 — 2026-09-06
+
+### Ajouté
+- Phases 0-1 de `roadmap_environnement_apprenable_v3.md` : mécanique de zones dangereuses.
+  `scripts/danger_zone.gd` (`Area3D` statiques, RNG dédié dérivé de la seed, 64 essais de
+  placement), `scripts/danger_zone_contract.gd` (calcul zéro zone / exposition / chevauchement au
+  taux maximal / sortie), coût de faim appliqué dans `character.gd` au temps simulé, télémétrie
+  `danger_placement|danger_enter|danger_exposure|danger_exit` et totaux par agent dans le résumé.
+  `experiments/danger_zone_contract_v1.md`, `danger_zone_oracle_base_v1.json`,
+  `campaigns/danger_zone_oracle_v3.json`, `danger_zone_smoke_v1.json`. Validé headless
+  (`run_manual_checks`, `check_telemetry.py`, `check_reproducibility.py`) et fenêtré.
+- `run_danger_windowed.py` : lance Godot fenêtré + mode dev + `experiments/danger_zone_windowed_v1.json`.
+- Autoload `DevState` (`scripts/dev_state.gd`) : porte les overrides seed et `danger_zone_count` à
+  travers `reload_current_scene()`.
+- Panneau dev : bouton « tuer le personnage de test », lignes « Seed » et « Zones dangereuses »
+  avec relance de scène, raccourcis clavier réorganisés en grille groupée.
+
+### Corrigé
+- Personnage de test : l'animation de marche « glissait » à `game_speed > 1` —
+  `AnimationPlayer.speed_scale` désormais indexé sur `GameSpeed.time_scale`.
+- `experiments/danger_zone_contract_v1.md` : la `category` d'un événement danger est son nom
+  (`danger_placement`, `danger_enter`…), pas `"danger"`.
+
+### Modifié
+- `tests_manuels.md` vidé : tests ROBERTO multi-projet validés au téléphone, tests zones
+  dangereuses (rendu, placement, exposition, désactivation stricte) tous verts.
+- `roadmap_environnement_apprenable_v3.md` : Phase 1 [FAIT] ; Phase 2 reçoit un livrable de
+  config smoke à `events` scriptés.
+- `.claude/memory.md` : les fenêtres Godot de ce projet se lancent sur le bureau virtuel « IA_Life ».
+
 ## v0.28 — 2026-09-01
 
 ### Ajouté

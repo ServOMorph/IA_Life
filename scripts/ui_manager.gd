@@ -103,16 +103,55 @@ func _build_menu_bar() -> void:
 	row.add_child(_build_large_view_button())
 	row.add_child(_build_reset_button())
 
+const DEV_SHORTCUTS := [
+	["Simulation", ""],
+	["Espace", "geler / reprendre la simulation"],
+	["N", "avancer d'une frame (simulation gelée)"],
+	["Personnage de test", ""],
+	["F5", "prendre / lâcher le contrôle (ZQSD + souris)"],
+	["H", "forcer la faim basse (déclenche un repas)"],
+	["G", "forcer la faim haute (déclenche une cueillette)"],
+	["E", "ramasser une mûre proche"],
+	["K", "tuer le personnage de test (animation de mort)"],
+	["Caméra / téléport", ""],
+	["F1-F4", "téléporter un agent au centre de la map (caméra en suivi)"],
+	["Shift+F1-F4", "téléporter un agent au contact de la ronce la plus proche"],
+	["Outils", ""],
+	["T", "ouvrir / fermer la checklist de tests"],
+]
+
 func _build_dev_panel() -> void:
 	_dev_panel = PanelContainer.new()
-	_dev_panel.custom_minimum_size = Vector2(560, 0)
+	_dev_panel.custom_minimum_size = Vector2(880, 0)
 
-	var label := Label.new()
-	label.text = "MODE DEV — Espace : geler/reprendre | N : avancer d'une frame | H : faim basse (repas) | G : faim haute (cueillette) | E : ramasser une mûre proche | K : tuer le perso de test | F1-F4 : téléporter perso au centre de la map (+ suivi caméra) | Shift+F1-F4 : téléporter perso au contact d'une ronce (+ suivi caméra) | F5 : contrôler le personnage de test (ZQSD + souris) | T : checklist de tests"
-	label.autowrap_mode = TextServer.AUTOWRAP_WORD
-	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color(0.08, 0.08, 0.1, 0.93)
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 12
+	style.content_margin_bottom = 12
+	style.corner_radius_bottom_left = 6
+	style.corner_radius_bottom_right = 6
+	_dev_panel.add_theme_stylebox_override("panel", style)
+
 	var vbox := VBoxContainer.new()
-	vbox.add_child(label)
+	vbox.add_theme_constant_override("separation", 10)
+
+	var title := Label.new()
+	title.text = "MODE DEV"
+	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_color", Color(1.0, 0.6, 0.1))
+	vbox.add_child(title)
+
+	vbox.add_child(_build_shortcuts_grid())
+	vbox.add_child(HSeparator.new())
+
+	var config_title := Label.new()
+	config_title.text = "Relance de scène"
+	config_title.add_theme_color_override("font_color", Color(0.6, 0.75, 1.0))
+	vbox.add_child(config_title)
+	vbox.add_child(_build_seed_row())
+	vbox.add_child(_build_danger_row())
 
 	_dev_status_label = Label.new()
 	_dev_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -121,6 +160,97 @@ func _build_dev_panel() -> void:
 
 	_dev_panel.add_child(vbox)
 	_root.add_child(_dev_panel)
+
+func _build_shortcuts_grid() -> GridContainer:
+	var grid := GridContainer.new()
+	grid.columns = 2
+	grid.add_theme_constant_override("h_separation", 20)
+	grid.add_theme_constant_override("v_separation", 4)
+	for pair in DEV_SHORTCUTS:
+		if pair[1] == "":
+			var header := Label.new()
+			header.text = pair[0]
+			header.add_theme_color_override("font_color", Color(0.6, 0.75, 1.0))
+			grid.add_child(header)
+			grid.add_child(Label.new())
+			continue
+		var key := Label.new()
+		key.text = pair[0]
+		key.custom_minimum_size = Vector2(120, 0)
+		key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+		key.add_theme_color_override("font_color", Color(0.95, 0.9, 0.55))
+		grid.add_child(key)
+		var desc := Label.new()
+		desc.text = pair[1]
+		grid.add_child(desc)
+	return grid
+
+func _build_seed_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+
+	var label := Label.new()
+	label.text = "Seed"
+	label.custom_minimum_size = Vector2(150, 0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(label)
+
+	var spin := SpinBox.new()
+	spin.min_value = 0
+	spin.max_value = 1000000
+	spin.step = 1
+	spin.rounded = true
+	spin.value = DevState.current_seed
+	spin.custom_minimum_size = Vector2(130, 0)
+	row.add_child(spin)
+
+	var apply_button := Button.new()
+	apply_button.text = "Relancer avec cette seed"
+	apply_button.pressed.connect(func() -> void:
+		DevState.seed_override = int(spin.value)
+		GameLogger.log_event("dev", "Relance avec seed %d (panneau dev)" % int(spin.value))
+		_on_reset_pressed()
+	)
+	row.add_child(apply_button)
+
+	var random_button := Button.new()
+	random_button.text = "Aléatoire"
+	random_button.pressed.connect(func() -> void:
+		spin.value = randi() % (int(spin.max_value) + 1)
+	)
+	row.add_child(random_button)
+
+	return row
+
+func _build_danger_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+
+	var label := Label.new()
+	label.text = "Zones dangereuses"
+	label.custom_minimum_size = Vector2(150, 0)
+	label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(label)
+
+	var spin := SpinBox.new()
+	spin.min_value = 0
+	spin.max_value = 100
+	spin.step = 1
+	spin.rounded = true
+	spin.value = DevState.current_danger_zone_count
+	spin.custom_minimum_size = Vector2(130, 0)
+	row.add_child(spin)
+
+	var apply_button := Button.new()
+	apply_button.text = "Relancer avec ce nombre"
+	apply_button.pressed.connect(func() -> void:
+		DevState.danger_zone_count_override = int(spin.value)
+		GameLogger.log_event("dev", "Relance avec danger_zone_count %d (panneau dev)" % int(spin.value))
+		_on_reset_pressed()
+	)
+	row.add_child(apply_button)
+
+	return row
 
 func set_dev_frozen(frozen: bool) -> void:
 	_dev_frozen = frozen
@@ -177,6 +307,15 @@ func _build_test_stats_panel() -> void:
 		node.set("memory_capacity", int(v))
 		GameLogger.log_event("config", "Personnage de test mémoire -> %d" % int(v))
 	, 0))
+
+	var kill_button := Button.new()
+	kill_button.text = "Tuer le personnage de test (animation de mort)"
+	kill_button.pressed.connect(func() -> void:
+		if _test_character_node != null and not _test_character_node.get("is_dead"):
+			_test_character_node.kill()
+			GameLogger.log_event("dev", "Personnage de test tué via le panneau dev")
+	)
+	vbox.add_child(kill_button)
 
 	_root.add_child(_test_stats_panel)
 

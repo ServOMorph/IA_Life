@@ -91,12 +91,15 @@ bat pas le hasard sur cette tâche. Le code des Phases 2-3 est conservé (tests 
 la Phase 3 passés) ; les Phases 4-6 ne sont pas engagées. Détail :
 `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
 
-La suite planifiée est `roadmap_environnement_apprenable_v3.md` : introduire des zones dangereuses
+La suite est `roadmap_environnement_apprenable_v3.md` : introduire des zones dangereuses
 localisées qui ajoutent un coût de faim, puis démontrer avec des politiques fixes
 `eviter|ignorer|viser` que le choix de direction bat réellement le hasard. La calibration utilise
-12 seeds et la confirmation 12 seeds réservés. Aucun danger n'est encore implémenté et la roadmap
-v2 reste suspendue jusqu'à ce gate ; sa reprise commencerait par un raccord explicite du danger au
-reward, puis une nouvelle baseline v3.
+12 seeds et la confirmation 12 seeds réservés. Phases 0-1 closes le 2026-09-06 : la mécanique est
+implémentée (zones `Area3D` statiques placées de façon déterministe depuis la seed, coût de faim
+au temps simulé égal au taux maximal des zones actives, télémétrie `danger_placement|enter|
+exposure|exit`) et validée en headless et en fenêtré (`run_danger_windowed.py`, panneau dev avec
+relance sur seed ou nombre de zones choisis). Reste l'oracle de politiques fixes (Phases 2-4)
+avant tout raccord au learner ; la roadmap v2 reste suspendue jusqu'à ce gate.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

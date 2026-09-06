@@ -2,7 +2,8 @@ extends Node
 
 const SAVE_PATH := "res://logs/game_config.json"
 const PERSISTED_KEYS := ["max_berries_carried", "pickup_hunger_threshold", "eat_hunger_threshold",
-	"full_life_berries", "ronce_count", "berries_per_ronce", "light_energy"]
+	"full_life_berries", "ronce_count", "berries_per_ronce", "danger_zone_count", "danger_zone_radius",
+	"danger_hunger_cost_rate", "danger_zone_visible", "danger_zone_safety_radius", "light_energy"]
 
 var max_berries_carried: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["max_berries_carried"])
 var pickup_hunger_threshold: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["pickup_hunger_threshold"])
@@ -10,6 +11,11 @@ var eat_hunger_threshold: float = VariableRegistry.default_value(VariableRegistr
 var full_life_berries: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["full_life_berries"])
 var ronce_count: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["ronce_count"])
 var berries_per_ronce: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["berries_per_ronce"])
+var danger_zone_count: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_zone_count"])
+var danger_zone_radius: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_zone_radius"])
+var danger_hunger_cost_rate: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_hunger_cost_rate"])
+var danger_zone_visible: bool = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_zone_visible"])
+var danger_zone_safety_radius: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_zone_safety_radius"])
 var light_energy: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["light_energy"])
 
 func _ready() -> void:

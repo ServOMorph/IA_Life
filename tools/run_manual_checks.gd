@@ -1,5 +1,8 @@
 extends Node
 
+const DangerContract = preload("res://scripts/danger_zone_contract.gd")
+const CharacterScript = preload("res://scripts/character.gd")
+
 # Vérifications automatisées pour les anciens tests manuels trop coûteux à reproduire.
 # Usage : python tools/run_manual_checks.py
 
@@ -13,6 +16,18 @@ class TestRonce:
 			return false
 		berries -= 1
 		return true
+
+class TestDangerZone:
+	extends Node3D
+
+	var zone_id := "danger_test"
+	var hunger_cost_rate := 1.0
+	var radius := 4.0
+
+	func is_character_exposed(world_position: Vector3) -> bool:
+		var offset := world_position - global_position
+		offset.y = 0.0
+		return offset.length_squared() <= radius * radius
 
 var _failures: Array[String] = []
 
@@ -30,6 +45,8 @@ func _run() -> void:
 	_test_experiment_config_defaults()
 	_test_experiment_config_overrides()
 	_test_experiment_config_validation()
+	_test_danger_zone_contract()
+	_test_danger_zone_integration()
 	_test_vision_range_and_angle()
 	_test_vision_memorization()
 	_test_vision_memory_capacity_no_churn()
@@ -62,8 +79,7 @@ func _expect(condition: bool, message: String) -> void:
 		_failures.append(message)
 
 func _make_character() -> CharacterBody3D:
-	var character := CharacterBody3D.new()
-	character.set_script(load("res://scripts/character.gd"))
+	var character := CharacterScript.new()
 	get_tree().root.add_child(character)
 	return character
 
@@ -338,6 +354,61 @@ func _test_experiment_config_validation() -> void:
 
 	var probabilities_over_one := ExperimentConfig.from_raw({"agents": {"defaults": {"follow_probability": 0.7, "avoid_probability": 0.6}}})
 	_expect(not probabilities_over_one.is_valid(), "ExperimentConfig validation : follow_probability + avoid_probability > 1 a été accepté.")
+
+func _test_danger_zone_contract() -> void:
+	# Phase 0 v3 : sans paramètres de danger, les anciens JSON restent valides et la
+	# mécanique demeure désactivée. Les effets, collisions et événements sont introduits
+	# seulement en Phase 1.
+	var legacy := ExperimentConfig.from_raw({"environment": {"game_config": {"ronce_count": 30}}})
+	_expect(legacy.is_valid(), "Danger Phase 0 : un ancien JSON sans paramètres de danger doit rester valide.")
+	_expect(not legacy.normalized["environment"]["game_config"].has("danger_zone_count"), "Danger Phase 0 : la normalisation ne doit pas injecter de clé dans un ancien JSON.")
+	_expect(GameConfig.danger_zone_count == 0, "Danger Phase 0 : le défaut zéro doit désactiver strictement les zones dangereuses.")
+
+	var configured := ExperimentConfig.from_raw({"environment": {"game_config": {
+		"danger_zone_count": 2,
+		"danger_zone_radius": 6.0,
+		"danger_hunger_cost_rate": 1.5,
+		"danger_zone_visible": true,
+		"danger_zone_safety_radius": 10.0,
+	}}})
+	_expect(configured.is_valid(), "Danger Phase 0 : les paramètres de contrat valides doivent être acceptés.")
+	_expect(configured.normalized["environment"]["game_config"]["danger_zone_count"] == 2, "Danger Phase 0 : le nombre de zones doit être normalisé.")
+	_expect(is_equal_approx(configured.normalized["environment"]["game_config"]["danger_hunger_cost_rate"], 1.5), "Danger Phase 0 : le coût de faim doit être normalisé.")
+	var invalid_radius := ExperimentConfig.from_raw({"environment": {"game_config": {"danger_zone_radius": 0.0}}})
+	_expect(not invalid_radius.is_valid(), "Danger Phase 0 : un rayon nul doit être refusé quand une zone est configurée.")
+
+	# Les quatre scénarios sont purs à cette phase : ils verrouillent le calcul avant
+	# son raccord à Character et Area3D en Phase 1.
+	_expect(is_equal_approx(DangerContract.hunger_cost([], 5.0), 0.0), "Danger Phase 0 : zéro zone ne doit produire aucun coût.")
+	_expect(is_equal_approx(DangerContract.hunger_cost([1.5], 4.0), 6.0), "Danger Phase 0 : une exposition simple doit coûter taux × durée simulée.")
+	_expect(is_equal_approx(DangerContract.hunger_cost([1.5, 0.75], 4.0), 6.0), "Danger Phase 0 : deux zones superposées doivent appliquer le coût maximal, pas la somme.")
+	_expect(is_equal_approx(DangerContract.hunger_cost([], 2.0), 0.0), "Danger Phase 0 : après sortie, le coût de danger doit cesser immédiatement.")
+
+func _test_danger_zone_integration() -> void:
+	var character := _make_character()
+	character.hunger = 100.0
+	character.hunger_depletion_rate = 0.0
+	character.move_speed = 0.0
+	var danger_a := TestDangerZone.new()
+	danger_a.zone_id = "danger_test_a"
+	danger_a.hunger_cost_rate = 1.5
+	var danger_b := TestDangerZone.new()
+	danger_b.zone_id = "danger_test_b"
+	danger_b.hunger_cost_rate = 0.75
+	get_tree().root.add_child(danger_a)
+	get_tree().root.add_child(danger_b)
+	character.set_danger_zones([danger_a, danger_b])
+	character._physics_process(2.0)
+	_expect(is_equal_approx(character.hunger, 97.0), "Danger Phase 1 : le coût mesuré doit être taux maximal × durée simulée.")
+	_expect(character.danger_entries_total == 2, "Danger Phase 1 : les entrées de zone doivent être comptées.")
+	_expect(is_equal_approx(character.danger_exposure_seconds_total, 2.0), "Danger Phase 1 : la durée d'exposition doit utiliser le temps simulé.")
+	_expect(is_equal_approx(character.danger_hunger_cost_total, 3.0), "Danger Phase 1 : le coût cumulé de danger est incohérent.")
+	character.position = Vector3(10.0, 0.0, 0.0)
+	character._physics_process(1.0)
+	_expect(is_equal_approx(character.danger_hunger_cost_total, 3.0), "Danger Phase 1 : le coût doit cesser à la sortie.")
+	character.queue_free()
+	danger_a.queue_free()
+	danger_b.queue_free()
 
 func _find_memory_slider(node: Node) -> HSlider:
 	if node is HBoxContainer and node.get_child_count() >= 2:

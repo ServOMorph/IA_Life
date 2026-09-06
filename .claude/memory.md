@@ -40,3 +40,8 @@ parallélisme de `tools/run_campaign.py` (`--jobs`, `--retries`), pas par l'acc�
 (Phase 0 close le 2026-08-31 : 72 runs de 300 s simulés en ~45 min à `--jobs 8`, égalité bit à
 bit séquentiel/parallèle vérifiée). À instruire à fond seulement si le débit parallélisé devient
 insuffisant. Origine : action P2 de `_contexte/signals.md`.
+
+## 2026-09-06 — Fenêtres Godot sur le bureau virtuel IA_Life
+Tout lancement fenêtré de Godot pour ce projet (`run_dev.py`, `run_danger_windowed.py`, ou appel
+direct `godot --path .` sans `--headless`) doit ouvrir sa fenêtre sur le bureau virtuel Windows
+nommé « IA_Life », pas sur le bureau courant.
