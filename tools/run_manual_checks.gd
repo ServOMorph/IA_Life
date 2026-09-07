@@ -47,6 +47,17 @@ func _run() -> void:
 	_test_experiment_config_validation()
 	_test_danger_zone_contract()
 	_test_danger_zone_integration()
+	_test_experiment_config_teleport_event()
+	_test_danger_perception_visible_direction_and_distance()
+	_test_danger_perception_behind_ignored()
+	_test_danger_perception_out_of_range_ignored()
+	_test_danger_response_direction_prioritizes_active_zone()
+	_test_fixed_policy_danger_dispatch()
+	_test_fixed_policy_danger_ignorer_unaffected()
+	_test_fixed_policy_danger_eviter_overrides_direction()
+	_test_fixed_policy_danger_viser_overrides_direction()
+	_test_fixed_policy_danger_no_direction_leaves_action_untouched()
+	_test_fixed_policy_danger_respects_manual_control()
 	_test_vision_range_and_angle()
 	_test_vision_memorization()
 	_test_vision_memory_capacity_no_churn()
@@ -67,7 +78,7 @@ func _run() -> void:
 	_test_baseline_ignores_full_inventory()
 	_test_adaptive_ignores_full_inventory()
 	if _failures.is_empty():
-		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig, vision (Phase 8) et décideur adaptatif (Phases 1 et 2) validés automatiquement.")
+		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig, vision (Phase 8), décideur adaptatif (Phases 1 et 2) et perception/politique du danger (Phase 2 v3) validés automatiquement.")
 		get_tree().quit(0)
 	else:
 		for failure in _failures:
@@ -409,6 +420,159 @@ func _test_danger_zone_integration() -> void:
 	character.queue_free()
 	danger_a.queue_free()
 	danger_b.queue_free()
+
+func _test_experiment_config_teleport_event() -> void:
+	# Phase 2 v3 : l'événement teleport_agent scripte l'entrée/sortie d'un agent dans une
+	# zone dangereuse en headless, sans manipulation fenêtrée (contrat Phase 2).
+	var valid := ExperimentConfig.from_raw({"events": [{"type": "teleport_agent", "at_seconds": 1.0, "agent": "Rouge", "position": [1.0, 0.0, 2.0]}]})
+	_expect(valid.is_valid(), "ExperimentConfig events : un événement teleport_agent valide doit être accepté.")
+	_expect(valid.normalized["events"].size() == 1, "ExperimentConfig events : l'événement teleport_agent normalisé doit être conservé.")
+	var missing_agent := ExperimentConfig.from_raw({"events": [{"type": "teleport_agent", "at_seconds": 1.0, "position": [1.0, 0.0, 2.0]}]})
+	_expect(not missing_agent.is_valid(), "ExperimentConfig events : teleport_agent sans agent doit être refusé.")
+	var bad_position := ExperimentConfig.from_raw({"events": [{"type": "teleport_agent", "at_seconds": 1.0, "agent": "Rouge", "position": [1.0, 0.0]}]})
+	_expect(not bad_position.is_valid(), "ExperimentConfig events : teleport_agent avec une position incomplète doit être refusé.")
+
+func _make_danger(local_position: Vector3, cost_rate: float = 1.0, radius: float = 2.0) -> Area3D:
+	var zone := Area3D.new()
+	zone.set_script(load("res://scripts/danger_zone.gd"))
+	zone.zone_id = "test_danger"
+	zone.radius = radius
+	zone.hunger_cost_rate = cost_rate
+	zone.position = local_position
+	get_tree().root.add_child(zone)
+	zone.add_to_group("perceptible")
+	return zone
+
+## Phase 2 v3 : la zone dangereuse rejoint le groupe "perceptible" générique (comme un
+## roncier) et suit les mêmes règles de portée, d'angle et d'occlusion — cas « devant ».
+func _test_danger_perception_visible_direction_and_distance() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 90.0
+	character.vision_blocked_by_terrain = false
+	var ahead := _make_danger(Vector3(0.0, 0.0, -5.0))
+	character._update_vision_perception()
+	var info: Dictionary = character._visible_danger_info()
+	_expect(bool(info["has_visible_danger"]), "Danger Phase 2 : un danger devant, dans la portée, doit être perçu.")
+	_expect(Vector3(info["visible_danger_direction"]).is_equal_approx(Vector3(0, 0, -1)), "Danger Phase 2 : la direction perçue doit pointer vers le danger.")
+	_expect(is_equal_approx(float(info["visible_danger_distance"]), 5.0), "Danger Phase 2 : la distance perçue doit être correcte.")
+	character.free()
+	ahead.free()
+
+## Cas « derrière » : hors du champ de vision angulaire, un danger n'est pas perçu — même
+## mécanisme générique que pour un roncier (_test_vision_range_and_angle).
+func _test_danger_perception_behind_ignored() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 90.0
+	character.vision_blocked_by_terrain = false
+	var behind := _make_danger(Vector3(0.0, 0.0, 5.0))
+	character._update_vision_perception()
+	_expect(not bool(character._visible_danger_info()["has_visible_danger"]), "Danger Phase 2 : un danger hors du champ de vision ne doit pas être perçu.")
+	character.free()
+	behind.free()
+
+## Cas « hors portée ».
+func _test_danger_perception_out_of_range_ignored() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 10.0
+	character.vision_angle_degrees = 360.0
+	character.vision_blocked_by_terrain = false
+	var far := _make_danger(Vector3(0.0, 0.0, -50.0))
+	character._update_vision_perception()
+	_expect(not bool(character._visible_danger_info()["has_visible_danger"]), "Danger Phase 2 : un danger hors de portée ne doit pas être perçu.")
+	character.free()
+	far.free()
+
+## Cas « zone déjà occupée » : un danger physiquement subi (in_danger) doit produire une
+## direction d'éloignement stable même quand la vision ne le perçoit pas (ici vision
+## nulle, qui recouvre aussi le cas d'un danger occlus ou hors du champ de vision alors
+## que l'agent est déjà dedans) — l'exposition physique prime sur la perception visuelle.
+func _test_danger_response_direction_prioritizes_active_zone() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 0.0
+	character.hunger_depletion_rate = 0.0
+	character.move_speed = 0.0
+	var zone := TestDangerZone.new()
+	zone.zone_id = "danger_occupied"
+	zone.radius = 4.0
+	zone.hunger_cost_rate = 1.0
+	zone.position = Vector3(2.0, 0.0, 0.0)
+	get_tree().root.add_child(zone)
+	character.set_danger_zones([zone])
+	character._physics_process(0.5)
+	var info: Dictionary = character._visible_danger_info()
+	_expect(not bool(info["has_visible_danger"]), "Danger Phase 2 : ce scénario suppose une zone occupée non visible (vision nulle).")
+	_expect(bool(character._active_danger_zones.has("danger_occupied")), "Danger Phase 2 : la zone occupée doit être physiquement active.")
+	var response: Vector3 = character._danger_response_direction(info)
+	_expect(not response.is_zero_approx(), "Danger Phase 2 : une zone déjà occupée doit produire une direction d'éloignement même sans perception visuelle.")
+	_expect(response.is_equal_approx(Vector3(1, 0, 0)), "Danger Phase 2 : la direction doit pointer de l'agent vers le centre de la zone occupée.")
+	character.free()
+	zone.free()
+
+func _test_fixed_policy_danger_dispatch() -> void:
+	_expect(VariableRegistry.CHARACTER.has("fixed_policy_danger"), "Politique fixe danger registre : fixed_policy_danger (Phase 2 v3) doit être déclaré.")
+	_expect((VariableRegistry.CHARACTER["fixed_policy_danger"]["options"] as Array).has("eviter"), "Politique fixe danger registre : 'eviter' doit figurer dans les options de fixed_policy_danger.")
+	var character := _make_character()
+	character.decider_type = "politique_fixe"
+	character.fixed_policy_danger = "eviter"
+	var fixed = character._build_decider()
+	_expect(fixed is FixedPolicyDecider and fixed.fixed_policy_danger == "eviter", "Politique fixe danger dispatch : fixed_policy_danger doit être transmis au décideur.")
+	character.queue_free()
+
+## Observation de base hors situation de faim (fixed_policy_s1/s2/s3 sans effet), pour
+## isoler la surcouche danger de la politique alimentaire — cf. principe d'isolation de la
+## Phase 2 (roadmap_environnement_apprenable_v3).
+func _fixed_danger_observation(overrides: Dictionary = {}) -> Dictionary:
+	var observation := _adaptive_observation({
+		"hunger": 95.0,
+		"has_visible_ronce": false,
+		"has_memories": false,
+		"in_danger": false,
+		"has_visible_danger": false,
+		"visible_danger_direction": Vector3.ZERO,
+		"visible_danger_distance": 0.0,
+		"danger_response_direction": Vector3.ZERO,
+	})
+	for key in overrides:
+		observation[key] = overrides[key]
+	return observation
+
+func _make_fixed_danger_decider(danger_action: String) -> FixedPolicyDecider:
+	var decider := FixedPolicyDecider.new()
+	decider.configure_fixed(AdaptiveDecider.ACTION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_MEMORISEE, AdaptiveDecider.ACTION_ERRANCE, danger_action, 2.0, "Test")
+	return decider
+
+func _test_fixed_policy_danger_ignorer_unaffected() -> void:
+	var decider := _make_fixed_danger_decider("ignorer")
+	var action: Dictionary = decider.decide(_fixed_danger_observation({"danger_response_direction": Vector3(1, 0, 0)}))
+	_expect(action["goal"] == AdaptiveDecider.ACTION_ERRANCE, "Danger surcouche : 'ignorer' ne doit jamais modifier l'action de la politique alimentaire.")
+
+func _test_fixed_policy_danger_eviter_overrides_direction() -> void:
+	var decider := _make_fixed_danger_decider("eviter")
+	var action: Dictionary = decider.decide(_fixed_danger_observation({"danger_response_direction": Vector3(1, 0, 0)}))
+	_expect(action["goal"] == "danger_eviter", "Danger surcouche : 'eviter' doit produire le but danger_eviter quand un danger est pertinent.")
+	_expect(action["direction"].is_equal_approx(Vector3(-1, 0, 0)), "Danger surcouche : 'eviter' doit orienter la direction à l'opposé du danger.")
+
+func _test_fixed_policy_danger_viser_overrides_direction() -> void:
+	var decider := _make_fixed_danger_decider("viser")
+	var action: Dictionary = decider.decide(_fixed_danger_observation({"danger_response_direction": Vector3(0, 0, -1)}))
+	_expect(action["goal"] == "danger_viser", "Danger surcouche : 'viser' doit produire le but danger_viser quand un danger est pertinent.")
+	_expect(action["direction"].is_equal_approx(Vector3(0, 0, -1)), "Danger surcouche : 'viser' doit orienter la direction vers le danger.")
+
+func _test_fixed_policy_danger_no_direction_leaves_action_untouched() -> void:
+	var decider := _make_fixed_danger_decider("eviter")
+	var action: Dictionary = decider.decide(_fixed_danger_observation())
+	_expect(action["goal"] == AdaptiveDecider.ACTION_ERRANCE, "Danger surcouche : sans danger pertinent (direction nulle), la politique alimentaire doit rester inchangée.")
+
+func _test_fixed_policy_danger_respects_manual_control() -> void:
+	var decider := _make_fixed_danger_decider("eviter")
+	var action: Dictionary = decider.decide(_fixed_danger_observation({"manual_control": true, "manual_direction": Vector3(0, 0, 1), "danger_response_direction": Vector3(1, 0, 0)}))
+	_expect(action["goal"] == "controle_manuel", "Danger surcouche : le contrôle manuel ne doit jamais être remplacé par la surcouche danger.")
 
 func _find_memory_slider(node: Node) -> HSlider:
 	if node is HBoxContainer and node.get_child_count() >= 2:

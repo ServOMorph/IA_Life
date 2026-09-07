@@ -36,6 +36,7 @@ const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 @export var fixed_policy_s1: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s1"])
 @export var fixed_policy_s2: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s2"])
 @export var fixed_policy_s3: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s3"])
+@export var fixed_policy_danger: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_danger"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
 @export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
@@ -150,7 +151,7 @@ func _build_decider():
 			return adaptive_v1
 		"politique_fixe":
 			var fixed := FixedPolicyDecider.new()
-			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, fixed_policy_s3, adaptive_decision_interval_seconds, display_name)
+			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, fixed_policy_s3, fixed_policy_danger, adaptive_decision_interval_seconds, display_name)
 			return fixed
 		_:
 			return BaselineDecider.new()
@@ -313,6 +314,7 @@ func _apply_decision(scaled_delta: float) -> void:
 		_set_goal("rl")
 		return
 	var visible_ronce_direction := _direction_to_nearest_visible_ronce()
+	var danger_info := _visible_danger_info()
 	var action: Dictionary = _decider.decide({
 		"manual_control": manual_control,
 		"manual_direction": _manual_direction,
@@ -335,6 +337,11 @@ func _apply_decision(scaled_delta: float) -> void:
 		"current_direction": _direction,
 		"wander_timer": _timer,
 		"delta": scaled_delta,
+		"in_danger": not _active_danger_zones.is_empty(),
+		"has_visible_danger": danger_info["has_visible_danger"],
+		"visible_danger_direction": danger_info["visible_danger_direction"],
+		"visible_danger_distance": danger_info["visible_danger_distance"],
+		"danger_response_direction": _danger_response_direction(danger_info),
 	})
 	if not (action.has("goal") and action.has("direction") and action.has("renew_wander")
 			and action["goal"] is String and action["direction"] is Vector3 and action["renew_wander"] is bool):
@@ -608,6 +615,56 @@ func _direction_to_nearest_visible_ronce() -> Vector3:
 			nearest_distance = entry["distance"]
 			nearest_direction = entry["direction"]
 	return nearest_direction
+
+## Danger le plus proche perçu par la vision générique (soumis à portée, angle et
+## occlusion, comme tout autre type perceptible). Indépendant de l'exposition physique :
+## un danger visible mais non encore atteint n'a causé aucun coût de faim.
+func _visible_danger_info() -> Dictionary:
+	var nearest_distance := INF
+	var nearest_direction := Vector3.ZERO
+	var found := false
+	for entry in _visible_entities:
+		if entry["type"] != "danger":
+			continue
+		found = true
+		if entry["distance"] < nearest_distance:
+			nearest_distance = entry["distance"]
+			nearest_direction = entry["direction"]
+	return {
+		"has_visible_danger": found,
+		"visible_danger_direction": nearest_direction,
+		"visible_danger_distance": nearest_distance if found else 0.0,
+	}
+
+## Direction stable vers le danger pertinent, sans consommer d'aléa : une politique
+## d'évitement ou de ciblage la prend telle quelle ou l'inverse. Priorité à la zone
+## effectivement subie (in_danger) sur la zone seulement visible — un agent déjà exposé
+## doit pouvoir s'en éloigner même si son orientation ou une occlusion le rend
+## momentanément non perceptible par la vision générique (cas « zone déjà occupée »).
+func _danger_response_direction(danger_info: Dictionary) -> Vector3:
+	if not _active_danger_zones.is_empty():
+		return _direction_to_nearest_active_danger()
+	return Vector3(danger_info["visible_danger_direction"])
+
+func _direction_to_nearest_active_danger() -> Vector3:
+	var zone_ids: Array = _active_danger_zones.keys()
+	zone_ids.sort()
+	var nearest_id: String = ""
+	var nearest_distance := INF
+	for zone_id_variant in zone_ids:
+		var zone_id := String(zone_id_variant)
+		var zone = _active_danger_zones[zone_id]
+		if not is_instance_valid(zone):
+			continue
+		var distance := position.distance_squared_to(zone.position)
+		if distance < nearest_distance:
+			nearest_distance = distance
+			nearest_id = zone_id
+	if nearest_id == "":
+		return Vector3.ZERO
+	var to_zone: Vector3 = _active_danger_zones[nearest_id].position - position
+	to_zone.y = 0.0
+	return to_zone.normalized() if to_zone.length_squared() > 0.0001 else Vector3.ZERO
 
 func _update_social_perception(scaled_delta: float) -> void:
 	if social_radius <= 0.0:

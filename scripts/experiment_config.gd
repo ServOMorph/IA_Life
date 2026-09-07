@@ -151,6 +151,22 @@ func _normalize_events(raw_events: Array) -> Array:
 					errors.append("events[%d].count doit être un entier compris entre 1 et 500" % index)
 					continue
 				events.append({"type": event_type, "at_seconds": float(at_seconds), "count": int(count)})
+			"teleport_agent":
+				var agent_name := String(raw_event.get("agent", ""))
+				if agent_name == "":
+					errors.append("events[%d].agent doit être un nom d'agent non vide" % index)
+					continue
+				var raw_position = raw_event.get("position", [])
+				var position_valid: bool = raw_position is Array and raw_position.size() == 3
+				if position_valid:
+					for component in raw_position:
+						if not (typeof(component) == TYPE_INT or typeof(component) == TYPE_FLOAT):
+							position_valid = false
+							break
+				if not position_valid:
+					errors.append("events[%d].position doit être un triplet [x, y, z] numérique" % index)
+					continue
+				events.append({"type": event_type, "at_seconds": float(at_seconds), "agent": agent_name, "position": [float(raw_position[0]), float(raw_position[1]), float(raw_position[2])]})
 			_:
 				errors.append("events[%d].type inconnu : %s" % [index, event_type])
 	events.sort_custom(func(a, b): return a["at_seconds"] < b["at_seconds"])

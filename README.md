@@ -98,8 +98,12 @@ localisées qui ajoutent un coût de faim, puis démontrer avec des politiques f
 implémentée (zones `Area3D` statiques placées de façon déterministe depuis la seed, coût de faim
 au temps simulé égal au taux maximal des zones actives, télémétrie `danger_placement|enter|
 exposure|exit`) et validée en headless et en fenêtré (`run_danger_windowed.py`, panneau dev avec
-relance sur seed ou nombre de zones choisis). Reste l'oracle de politiques fixes (Phases 2-4)
-avant tout raccord au learner ; la roadmap v2 reste suspendue jusqu'à ce gate.
+relance sur seed ou nombre de zones choisis). Phase 2 close le 2026-09-07 : les zones sont
+perçues par `Character._perceive`, et le décideur `politique_fixe` reçoit une surcouche
+`fixed_policy_danger` (ignorer/eviter/viser) isolée de la politique alimentaire. Gate causal
+franchi sur scénario scripté (seed 2) : exposition eviter 0,75 s < ignorer 1,73/1,47 s < viser
+11,98 s, reproductible. Reste la calibration puis la confirmation (Phases 3-4) avant tout raccord
+au learner ; la roadmap v2 reste suspendue jusqu'à ce gate réservé.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

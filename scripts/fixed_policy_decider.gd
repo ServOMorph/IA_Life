@@ -18,16 +18,40 @@ extends AdaptiveDecider
 ## Quand l'action désirée n'est pas applicable dans l'observation courante (viser un
 ## souvenir sans souvenir utilisable, viser une zone sans direction exploitable), repli
 ## déterministe sur errance.
+##
+## Phase 2 (roadmap_environnement_apprenable_v3) : fixed_policy_danger ajoute une
+## surcouche de réponse au danger, appliquée après la politique alimentaire ci-dessus et
+## sans y toucher. Hors danger physiquement subi ou visible, tous les bras exécutent la
+## même politique alimentaire — c'est cette isolation qui permet d'attribuer un écart de
+## résultat au danger plutôt qu'à un autre réglage. `ignorer` laisse la politique
+## alimentaire inchangée ; `eviter` et `viser` remplacent l'action retenue par une
+## direction stable (character.gd::_danger_response_direction), sans consommer d'aléa.
+
+const DANGER_IGNORER := "ignorer"
+const DANGER_EVITER := "eviter"
+const DANGER_VISER := "viser"
 
 var fixed_action_s1 := ACTION_RONCE_VISIBLE
 var fixed_action_s2 := ACTION_RONCE_MEMORISEE
 var fixed_action_s3 := ACTION_ERRANCE
+var fixed_policy_danger := DANGER_IGNORER
 
-func configure_fixed(action_s1: String, action_s2: String, action_s3: String, interval_seconds: float, name: String = "") -> void:
+func configure_fixed(action_s1: String, action_s2: String, action_s3: String, danger_action: String, interval_seconds: float, name: String = "") -> void:
 	configure(0.0, 0.0, interval_seconds, 0, name)
 	fixed_action_s1 = action_s1
 	fixed_action_s2 = action_s2
 	fixed_action_s3 = action_s3
+	fixed_policy_danger = danger_action
+
+func decide(observation: Dictionary) -> Dictionary:
+	var action: Dictionary = super.decide(observation)
+	if fixed_policy_danger == DANGER_IGNORER or bool(observation.get("manual_control", false)):
+		return action
+	var toward_danger := Vector3(observation.get("danger_response_direction", Vector3.ZERO))
+	if toward_danger.is_zero_approx():
+		return action
+	var oriented := toward_danger if fixed_policy_danger == DANGER_VISER else -toward_danger
+	return {"goal": "danger_%s" % fixed_policy_danger, "direction": oriented.normalized(), "renew_wander": false}
 
 func _select_action(situation: String, actions: Array) -> String:
 	last_explored = false

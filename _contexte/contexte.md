@@ -10,9 +10,10 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
 Phases 1 à 8 closes ; axe apprentissage v2 suspendu après égalité statistique avec le hasard.
-`roadmap_environnement_apprenable_v3.md` : Phases 0-1 [FAIT] — zones dangereuses implémentées
-(placement déterministe, télémétrie `danger_*`, coût de faim), validées headless et fenêtré.
-Prochaine étape : Phase 2 (perception + oracle `fixed_policy_danger`). v2 interdite jusqu'au gate v3.
+`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT] — zones dangereuses implémentées et
+perçues (`_perceive`), oracle `fixed_policy_danger = ignorer|eviter|viser` en surcouche validé par
+gate causal (eviter < ignorer < viser, reproductible). Prochaine étape : Phase 3 (calibration sur
+seeds d'entraînement). v2 interdite jusqu'au gate v3 réservé.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-28 : Pont `com_telephone` migré vers le projet Roberto (hôte du serveur + template de
@@ -66,3 +67,8 @@ Prochaine étape : Phase 2 (perception + oracle `fixed_policy_danger`). v2 inter
   télémétrie `danger_*`) validée headless + fenêtré. Outillage dev : autoload `DevState` (overrides
   seed / nb de zones), `run_danger_windowed.py`, panneau dev enrichi ; fix `AnimationPlayer.speed_scale`
   indexé sur `GameSpeed.time_scale`. Prochaine : Phase 2 (perception + oracle).
+- 2026-09-07 : Phase 2 de `roadmap_environnement_apprenable_v3.md` close — perception du danger
+  raccordée à `_perceive`, décideur `fixed_policy_danger` (ignorer/eviter/viser) en surcouche
+  isolée de la politique alimentaire, événement scripté `teleport_agent`. Gate causal franchi sur
+  scénario scripté (seed 2) : exposition eviter 0,75 s < ignorer 1,73/1,47 s < viser 11,98 s,
+  reproductible ; aucune régression sur l'oracle Phase 1. Prochaine : Phase 3 (calibration).

@@ -345,3 +345,38 @@ Phase 2 v2 : récompense événementielle + amorçage TD + versionnage format de
 
 ## Question bloquante pour la session suivante
 Aucune — checkpoint Phase 1 posé, /compact fait, Phase 2 prête.
+
+---
+
+# Session du 2026-09-06
+
+## Décisions prises
+- Phase 1 de `roadmap_environnement_apprenable_v3.md` close : mécanique de zones dangereuses
+  (placement déterministe, télémétrie `danger_*`, coût de faim au temps simulé) validée headless
+  et fenêtré. Gate complet franchi.
+- Outillage de test fenêtré v3 retenu : `run_danger_windowed.py`, autoload `DevState`, panneau
+  dev enrichi.
+
+## Livrables produits ou modifiés
+- Lot Phases 0-1 v3 (préexistant) commité : `scripts/danger_zone.gd`, `danger_zone_contract.gd`,
+  `experiments/danger_zone_{contract_v1.md,oracle_base_v1.json,smoke_v1.json}`,
+  `campaigns/danger_zone_oracle_v3.json`, + modifs `character/main/game_config/variable_registry/
+  aggregate_results/check_telemetry/run_manual_checks`.
+- Créés : `scripts/dev_state.gd`, `run_danger_windowed.py`, `experiments/danger_zone_windowed_v1.json`.
+- Modifiés : `scripts/ui_manager.gd` (panneau dev), `scripts/main.gd` (overrides `DevState`),
+  `project.godot` (autoload), `scripts/character.gd` (`speed_scale`), `tests_manuels.md` (vidé),
+  `experiments/danger_zone_contract_v1.md` (schéma `category`), `.claude/memory.md` (note bureau).
+
+## Hypothèses validées / invalidées
+- VALIDE : zones dangereuses rendues (disques rouges), placées hors décor, `danger_enter`/
+  `danger_exposure`/`danger_exit` avec coût = taux × durée, arrêt à la sortie ;
+  `danger_zone_count: 0` désactive strictement (0 géométrie, 0 événement).
+- VALIDE : à `game_speed > 1` l'anim de marche « glissait » (speed_scale non indexé). Corrigé.
+- EN ATTENTE : une politique d'évitement bat-elle le hasard sur la tâche v3 ? (Phases 2-4)
+
+## Prochaine étape exacte
+Phase 2 de `roadmap_environnement_apprenable_v3.md` : perception `_perceive` des zones, décideur
+`fixed_policy_danger` en surcouche, config smoke à `events` scriptés, gate sur scénario scripté.
+
+## Question bloquante pour la session suivante
+Aucune.

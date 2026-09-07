@@ -1,7 +1,7 @@
 # Roadmap — Environnement apprenable v3 : zones dangereuses
 
 Créée le : 2026-09-01
-Statut : **[PLANIFIÉE — préalable à la reprise de `roadmap_apprentissage_v2.md`]**
+Statut : **[EN COURS — Phases 0-2 FAIT, préalable à la reprise de `roadmap_apprentissage_v2.md`]**
 
 ## Objectif
 
@@ -116,7 +116,7 @@ décor, exposition/sortie, `danger_zone_count: 0` strict) via `run_danger_window
 complet passé. Outillage : autoload `DevState` + panneau dev (relance avec seed / nombre de zones
 choisis), `experiments/danger_zone_windowed_v1.json`.
 
-### Phase 2 — Perception et oracle de politiques fixes [À FAIRE]
+### Phase 2 — Perception et oracle de politiques fixes [FAIT — 2026-09-07]
 
 - Raccorder les zones au système `_perceive` et produire une direction d'éloignement stable.
 - Étendre le décideur de politique fixe avec `fixed_policy_danger = ignorer|eviter|viser`.
@@ -131,6 +131,19 @@ choisis), `experiments/danger_zone_windowed_v1.json`.
 **Gate** : sur un scénario scripté, `eviter` réduit l'exposition, `viser` l'augmente et `ignorer`
 laisse la trajectoire inchangée ; aucun bras ne consomme un aléa supplémentaire au moment de la
 décision.
+
+**Livrables** : `danger_zone.gd` expose `get_perception_type()/get_perception_state()` (perceptible
+si `danger_zone_visible`) ; `character.gd` calcule `danger_response_direction` (priorité à la zone
+physiquement active sur la zone seulement visible, couvre le cas « zone déjà occupée ») et l'expose
+à l'observation ; `fixed_policy_decider.gd::decide()` applique la surcouche (`ignorer` = no-op,
+`eviter`/`viser` = direction opposée/alignée). Événement scripté `teleport_agent` ajouté à
+`experiment_config.gd`/`main.gd`. Séquence `danger_enter`/`danger_exposure`/`danger_exit` couverte
+en headless par `experiments/danger_zone_scripted_events_v1.json`
+(`check_telemetry.py`/`check_reproducibility.py` verts). Gate causal vérifié sur
+`experiments/danger_zone_fixed_policy_scenario_v1.json` (seed 2, 4 agents co-localisés dans la même
+zone) : exposition `eviter` 0,75 s < `ignorer` 1,73/1,47 s < `viser` 11,98 s, reproductible ; aucune
+régression sur `p1_fixed_policy_selftest.json` (`check_fixed_policy.py`). 12 tests ajoutés à
+`run_manual_checks.gd`.
 
 ### Phase 3 — Calibration sur seeds d'entraînement [À FAIRE]
 

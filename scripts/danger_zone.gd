@@ -13,3 +13,9 @@ func is_character_exposed(world_position: Vector3) -> bool:
 	offset.y = 0.0
 	return offset.length_squared() <= radius * radius
 
+func get_perception_type() -> String:
+	return "danger"
+
+func get_perception_state() -> Dictionary:
+	return {"zone_id": zone_id}
+

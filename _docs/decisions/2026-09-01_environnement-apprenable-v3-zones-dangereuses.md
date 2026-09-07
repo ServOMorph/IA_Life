@@ -2,8 +2,10 @@
 
 Date : 2026-09-01
 Statut : validé pour planification. Phases 0-1 closes le 2026-09-06 (mécanique de zones
-dangereuses implémentée, télémétrie et coût de faim validés headless + fenêtré). Oracle de
-politiques fixes (Phases 2-4) non encore exécuté.
+dangereuses implémentée, télémétrie et coût de faim validés headless + fenêtré). Phase 2 close le
+2026-09-07 (perception du danger raccordée à `_perceive`, oracle `fixed_policy_danger` en
+surcouche, gate causal franchi sur scénario scripté : eviter < ignorer < viser, reproductible).
+Calibration sur seeds d'entraînement (Phase 3) non encore exécutée.
 Roadmap : `roadmap_environnement_apprenable_v3.md`
 
 ## Décision

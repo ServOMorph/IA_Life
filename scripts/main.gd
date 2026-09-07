@@ -533,11 +533,25 @@ func _execute_environment_event(event: Dictionary, event_index: int) -> void:
 			affected += 1
 	elif event_type == "spawn_ronces":
 		affected = _spawn_event_ronces(int(event["count"]), event_index)
+	elif event_type == "teleport_agent":
+		affected = _teleport_agent(String(event["agent"]), event["position"])
 	var record := event.duplicate(true)
 	record["executed_at_simulation_seconds"] = _simulation_clock
 	record["affected_ronces"] = affected
 	_executed_events.append(record)
 	GameLogger.log_event_data("environment_event", "Événement %s exécuté (%d ronciers affectés)" % [event_type, affected], record)
+
+## Déplace un agent instantanément à une position fixe, sans consommer d'aléa. Sert aux
+## scénarios scriptés (`events`) qui doivent amener un agent dans une zone dangereuse puis
+## l'en faire sortir de façon reproductible, indépendamment de la vitesse ou du décideur.
+func _teleport_agent(agent_name: String, target_position: Array) -> int:
+	for character in _characters:
+		if not is_instance_valid(character) or character.display_name != agent_name:
+			continue
+		character.position = Vector3(target_position[0], target_position[1], target_position[2])
+		character.velocity = Vector3.ZERO
+		return 1
+	return 0
 
 func _spawn_event_ronces(count: int, event_index: int) -> int:
 	var rng := RandomNumberGenerator.new()
@@ -975,6 +989,8 @@ func _spawn_danger_zone(index: int, position: Vector3, attempt: int) -> void:
 	mesh_instance.material_override = material
 	mesh_instance.visible = GameConfig.danger_zone_visible
 	zone.add_child(mesh_instance)
+	if GameConfig.danger_zone_visible:
+		zone.add_to_group("perceptible")
 
 	var collision := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()

@@ -1,3 +1,20 @@
+## v0.30 — 2026-09-07
+
+### Ajouté
+- Phase 2 de `roadmap_environnement_apprenable_v3.md` : perception des zones dangereuses par
+  `Character._perceive` (`danger_zone.gd::get_perception_type/get_perception_state`) et surcouche
+  `fixed_policy_danger = ignorer|eviter|viser` sur le décideur `politique_fixe`
+  (`fixed_policy_decider.gd`), isolée de la politique alimentaire. `character.gd` calcule
+  `danger_response_direction` en priorisant la zone physiquement active sur la zone seulement
+  visible. Événement scripté `teleport_agent` (`experiment_config.gd`, `main.gd`).
+  `experiments/danger_zone_scripted_events_v1.json` (séquence `danger_enter`/`danger_exposure`/
+  `danger_exit` en headless), `experiments/danger_zone_fixed_policy_scenario_v1.json` (gate
+  causal). 12 tests ajoutés à `run_manual_checks.gd`.
+
+### Modifié
+- `roadmap_environnement_apprenable_v3.md` : Phase 2 [FAIT] ; prochaine étape = Phase 3
+  (calibration sur seeds d'entraînement).
+
 ## v0.29 — 2026-09-06
 
 ### Ajouté

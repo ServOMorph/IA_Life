@@ -1,0 +1,22 @@
+{
+  "format_version": 1,
+  "experiment_id": "danger-zone-phase2-scripted-events-v1",
+  "seed": 777,
+  "environment": {
+    "game_config": {
+      "ronce_count": 0,
+      "danger_zone_count": 1,
+      "danger_zone_radius": 6.0,
+      "danger_hunger_cost_rate": 2.0,
+      "danger_zone_safety_radius": 0.0
+    }
+  },
+  "agents": {
+    "defaults": {"move_speed": 0.0, "hunger_depletion_rate": 0.0}
+  },
+  "events": [
+    {"type": "teleport_agent", "at_seconds": 0.5, "agent": "Rouge", "position": [-63.6623001098633, -1.37423062324524, -68.8111572265625]},
+    {"type": "teleport_agent", "at_seconds": 2.5, "agent": "Rouge", "position": [0.0, 0.0, 0.0]}
+  ],
+  "simulation": {"game_speed": 1.0, "max_simulation_seconds": 3.5, "quit_on_all_dead": false}
+}
