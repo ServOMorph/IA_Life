@@ -1,12 +1,15 @@
-# Signals — ia_life (MAJ 2026-09-07)
+# Signals — ia_life (MAJ 2026-09-08)
 
 ## Actions ouvertes
 
-- [P1|ouvert] Engager la Phase 3 de l'environnement apprenable v3 : calibration sur seeds
-  d'entraînement (grille zones × rayon × coût de faim, 5 bras × 12 seeds, `--jobs`/`--retries`).
-  fait quand: le gate causal Phase 3 (4 critères écrits) est franchi et le meilleur candidat est
-  classé par séparation des politiques.
-  réf: `roadmap_environnement_apprenable_v3.md` (Phase 3).
+- [P1|ouvert] Poursuivre le probe de densité de zones dangereuses (Phase 3 de
+  `roadmap_environnement_apprenable_v3.md`) au-delà de 20 zones (25/30/40), sur le point fixe
+  rayon 6.0 / coût 0.6 / `danger_reaction_range` 8.0, base `danger_zone_oracle_base_v2.json`
+  (`hunger_depletion_rate` 0.70), mêmes 12 seeds de calibration.
+  fait quand: un point de densité franchit les 4 critères du gate causal Phase 3
+  (`tools/check_danger_calibration.py`), ou la tendance monotone plafonne sans les atteindre
+  (documenter alors comme limite du mécanisme avant de trancher enrichir/abandonner).
+  réf: `roadmap_environnement_apprenable_v3.md` (Phase 3), `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md` (section 2026-09-08), `experiments/campaigns/danger_zone_density_probe_v1.json`.
 - [P3|dormant] Axe apprentissage v2 toujours suspendu pendant la validation de l'environnement v3.
   fait quand: Phases 0-5 v3 [FAIT], gate réservé Phase 4 passé, puis bandeau v2 amendé.
   réf: `roadmap_environnement_apprenable_v3.md` (condition de déblocage),
@@ -14,71 +17,98 @@
 
 ## Contexte chaud
 
-- `roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT]. Perception du danger raccordée à
-  `_perceive` (`danger_zone.gd::get_perception_type/get_perception_state`) ; `character.gd` calcule
-  `danger_response_direction` en priorisant la zone physiquement active sur la zone seulement
-  visible (couvre le cas « zone déjà occupée ») ; `fixed_policy_decider.gd` applique la surcouche
-  `fixed_policy_danger = ignorer|eviter|viser` sans toucher à la politique alimentaire hors danger.
-  Événement scripté `teleport_agent` ajouté (`experiment_config.gd`/`main.gd`). Gate causal vérifié
-  sur `experiments/danger_zone_fixed_policy_scenario_v1.json` (seed 2) : exposition eviter 0,75 s <
-  ignorer 1,73/1,47 s < viser 11,98 s, reproductible. Séquence `danger_enter`/`danger_exposure`/
-  `danger_exit` couverte en headless par `experiments/danger_zone_scripted_events_v1.json`. Aucune
-  régression sur l'oracle Phase 1 (`p1_fixed_policy_selftest.json` via `check_fixed_policy.py` —
-  attention au timeout par défaut 200s, marginal pour cette config à `game_speed=1` ; relancer avec
-  `--timeout 260` si échec par timeout). Prochaine étape = Phase 3 (calibration).
-- Outillage de test fenêtré v3 : `run_danger_windowed.py` (Godot fenêtré + dev mode +
-  `experiments/danger_zone_windowed_v1.json`, 12 zones, pas d'auto-quit) ; autoload `DevState`
-  (`scripts/dev_state.gd`) qui porte les overrides seed / `danger_zone_count` à travers
-  `reload_current_scene()` ; panneau dev enrichi (lignes « Seed » et « Zones dangereuses » +
-  boutons Relancer, bouton « tuer le perso de test », raccourcis en grille groupée).
-- Fenêtres Godot de ce projet : à lancer sur le bureau virtuel Windows « IA_Life »
-  (`.claude/memory.md`). Le script ne force pas le bureau lui-même.
-- Analyse v3 : les ronciers v2 sont homogènes, aucune direction n'a de coût causal stable. Le
-  reward adaptatif ne mesure pas la perte de faim : un danger exigera une pénalité événementielle
-  explicite, mais seulement après validation de l'oracle fixe (Phase 5 v3).
+- Phase 3 engagée le 2026-09-08, gate causal jamais franchi mais 3 causes d'échec identifiées et
+  corrigées/amendées en cascade, chacune vérifiée par un diagnostic resserré (12 seeds de
+  calibration, pas les seeds réservés) :
+  1. **Bug tirage `aleatoire`** : `FixedPolicyDecider.decide()` est appelé à chaque frame physique
+     (`character.gd::_physics_process`) ; un premier correctif retirait eviter/viser à chaque
+     frame, la direction oscillait ~60×/s et s'annulait en moyenne (le bras `aleatoire`
+     reproduisait exactement les stats du bras `eviter`, 0.00 coût/exposition sur 96 runs).
+     Corrigé : le tirage est tenu pendant `decision_interval_seconds`, même mécanique que
+     `_engagement_timer` de `AdaptiveDecider`. `aleatoire` ajouté à l'enum `fixed_policy_danger`
+     (`ignorer|eviter|viser|aleatoire`).
+  2. **Surcouche danger trop invasive** : elle remplaçait la politique alimentaire dès qu'une zone
+     est visible n'importe où dans le champ de vision (15 m), pas seulement sur le chemin —
+     `eviter` supprimait bien le coût de danger (0.00) mais restait le pire bras en survie (0.19
+     vs 0.32 pour `ignorer`). Corrigé : nouveau paramètre `danger_reaction_range` (CHARACTER,
+     décision, défaut 250.0 = pas de filtrage), sous lequel seul un danger *visible* (pas subi)
+     déclenche la surcouche ; un danger physiquement subi reste toujours prioritaire.
+  3. **Plafond de survie sous 0.50 y compris sans danger** : `pf_rm_er` (contrôle, 0 zone)
+     survivait à 0.25 sur les 12 seeds de calibration Phase 3, contre 0.58 mesuré sur d'autres
+     seeds lors du calibrage de `roadmap_apprentissage_v2.md` — variance inter-seed déjà
+     documentée comme risque connu de l'environnement v2. Amendé : `hunger_depletion_rate` 0.9 →
+     0.70 dans une nouvelle base `experiments/danger_zone_oracle_base_v2.json` (survie `pf_rm_er`
+     remonte à 0.75) ; `danger_zone_oracle_base_v1.json` conservé intact comme trace historique.
+  4. **Danger trop rare pour produire un signal** : avec 6 zones et `danger_zone_safety_radius`
+     12 m autour de 30 ronciers (carte 160×160), `eviter`/`ignorer`/`aleatoire` produisaient des
+     résultats strictement identiques sur la majorité des seeds (le danger n'est presque jamais
+     sur la trajectoire naturelle). Diagnostic densité (10/15/20 zones, aucun échec de placement
+     même à 20) : tendance **monotone claire** — à 20 zones `eviter` devient la meilleure
+     politique (0.58, devant `ignorer` 0.50), critères du gate progressent 6→7/12, 3→6/12,
+     2→5/12 — mais toujours sous les seuils requis (9-10/12). Session arrêtée ici sur décision
+     utilisateur ; prochaine étape = pousser 25/30/40 zones (action P1 ci-dessus).
+- Nouvel outil `tools/check_danger_calibration.py` : implémente les 4 critères du gate causal
+  Phase 3 (coût eviter<viser ≥10/12, résultat eviter>viser ≥9/12, résultat eviter>aleatoire
+  ≥9/12, survie meilleure politique ∈[0.50,0.90] et pire ≤0.40) sur un dossier de campagne,
+  groupe par point de grille, classe les candidats. Réutilisable pour la suite de la Phase 3 et
+  la Phase 4 (seeds réservés).
+- `experiments/campaigns/danger_zone_oracle_v3.json` amendé : le bras `pf_rm_er` (contrôle sans
+  danger) en a été retiré — un override de bras sur `danger_zone_count` est toujours écrasé par
+  la grille (`run_campaign.py` applique bras puis grille, la grille l'emporte sur un chemin
+  commun). Sorti dans `danger_zone_oracle_v3_control.json` (grille vide, 1 seul point).
+  Campagnes créées cette session, toutes sur les 12 seeds de calibration uniquement :
+  `danger_zone_reaction_range_probe_v1.json` (base v1, obsolète), `_v2.json` (base v2),
+  `danger_zone_base_recalibration_probe_v1.json` (balayage `hunger_depletion_rate`),
+  `danger_zone_density_probe_v1.json` (10/15/20 zones). Tous les `results/_danger_zone_*`
+  associés existent en local (gitignorés, non committés) avec leur `gate_report.json`.
 - `roadmap_apprentissage_v2.md` : Phases 0-3 [FAIT], Phases 4-6 [NON ENGAGÉE]. Bandeau
   « AXE SUSPENDU » en tête. Ne pas relancer M2 v2 / M3 / Phases 4-6 avant le gate v3 réservé.
-- Deux environnements gelés coexistent :
-  - `experiments/apprentissage_env_ref.json` (v1 : `hunger` 0,7, `eat_hunger_threshold` défaut 50).
-  - `experiments/apprentissage_env_ref_v2.json` (v2 : `hunger` 0,9, `eat_hunger_threshold` 90,
-    supprime le tampon de digestion). Rupture M0 v1 → Mf v1 assumée.
 - `politique_fixe_max_v1` dépend de l'environnement : `pf_er_rm` sur v1 (0,83), `pf_rm_er` sur
-  v2 (0,58). `pf_rv_rm` ≡ `automate` bit à bit (les deux environnements).
+  v2 (0,58 sur les seeds de calibration v2 d'origine — 0,25 puis 0,75 selon `hunger_depletion_rate`
+  sur les 12 seeds de calibration v3, cf. point 3 ci-dessus : variance inter-seed forte, à garder
+  en tête pour toute mesure future sur un nouveau jeu de seeds).
 - Vie médiane inutilisable comme métrique de résultat sur v2 : saturée à 300 dès que
   survie ≥ 0,5. Seules survie et mûres mangées discriminent.
 - `results/` gitignoré. `pf_er_er` crashe Godot sporadiquement sous forte charge (jobs 6+) —
   contourné par `--retries`.
 - `game_speed` x1/x4 : divergence sur le décideur adaptatif documentée (`.claude/memory.md`).
 - Ollama : ne pas supposer qu'il tourne. `D:\Ollama\ollama.exe`, `gemma3:1b`, `ollama serve`.
-- `scripts/check_kit.py` toujours absent (étape 10 de `/close` non exécutable) — 17e confirmation.
+- `scripts/check_kit.py` toujours absent (étape 10 de `/close` non exécutable) — 18e confirmation.
 - `scripts/adaptive_decider_v1.gd` : ne pas supprimer tant que la suspension n'est pas définitive.
 - `AGENTS.md` / `GEMINI.md` : modifiés hors session (réalignement `.claude/CLAUDE.md`), toujours en
   résidus non commités — à revoir/committer à part, hors périmètre de cette session.
 
-## Dernière session (2026-09-07)
+## Dernière session (2026-09-08)
 
-# Session du 2026-09-07
+# Session du 2026-09-08
 
 ## Décisions prises
-- Phase 2 de `roadmap_environnement_apprenable_v3.md` close : perception du danger raccordée à
-  `_perceive`, décideur `fixed_policy_danger` (ignorer/eviter/viser) en surcouche isolée de la
-  politique alimentaire.
+- Phase 3 de `roadmap_environnement_apprenable_v3.md` engagée : gate causal jamais franchi, mais
+  3 causes d'échec en cascade diagnostiquées et corrigées/amendées (bug tirage `aleatoire`,
+  surcouche danger trop invasive, plafond de survie sous 0,50 hors danger, densité insuffisante).
+- Amendement du contrat de base Phase 0 : `danger_zone_oracle_base_v2.json` créé
+  (`hunger_depletion_rate` 0,70), v1 conservé intact. Décision actée avec l'utilisateur.
 
 ## Livrables produits ou modifiés
-- Modifiés : `scripts/character.gd`, `danger_zone.gd`, `fixed_policy_decider.gd`, `main.gd`,
-  `experiment_config.gd`, `variable_registry.gd`, `tools/run_manual_checks.gd` (12 tests ajoutés).
-- Créés : `experiments/danger_zone_scripted_events_v1.json`,
-  `experiments/danger_zone_fixed_policy_scenario_v1.json`.
+- Modifiés : `scripts/variable_registry.gd` (`aleatoire`, `danger_reaction_range`),
+  `scripts/fixed_policy_decider.gd` (tirage tenu sur intervalle), `scripts/character.gd`
+  (`danger_reaction_range`, filtre dans `_danger_response_direction`, rng_seed transmis),
+  `tools/run_manual_checks.gd` (13 tests ajoutés), `experiments/campaigns/danger_zone_oracle_v3.json`
+  (bras `pf_rm_er` retiré).
+- Créés : `tools/check_danger_calibration.py`, `experiments/danger_zone_oracle_base_v2.json`,
+  `experiments/campaigns/danger_zone_oracle_v3_control.json`,
+  `danger_zone_reaction_range_probe_v1.json`/`_v2.json`,
+  `danger_zone_base_recalibration_probe_v1.json`, `danger_zone_density_probe_v1.json`.
 
 ## Hypothèses validées / invalidées
-- VALIDE : `eviter` réduit l'exposition (0,75 s), `ignorer` neutre (1,73/1,47 s), `viser`
-  l'augmente (11,98 s) — gate causal franchi, reproductible (seed 2).
-- VALIDE : aucun aléa supplémentaire consommé à la décision ; aucune régression sur l'oracle
-  Phase 1 (`check_fixed_policy.py` vert).
+- INVALIDE : le mécanisme de danger calibré en Phases 0-2 passe le gate causal Phase 3 tel quel.
+- VALIDE : les 3 corrections identifiées (reaction_range, hunger_depletion_rate, densité) vont
+  chacune dans le bon sens, avec une tendance monotone claire sur la densité (10→15→20 zones).
+- EN ATTENTE : aucun point testé ne franchit encore les 4 critères du gate.
 
 ## Prochaine étape exacte
-Phase 3 : calibration sur seeds d'entraînement (grille zones × rayon × coût de faim, 5 bras ×
-12 seeds).
+Pousser le probe de densité à 25/30/40 zones (même point fixe par ailleurs) pour voir si la
+tendance monotone franchit les seuils du gate causal, ou plafonne.
 
 ## Question bloquante pour la session suivante
 Aucune.

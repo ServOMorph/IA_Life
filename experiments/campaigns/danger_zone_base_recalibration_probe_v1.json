@@ -1,0 +1,16 @@
+{
+  "campaign_id": "danger-zone-base-recalibration-probe-v1",
+  "_comment": "Amendement du contrat de base Phase 0 (2026-09-08), decide explicitement avec l'utilisateur : le controle sans danger (pf_rm_er, danger_zone_count=0) ne survit qu'a 0,25 sur les 12 seeds de calibration verrouilles en Phase 0, contre 0,58 mesure lors du calibrage de roadmap_apprentissage_v2.md (seeds differents, 2026-09-01) -- plafond sous les 0,50 minimum du critere 4, independamment du mecanisme de danger. Diagnostic cible : hunger_depletion_rate (Rouge, 0.9 dans la base gelee v2) est le levier le plus direct pour remonter le plafond de survie sans changer la politique alimentaire fixe (pf_rm_er reste la meilleure politique fixe connue de l'espace d'action v2). Danger desactive (count=0 herite de la base) : mesure la survie de la politique alimentaire seule. Seules les 12 seeds de calibration sont utilisees ; reserved_seeds non touchees.",
+  "base_config": "../danger_zone_oracle_base_v1.json",
+  "arms": [
+    {"name": "pf_rm_er", "overrides": {}}
+  ],
+  "parameter_grid": {
+    "agents.individual.Rouge.hunger_depletion_rate": [0.7, 0.75, 0.8, 0.85, 0.9]
+  },
+  "seeds": [20260921, 20260922, 20260923, 20260924, 20260925, 20260926, 20260927, 20260928, 20260929, 20260930, 20261001, 20261002],
+  "reserved_seeds": [20270921, 20270922, 20270923, 20270924, 20270925, 20270926, 20270927, 20270928, 20270929, 20270930, 20271001, 20271002],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_danger_zone_base_recalibration_probe_v1"
+}

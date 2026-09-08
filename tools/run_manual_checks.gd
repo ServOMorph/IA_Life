@@ -52,12 +52,20 @@ func _run() -> void:
 	_test_danger_perception_behind_ignored()
 	_test_danger_perception_out_of_range_ignored()
 	_test_danger_response_direction_prioritizes_active_zone()
+	_test_danger_response_direction_respects_reaction_range()
+	_test_danger_response_direction_within_reaction_range()
+	_test_danger_response_direction_active_zone_ignores_reaction_range()
 	_test_fixed_policy_danger_dispatch()
 	_test_fixed_policy_danger_ignorer_unaffected()
 	_test_fixed_policy_danger_eviter_overrides_direction()
 	_test_fixed_policy_danger_viser_overrides_direction()
 	_test_fixed_policy_danger_no_direction_leaves_action_untouched()
 	_test_fixed_policy_danger_respects_manual_control()
+	_test_fixed_policy_danger_aleatoire_registry()
+	_test_fixed_policy_danger_aleatoire_only_eviter_or_viser()
+	_test_fixed_policy_danger_aleatoire_choice_held_within_window()
+	_test_fixed_policy_danger_aleatoire_deterministic_by_seed()
+	_test_fixed_policy_danger_aleatoire_no_direction_leaves_action_untouched()
 	_test_vision_range_and_angle()
 	_test_vision_memorization()
 	_test_vision_memory_capacity_no_churn()
@@ -514,6 +522,63 @@ func _test_danger_response_direction_prioritizes_active_zone() -> void:
 	character.free()
 	zone.free()
 
+## Phase 3 (roadmap_environnement_apprenable_v3) : un danger seulement visible au-delà de
+## danger_reaction_range ne doit pas déclencher de réponse, même s'il reste perçu (la
+## perception, elle, suit toujours vision_range).
+func _test_danger_response_direction_respects_reaction_range() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 360.0
+	character.vision_blocked_by_terrain = false
+	character.danger_reaction_range = 5.0
+	var far := _make_danger(Vector3(0.0, 0.0, -8.0))
+	character._update_vision_perception()
+	var info: Dictionary = character._visible_danger_info()
+	_expect(bool(info["has_visible_danger"]), "Danger Phase 3 : un danger dans vision_range doit rester perçu même au-delà de danger_reaction_range.")
+	var response: Vector3 = character._danger_response_direction(info)
+	_expect(response.is_zero_approx(), "Danger Phase 3 : un danger visible au-delà de danger_reaction_range ne doit produire aucune direction de réponse.")
+	character.free()
+	far.free()
+
+func _test_danger_response_direction_within_reaction_range() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 360.0
+	character.vision_blocked_by_terrain = false
+	character.danger_reaction_range = 5.0
+	var near := _make_danger(Vector3(0.0, 0.0, -3.0))
+	character._update_vision_perception()
+	var info: Dictionary = character._visible_danger_info()
+	var response: Vector3 = character._danger_response_direction(info)
+	_expect(response.is_equal_approx(Vector3(0, 0, -1)), "Danger Phase 3 : un danger visible sous danger_reaction_range doit produire la direction normale.")
+	character.free()
+	near.free()
+
+## Une zone physiquement subie déclenche toujours la réponse, y compris avec
+## danger_reaction_range à 0 : l'exposition prime, elle n'est jamais soumise à ce filtre.
+func _test_danger_response_direction_active_zone_ignores_reaction_range() -> void:
+	var character := _make_character()
+	character.position = Vector3.ZERO
+	character.vision_range = 0.0
+	character.hunger_depletion_rate = 0.0
+	character.move_speed = 0.0
+	character.danger_reaction_range = 0.0
+	var zone := TestDangerZone.new()
+	zone.zone_id = "danger_occupied_reaction"
+	zone.radius = 4.0
+	zone.hunger_cost_rate = 1.0
+	zone.position = Vector3(2.0, 0.0, 0.0)
+	get_tree().root.add_child(zone)
+	character.set_danger_zones([zone])
+	character._physics_process(0.5)
+	var info: Dictionary = character._visible_danger_info()
+	var response: Vector3 = character._danger_response_direction(info)
+	_expect(not response.is_zero_approx(), "Danger Phase 3 : danger_reaction_range ne doit jamais s'appliquer à une zone physiquement active.")
+	character.free()
+	zone.free()
+
 func _test_fixed_policy_danger_dispatch() -> void:
 	_expect(VariableRegistry.CHARACTER.has("fixed_policy_danger"), "Politique fixe danger registre : fixed_policy_danger (Phase 2 v3) doit être déclaré.")
 	_expect((VariableRegistry.CHARACTER["fixed_policy_danger"]["options"] as Array).has("eviter"), "Politique fixe danger registre : 'eviter' doit figurer dans les options de fixed_policy_danger.")
@@ -542,9 +607,9 @@ func _fixed_danger_observation(overrides: Dictionary = {}) -> Dictionary:
 		observation[key] = overrides[key]
 	return observation
 
-func _make_fixed_danger_decider(danger_action: String) -> FixedPolicyDecider:
+func _make_fixed_danger_decider(danger_action: String, rng_seed: int = 0) -> FixedPolicyDecider:
 	var decider := FixedPolicyDecider.new()
-	decider.configure_fixed(AdaptiveDecider.ACTION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_MEMORISEE, AdaptiveDecider.ACTION_ERRANCE, danger_action, 2.0, "Test")
+	decider.configure_fixed(AdaptiveDecider.ACTION_RONCE_VISIBLE, AdaptiveDecider.ACTION_RONCE_MEMORISEE, AdaptiveDecider.ACTION_ERRANCE, danger_action, 2.0, "Test", rng_seed)
 	return decider
 
 func _test_fixed_policy_danger_ignorer_unaffected() -> void:
@@ -573,6 +638,65 @@ func _test_fixed_policy_danger_respects_manual_control() -> void:
 	var decider := _make_fixed_danger_decider("eviter")
 	var action: Dictionary = decider.decide(_fixed_danger_observation({"manual_control": true, "manual_direction": Vector3(0, 0, 1), "danger_response_direction": Vector3(1, 0, 0)}))
 	_expect(action["goal"] == "controle_manuel", "Danger surcouche : le contrôle manuel ne doit jamais être remplacé par la surcouche danger.")
+
+func _test_fixed_policy_danger_aleatoire_registry() -> void:
+	_expect((VariableRegistry.CHARACTER["fixed_policy_danger"]["options"] as Array).has("aleatoire"), "Politique fixe danger registre : 'aleatoire' (Phase 3 v3) doit figurer dans les options de fixed_policy_danger.")
+
+## 'aleatoire' doit toujours retomber sur eviter ou viser (jamais 'ignorer' ni une action de
+## la politique alimentaire), et la direction doit toujours être colinéaire à l'axe du danger.
+## delta > decision_interval_seconds (2.0) à chaque appel pour forcer un nouveau tirage :
+## sinon le choix est tenu (cf. _test_fixed_policy_danger_aleatoire_choice_held_within_window).
+func _test_fixed_policy_danger_aleatoire_only_eviter_or_viser() -> void:
+	var decider := _make_fixed_danger_decider("aleatoire", 7)
+	var toward := Vector3(1, 0, 0)
+	var saw_eviter := false
+	var saw_viser := false
+	for _i in range(40):
+		var action: Dictionary = decider.decide(_fixed_danger_observation({"danger_response_direction": toward, "delta": 3.0}))
+		_expect(action["goal"] == "danger_eviter" or action["goal"] == "danger_viser", "Danger surcouche 'aleatoire' : chaque tirage doit résoudre en danger_eviter ou danger_viser.")
+		if action["goal"] == "danger_eviter":
+			saw_eviter = true
+			_expect(action["direction"].is_equal_approx(-toward), "Danger surcouche 'aleatoire' : la branche eviter doit orienter à l'opposé du danger.")
+		else:
+			saw_viser = true
+			_expect(action["direction"].is_equal_approx(toward), "Danger surcouche 'aleatoire' : la branche viser doit orienter vers le danger.")
+	_expect(saw_eviter and saw_viser, "Danger surcouche 'aleatoire' : 40 tirages doivent produire les deux issues au moins une fois chacune.")
+
+## Non-régression du bug de calibration Phase 3 : un choix tiré doit être tenu tant que
+## decision_interval_seconds (2.0 dans _make_fixed_danger_decider) n'est pas écoulé, sinon
+## decide() étant appelé à chaque frame physique, un nouveau tirage à chaque appel ferait
+## osciller la direction en moyenne nulle (le bras aleatoire reproduisait alors exactement
+## les statistiques du bras eviter sur les 96 runs de calibration).
+func _test_fixed_policy_danger_aleatoire_choice_held_within_window() -> void:
+	var decider := _make_fixed_danger_decider("aleatoire", 7)
+	var toward := Vector3(1, 0, 0)
+	var first: Dictionary = decider.decide(_fixed_danger_observation({"danger_response_direction": toward, "delta": 0.0}))
+	for _i in range(20):
+		var action: Dictionary = decider.decide(_fixed_danger_observation({"danger_response_direction": toward, "delta": 0.05}))
+		_expect(action["goal"] == first["goal"], "Danger surcouche 'aleatoire' : le choix doit être tenu tant que decision_interval_seconds n'est pas écoulé.")
+
+## Reproductibilité : même rng_seed -> même séquence de tirages. Le rng_seed est dérivé de
+## decider_seed + hash(display_name) (character.gd::_build_decider), donc distinct entre
+## seeds d'expérience et entre agents, jamais figé à une constante partagée.
+func _test_fixed_policy_danger_aleatoire_deterministic_by_seed() -> void:
+	var toward := Vector3(1, 0, 0)
+	var decider_a := _make_fixed_danger_decider("aleatoire", 42)
+	var decider_b := _make_fixed_danger_decider("aleatoire", 42)
+	var decider_c := _make_fixed_danger_decider("aleatoire", 43)
+	var sequence_differs := false
+	for _i in range(20):
+		var goal_a: String = decider_a.decide(_fixed_danger_observation({"danger_response_direction": toward, "delta": 3.0}))["goal"]
+		var goal_b: String = decider_b.decide(_fixed_danger_observation({"danger_response_direction": toward, "delta": 3.0}))["goal"]
+		var goal_c: String = decider_c.decide(_fixed_danger_observation({"danger_response_direction": toward, "delta": 3.0}))["goal"]
+		_expect(goal_a == goal_b, "Danger surcouche 'aleatoire' : même rng_seed doit produire la même séquence de tirages.")
+		if goal_a != goal_c:
+			sequence_differs = true
+	_expect(sequence_differs, "Danger surcouche 'aleatoire' : deux rng_seed distincts doivent produire des séquences différentes sur 20 tirages.")
+
+func _test_fixed_policy_danger_aleatoire_no_direction_leaves_action_untouched() -> void:
+	var decider := _make_fixed_danger_decider("aleatoire")
+	var action: Dictionary = decider.decide(_fixed_danger_observation())
+	_expect(action["goal"] == AdaptiveDecider.ACTION_ERRANCE, "Danger surcouche 'aleatoire' : sans danger pertinent (direction nulle), la politique alimentaire doit rester inchangée.")
 
 func _find_memory_slider(node: Node) -> HSlider:
 	if node is HBoxContainer and node.get_child_count() >= 2:

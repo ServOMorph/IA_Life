@@ -26,18 +26,35 @@ extends AdaptiveDecider
 ## résultat au danger plutôt qu'à un autre réglage. `ignorer` laisse la politique
 ## alimentaire inchangée ; `eviter` et `viser` remplacent l'action retenue par une
 ## direction stable (character.gd::_danger_response_direction), sans consommer d'aléa.
+##
+## Phase 3 (roadmap_environnement_apprenable_v3) : `aleatoire` tire eviter/viser à parts
+## égales, un choix tenu pendant decision_interval_seconds de temps simulé puis retiré —
+## même fenêtre de tenue que l'engagement de AdaptiveDecider (`_engagement_timer`), sans
+## quoi decide() étant appelé à chaque frame physique (character.gd::_physics_process), un
+## nouveau tirage à chaque frame ferait osciller la direction ~60 fois/seconde : la moyenne
+## temporelle s'annule et le déplacement net ne diffère plus d'un évitement quasi pur (bug
+## constaté à la calibration Phase 3 : le bras aleatoire reproduisait exactement les
+## statistiques du bras eviter, exposition et coût de danger nuls sur les 96 runs). Le RNG
+## est hérité (`_rng`, seedé depuis `decider_seed + hash(display_name)`, cf.
+## character.gd::_build_decider — reproductible à seed d'expérience fixe, distinct entre
+## agents et entre seeds). Sert de plancher sans réponse structurée au danger dans le bras
+## `aleatoire` du benchmark de calibration.
 
 const DANGER_IGNORER := "ignorer"
 const DANGER_EVITER := "eviter"
 const DANGER_VISER := "viser"
+const DANGER_ALEATOIRE := "aleatoire"
 
 var fixed_action_s1 := ACTION_RONCE_VISIBLE
 var fixed_action_s2 := ACTION_RONCE_MEMORISEE
 var fixed_action_s3 := ACTION_ERRANCE
 var fixed_policy_danger := DANGER_IGNORER
 
-func configure_fixed(action_s1: String, action_s2: String, action_s3: String, danger_action: String, interval_seconds: float, name: String = "") -> void:
-	configure(0.0, 0.0, interval_seconds, 0, name)
+var _danger_aleatoire_timer := 0.0
+var _danger_aleatoire_choice := DANGER_EVITER
+
+func configure_fixed(action_s1: String, action_s2: String, action_s3: String, danger_action: String, interval_seconds: float, name: String = "", rng_seed: int = 0) -> void:
+	configure(0.0, 0.0, interval_seconds, rng_seed, name)
 	fixed_action_s1 = action_s1
 	fixed_action_s2 = action_s2
 	fixed_action_s3 = action_s3
@@ -50,8 +67,15 @@ func decide(observation: Dictionary) -> Dictionary:
 	var toward_danger := Vector3(observation.get("danger_response_direction", Vector3.ZERO))
 	if toward_danger.is_zero_approx():
 		return action
-	var oriented := toward_danger if fixed_policy_danger == DANGER_VISER else -toward_danger
-	return {"goal": "danger_%s" % fixed_policy_danger, "direction": oriented.normalized(), "renew_wander": false}
+	var resolved_policy := fixed_policy_danger
+	if resolved_policy == DANGER_ALEATOIRE:
+		_danger_aleatoire_timer -= float(observation.get("delta", 0.0))
+		if _danger_aleatoire_timer <= 0.0:
+			_danger_aleatoire_choice = DANGER_VISER if _rng.randf() < 0.5 else DANGER_EVITER
+			_danger_aleatoire_timer = decision_interval_seconds
+		resolved_policy = _danger_aleatoire_choice
+	var oriented := toward_danger if resolved_policy == DANGER_VISER else -toward_danger
+	return {"goal": "danger_%s" % resolved_policy, "direction": oriented.normalized(), "renew_wander": false}
 
 func _select_action(situation: String, actions: Array) -> String:
 	last_explored = false

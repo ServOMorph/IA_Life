@@ -1,7 +1,7 @@
 # Roadmap — Environnement apprenable v3 : zones dangereuses
 
 Créée le : 2026-09-01
-Statut : **[EN COURS — Phases 0-2 FAIT, préalable à la reprise de `roadmap_apprentissage_v2.md`]**
+Statut : **[EN COURS — Phases 0-2 FAIT, Phase 3 EN COURS, préalable à la reprise de `roadmap_apprentissage_v2.md`]**
 
 ## Objectif
 
@@ -145,12 +145,49 @@ zone) : exposition `eviter` 0,75 s < `ignorer` 1,73/1,47 s < `viser` 11,98 s, re
 régression sur `p1_fixed_policy_selftest.json` (`check_fixed_policy.py`). 12 tests ajoutés à
 `run_manual_checks.gd`.
 
-### Phase 3 — Calibration sur seeds d'entraînement [À FAIRE]
+### Phase 3 — Calibration sur seeds d'entraînement [EN COURS — engagée 2026-09-08]
 
 - Balayer une petite grille : nombre de zones × rayon × coût de faim. Commencer grossier, puis
   raffiner une seule fois autour du meilleur candidat.
 - Exécuter les cinq bras sur les 12 seeds de calibration avec `--jobs` et `--retries`.
 - Classer les candidats par séparation des politiques, pas par difficulté maximale.
+
+**Avancement (2026-09-08)** : gate causal jamais franchi, mais 3 causes d'échec en cascade
+identifiées et corrigées/amendées, chacune vérifiée par un diagnostic resserré (12 seeds de
+calibration, jamais les seeds réservés) :
+
+1. Grille initiale (4 zones/rayon/coût × 4 bras × 12 seeds, 384 runs) : 0/8 points passent.
+   Bug trouvé : `FixedPolicyDecider.decide()` est rappelé à chaque frame physique — le bras
+   `aleatoire` retirait eviter/viser à chaque frame, la direction s'annulait en moyenne et
+   reproduisait exactement les stats du bras `eviter`. Corrigé : le tirage est tenu pendant
+   `decision_interval_seconds` (`fixed_policy_decider.gd`). Bras `pf_rm_er` (contrôle sans
+   danger) sorti de cette campagne — un override de bras sur `danger_zone_count` est toujours
+   écrasé par la grille (`run_campaign.py` applique bras puis grille).
+2. Bug rejoué (384 runs) : gate toujours 0/8, et de façon inattendue `eviter` (0,19 survie,
+   coût de danger nul confirmé) restait pire que `ignorer` (0,32) — la surcouche remplaçait la
+   politique alimentaire dès qu'une zone est visible n'importe où dans le champ de vision
+   (15 m), pas seulement sur le chemin. Corrigé : nouveau paramètre `danger_reaction_range`
+   (CHARACTER), sous lequel seul un danger *visible* (pas subi) déclenche la surcouche.
+3. Diagnostic `danger_reaction_range` (3/5/8 m, 144 runs) : `eviter` remonte à 0,33 au meilleur
+   point mais gate toujours en échec — et le contrôle sans danger (`pf_rm_er`) ne survit lui-même
+   qu'à 0,25 sur ces 12 seeds, sous le seuil de 0,50 du critère 4, indépendamment du danger.
+   Diagnostic `hunger_depletion_rate` (0,70 à 0,90, 60 runs) : 0,70 remonte la survie de
+   `pf_rm_er` à 0,75. Base amendée : `experiments/danger_zone_oracle_base_v2.json`
+   (`hunger_depletion_rate` 0,70), `danger_zone_oracle_base_v1.json` conservé intact.
+4. Diagnostic `reaction_range` rejoué sur la base v2 (144 runs) : critère 4 satisfait (best 0,67,
+   worst 0,33) mais `eviter`/`ignorer`/`aleatoire` produisent des résultats strictement
+   identiques sur la majorité des seeds — avec 6 zones et `danger_zone_safety_radius` 12 m
+   autour de 30 ronciers (carte 160×160), le danger est trop rare sur la trajectoire naturelle
+   pour que la réponse ait l'occasion de s'exercer. Diagnostic densité (10/15/20 zones, 144
+   runs, aucun échec de placement même à 20) : tendance **monotone claire** — à 20 zones,
+   `eviter` devient la meilleure politique (0,58, devant `ignorer` 0,50) ; les 3 critères
+   d'accord progressent 6→7/12, 3→6/12, 2→5/12, mais restent sous les seuils requis (9-10/12).
+
+Session arrêtée sur ce palier (décision utilisateur). Prochaine étape : pousser le probe de
+densité à 25/30/40 zones sur le même point fixe (rayon 6,0 / coût 0,6 / `danger_reaction_range`
+8,0 / base v2) pour voir si la tendance monotone franchit les seuils ou plafonne. Outil de gate :
+`tools/check_danger_calibration.py`. Détail complet :
+`_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
 
 **Gate causal obligatoire** :
 

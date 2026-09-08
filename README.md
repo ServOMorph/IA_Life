@@ -100,10 +100,16 @@ au temps simulé égal au taux maximal des zones actives, télémétrie `danger_
 exposure|exit`) et validée en headless et en fenêtré (`run_danger_windowed.py`, panneau dev avec
 relance sur seed ou nombre de zones choisis). Phase 2 close le 2026-09-07 : les zones sont
 perçues par `Character._perceive`, et le décideur `politique_fixe` reçoit une surcouche
-`fixed_policy_danger` (ignorer/eviter/viser) isolée de la politique alimentaire. Gate causal
-franchi sur scénario scripté (seed 2) : exposition eviter 0,75 s < ignorer 1,73/1,47 s < viser
-11,98 s, reproductible. Reste la calibration puis la confirmation (Phases 3-4) avant tout raccord
-au learner ; la roadmap v2 reste suspendue jusqu'à ce gate réservé.
+`fixed_policy_danger` (ignorer/eviter/viser/aleatoire) isolée de la politique alimentaire. Gate
+causal franchi sur scénario scripté (seed 2) : exposition eviter 0,75 s < ignorer 1,73/1,47 s <
+viser 11,98 s, reproductible. Phase 3 (calibration) engagée le 2026-09-08 : le gate causal n'est
+pas encore franchi, mais trois causes d'échec en cascade ont été diagnostiquées et corrigées —
+un bug de tirage aléatoire par frame, une surcouche danger trop invasive (bornée depuis par
+`danger_reaction_range`), et un plafond de survie hors danger sous 0,50 sur les seeds de
+calibration (remonté par `hunger_depletion_rate` 0,70 dans une base amendée
+`danger_zone_oracle_base_v2.json`). Reste à augmenter la densité de zones (tendance monotone
+claire, pas encore suffisante à 20 zones) avant la confirmation sur seeds réservés (Phase 4) ;
+la roadmap v2 reste suspendue jusqu'à ce gate réservé.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

@@ -1,0 +1,21 @@
+{
+  "campaign_id": "danger-zone-density-probe-v1",
+  "_comment": "Amendement Phase 3 (2026-09-08), decide explicitement avec l'utilisateur : sur danger_zone_reaction_range_probe_v2.json (base v2, hunger_depletion_rate 0.70), eviter/ignorer/aleatoire produisaient des resultats strictement identiques sur la majorite des 12 seeds -- le danger (6 zones, safety_radius 12m autour de 30 ronciers, carte 160x160) est trop rare sur la trajectoire naturelle de l'agent pour que la reponse ait l'occasion de s'exercer (0,00-0,08 entree/vie pour eviter/aleatoire). Diagnostic cible : densite (danger_zone_count) bien au-dela de la grille verrouillee en Phase 0 (4/6), safety_radius inchange. Point fixe par ailleurs au meilleur candidat connu (rayon 6.0, cout 0.6, danger_reaction_range 8.0). Seules les 12 seeds de calibration sont utilisees ; reserved_seeds non touchees. Verifier les evenements danger_placement status=failed apres coup (contrat : un echec de placement n'a pas de repli, moins de zones que prevu pour ce run).",
+  "base_config": "../danger_zone_oracle_base_v2.json",
+  "arms": [
+    {"name": "danger_eviter", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "eviter", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "danger_ignorer", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "danger_viser", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "viser", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "aleatoire", "agents.individual.Rouge.danger_reaction_range": 8.0}}
+  ],
+  "parameter_grid": {
+    "environment.game_config.danger_zone_count": [10, 15, 20],
+    "environment.game_config.danger_zone_radius": [6.0],
+    "environment.game_config.danger_hunger_cost_rate": [0.6]
+  },
+  "seeds": [20260921, 20260922, 20260923, 20260924, 20260925, 20260926, 20260927, 20260928, 20260929, 20260930, 20261001, 20261002],
+  "reserved_seeds": [20270921, 20270922, 20270923, 20270924, 20270925, 20270926, 20270927, 20270928, 20270929, 20270930, 20271001, 20271002],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_danger_zone_density_probe_v1"
+}

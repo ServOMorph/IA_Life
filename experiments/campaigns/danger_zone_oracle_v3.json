@@ -1,13 +1,12 @@
 {
   "campaign_id": "danger-zone-oracle-v3",
-  "_comment": "Contrat verrouillé en Phase 0 de roadmap_environnement_apprenable_v3. Les 12 seeds de calibration servent à choisir UN candidat de grille ; les 12 reserved_seeds ne sont jamais exécutées avant la confirmation Phase 4. Les cinq bras ne divergent que par la future surcouche de réponse au danger : hors danger visible, ils partagent la même politique alimentaire pf_rm_er. La grille coarse est exécutée en Phase 3, après implémentation des Phases 1-2 ; ne pas modifier les seeds après tout résultat.",
+  "_comment": "Contrat verrouillé en Phase 0 de roadmap_environnement_apprenable_v3. Les 12 seeds de calibration servent à choisir UN candidat de grille ; les 12 reserved_seeds ne sont jamais exécutées avant la confirmation Phase 4. Les quatre bras ne divergent que par la surcouche de réponse au danger (Phase 2/3) : hors danger visible, ils partagent la même politique alimentaire pf_rm_er. Le cinquième bras du contrat, le contrôle sans danger, est sorti dans danger_zone_oracle_v3_control.json (2026-09-07) : un override de bras sur danger_zone_count serait écrasé ici par la grille, qui l'emporte toujours sur un chemin commun (run_campaign.py:159). La grille coarse est exécutée en Phase 3, après implémentation des Phases 1-2 ; ne pas modifier les seeds après tout résultat.",
   "base_config": "../danger_zone_oracle_base_v1.json",
   "arms": [
     {"name": "danger_eviter", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "eviter"}},
     {"name": "danger_ignorer", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer"}},
     {"name": "danger_viser", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "viser"}},
-    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "aleatoire"}},
-    {"name": "pf_rm_er", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer"}}
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "aleatoire"}}
   ],
   "parameter_grid": {
     "environment.game_config.danger_zone_count": [4, 6],

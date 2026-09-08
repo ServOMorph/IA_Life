@@ -37,6 +37,7 @@ const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 @export var fixed_policy_s2: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s2"])
 @export var fixed_policy_s3: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s3"])
 @export var fixed_policy_danger: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_danger"])
+@export var danger_reaction_range: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["danger_reaction_range"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
 @export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
@@ -151,7 +152,7 @@ func _build_decider():
 			return adaptive_v1
 		"politique_fixe":
 			var fixed := FixedPolicyDecider.new()
-			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, fixed_policy_s3, fixed_policy_danger, adaptive_decision_interval_seconds, display_name)
+			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, fixed_policy_s3, fixed_policy_danger, adaptive_decision_interval_seconds, display_name, decider_seed + hash(display_name))
 			return fixed
 		_:
 			return BaselineDecider.new()
@@ -640,10 +641,22 @@ func _visible_danger_info() -> Dictionary:
 ## d'évitement ou de ciblage la prend telle quelle ou l'inverse. Priorité à la zone
 ## effectivement subie (in_danger) sur la zone seulement visible — un agent déjà exposé
 ## doit pouvoir s'en éloigner même si son orientation ou une occlusion le rend
-## momentanément non perceptible par la vision générique (cas « zone déjà occupée »).
+## momentanément non perceptible par la vision générique (cas « zone déjà occupée »), et ce
+## sans condition de distance : un danger subi est par définition pertinent.
+##
+## Phase 3 (roadmap_environnement_apprenable_v3) : un danger seulement visible (pas subi)
+## n'est retenu que sous danger_reaction_range, distinct de vision_range. Sans ce filtre, la
+## surcouche remplace la politique alimentaire dès qu'une zone est visible n'importe où dans
+## le champ de vision, y compris hors du chemin vers la nourriture — constaté à la
+## calibration : eviter supprimait bien le coût de danger (0,00 sur 96 runs) mais restait le
+## pire bras en survie, sous ignorer, la fuite interrompant l'alimentation trop souvent.
 func _danger_response_direction(danger_info: Dictionary) -> Vector3:
 	if not _active_danger_zones.is_empty():
 		return _direction_to_nearest_active_danger()
+	if not bool(danger_info["has_visible_danger"]):
+		return Vector3.ZERO
+	if float(danger_info["visible_danger_distance"]) > danger_reaction_range:
+		return Vector3.ZERO
 	return Vector3(danger_info["visible_danger_direction"])
 
 func _direction_to_nearest_active_danger() -> Vector3:

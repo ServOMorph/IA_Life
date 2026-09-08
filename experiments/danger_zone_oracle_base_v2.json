@@ -1,0 +1,33 @@
+{
+  "format_version": 1,
+  "experiment_id": "danger-zone-oracle-base-v2",
+  "_comment": "Amendement du contrat de base Phase 0 (2026-09-08), decide explicitement avec l'utilisateur : sur danger_zone_oracle_base_v1.json (hunger_depletion_rate 0.9, herite tel quel de apprentissage_env_ref_v2.json), le controle sans danger (pf_rm_er) ne survivait qu'a 0,25 sur les 12 seeds de calibration verrouilles en Phase 0 -- sous le seuil de 0,50 du critere 4 de Phase 3, independamment du mecanisme de danger. Diagnostic cible (danger_zone_base_recalibration_probe_v1.json, 60 runs) : hunger_depletion_rate=0.70 remonte la survie de pf_rm_er a 0,75 (0,75/0,80 restent a 0,42 ; fonction tres sensible dans cette plage, coherent avec la variance inter-seed deja documentee de l'environnement v2). v1 reste inchange comme trace historique ; toute campagne de calibration Phase 3 a partir du 2026-09-08 utilise cette base v2.",
+  "seed": 20260921,
+  "environment": {
+    "game_config": {
+      "ronce_count": 30,
+      "berries_per_ronce": 4,
+      "eat_hunger_threshold": 90.0,
+      "danger_zone_count": 0,
+      "danger_zone_radius": 8.0,
+      "danger_hunger_cost_rate": 1.0,
+      "danger_zone_visible": true,
+      "danger_zone_safety_radius": 12.0
+    }
+  },
+  "agents": {
+    "defaults": {"decider_type": "automate", "vision_range": 40.0},
+    "individual": {
+      "Rouge": {
+        "decider_type": "politique_fixe",
+        "fixed_policy_s1": "ronce_memorisee",
+        "fixed_policy_s2": "errance",
+        "fixed_policy_s3": "errance",
+        "vision_range": 15.0,
+        "hunger_depletion_rate": 0.7,
+        "memory_capacity": 5
+      }
+    }
+  },
+  "simulation": {"game_speed": 1.0, "max_simulation_seconds": 300.0, "quit_on_all_dead": false}
+}

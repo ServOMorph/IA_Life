@@ -1,3 +1,33 @@
+## v0.31 — 2026-09-08
+
+### Ajouté
+- `danger_reaction_range` (CHARACTER, décision) : distance sous laquelle un danger seulement
+  visible (pas physiquement subi) déclenche la surcouche `fixed_policy_danger` ; un danger subi
+  reste toujours prioritaire. `aleatoire` ajouté à l'énumération `fixed_policy_danger`
+  (`ignorer|eviter|viser|aleatoire`), tirage tenu pendant `decision_interval_seconds`.
+- `experiments/danger_zone_oracle_base_v2.json` : base de calibration amendée
+  (`hunger_depletion_rate` 0,70 au lieu de 0,90) — remonte la survie hors danger de 0,25 à 0,75
+  sur les 12 seeds de calibration Phase 3 ; v1 conservé intact.
+- `tools/check_danger_calibration.py` : gate causal Phase 3 (4 critères) sur un dossier de
+  campagne, groupé par point de grille.
+- Campagnes de diagnostic Phase 3 : `danger_zone_oracle_v3_control.json`,
+  `danger_zone_reaction_range_probe_v1.json`/`_v2.json`,
+  `danger_zone_base_recalibration_probe_v1.json`, `danger_zone_density_probe_v1.json`. 13 tests
+  ajoutés à `run_manual_checks.gd`.
+
+### Corrigé
+- `FixedPolicyDecider.decide()` (appelé à chaque frame physique) : le bras `aleatoire` retirait
+  eviter/viser à chaque frame, la direction s'annulait en moyenne et reproduisait exactement les
+  statistiques du bras `eviter`. Le tirage est désormais tenu pendant
+  `decision_interval_seconds`.
+
+### Modifié
+- `roadmap_environnement_apprenable_v3.md` : Phase 3 [EN COURS] — gate causal jamais franchi,
+  3 causes d'échec en cascade corrigées (tirage par frame, surcouche trop invasive, plafond de
+  survie), densité de zones testée jusqu'à 20 (tendance monotone, pas encore suffisant).
+  `danger_zone_oracle_v3.json` : bras `pf_rm_er` retiré (isolé dans `_v3_control.json`, un
+  override de bras sur `danger_zone_count` était toujours écrasé par la grille).
+
 ## v0.30 — 2026-09-07
 
 ### Ajouté

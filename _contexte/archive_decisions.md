@@ -1,5 +1,10 @@
 # Décisions structurantes archivées
 
+- 2026-08-28 : Pont `com_telephone` migré vers le projet Roberto (hôte du serveur + template de
+  référence unique). IA_Life devient un projet raccordé (README léger + `/roberto` surveillant
+  `messages_ia_life.log` chez Roberto). Serveur/PWA retirés du dépôt IA_Life. Clôt l'action
+  ouverte sur l'inclusion git de `ROBERTO/com_telephone`. Détail :
+  `D:\ServOMorph\Roberto\roadmap_com_telephone_hub.md`.
 - 2026-08-17 : Correctif bug terrain invisible (culling) + relief escarpé + cuvettes de
   spawn + capture d'écran automatisée (`run_screenshot.py`) + skill `synthese-projet`.
 - 2026-08-16 : Menu bas + panneaux persos par coin + focus caméra au clic.

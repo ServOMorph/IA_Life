@@ -1,3 +1,31 @@
+# Session du 2026-09-07
+
+## Décisions prises
+- Phase 2 de `roadmap_environnement_apprenable_v3.md` close : perception du danger raccordée à
+  `_perceive`, décideur `fixed_policy_danger` (ignorer/eviter/viser) en surcouche isolée de la
+  politique alimentaire.
+
+## Livrables produits ou modifiés
+- Modifiés : `scripts/character.gd`, `danger_zone.gd`, `fixed_policy_decider.gd`, `main.gd`,
+  `experiment_config.gd`, `variable_registry.gd`, `tools/run_manual_checks.gd` (12 tests ajoutés).
+- Créés : `experiments/danger_zone_scripted_events_v1.json`,
+  `experiments/danger_zone_fixed_policy_scenario_v1.json`.
+
+## Hypothèses validées / invalidées
+- VALIDE : `eviter` réduit l'exposition (0,75 s), `ignorer` neutre (1,73/1,47 s), `viser`
+  l'augmente (11,98 s) — gate causal franchi, reproductible (seed 2).
+- VALIDE : aucun aléa supplémentaire consommé à la décision ; aucune régression sur l'oracle
+  Phase 1 (`check_fixed_policy.py` vert).
+
+## Prochaine étape exacte
+Phase 3 : calibration sur seeds d'entraînement (grille zones × rayon × coût de faim, 5 bras ×
+12 seeds).
+
+## Question bloquante pour la session suivante
+Aucune.
+
+---
+
 # Session du 2026-08-17
 
 ## Décisions prises

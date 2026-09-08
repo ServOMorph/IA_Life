@@ -10,17 +10,14 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
 Phases 1 à 8 closes ; axe apprentissage v2 suspendu après égalité statistique avec le hasard.
-`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT] — zones dangereuses implémentées et
-perçues (`_perceive`), oracle `fixed_policy_danger = ignorer|eviter|viser` en surcouche validé par
-gate causal (eviter < ignorer < viser, reproductible). Prochaine étape : Phase 3 (calibration sur
-seeds d'entraînement). v2 interdite jusqu'au gate v3 réservé.
+`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT], Phase 3 [EN COURS] — calibration
+engagée le 2026-09-08, gate causal jamais franchi mais 3 causes d'échec en cascade identifiées et
+corrigées (tirage `aleatoire` tenu par intervalle, surcouche danger bornée par
+`danger_reaction_range`, plafond de survie remonté par `hunger_depletion_rate` 0,70 dans
+`danger_zone_oracle_base_v2.json`) ; densité de zones en cours d'augmentation (tendance monotone
+claire, 20 zones pas encore suffisant). v2 interdite jusqu'au gate v3 réservé.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-28 : Pont `com_telephone` migré vers le projet Roberto (hôte du serveur + template de
-  référence unique). IA_Life devient un projet raccordé (README léger + `/roberto` surveillant
-  `messages_ia_life.log` chez Roberto). Serveur/PWA retirés du dépôt IA_Life. Clôt l'action
-  ouverte sur l'inclusion git de `ROBERTO/com_telephone`. Détail :
-  `D:\ServOMorph\Roberto\roadmap_com_telephone_hub.md`.
 - 2026-08-29 : axe d'évolution suivant retenu — apprentissage individuel (option 1B,
   « heuristiques apprises ») : le personnage apprend en une vie quelle action de recherche de
   nourriture marche selon sa situation de faim (table `(situation, action) → score`). 1A
@@ -72,3 +69,9 @@ seeds d'entraînement). v2 interdite jusqu'au gate v3 réservé.
   isolée de la politique alimentaire, événement scripté `teleport_agent`. Gate causal franchi sur
   scénario scripté (seed 2) : exposition eviter 0,75 s < ignorer 1,73/1,47 s < viser 11,98 s,
   reproductible ; aucune régression sur l'oracle Phase 1. Prochaine : Phase 3 (calibration).
+- 2026-09-08 : Phase 3 engagée, gate causal jamais franchi mais 3 causes d'échec en cascade
+  corrigées (bug tirage `aleatoire` par frame, surcouche danger bornée par
+  `danger_reaction_range`, plafond de survie remonté par `hunger_depletion_rate` 0,70 —
+  `danger_zone_oracle_base_v2.json`, v1 conservé). Densité de zones testée jusqu'à 20 (tendance
+  monotone, pas encore suffisant). Voir
+  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.

@@ -1,0 +1,14 @@
+{
+  "campaign_id": "danger-zone-oracle-v3-control",
+  "_comment": "Bras 'contrôle sans danger' du contrat verrouillé en Phase 0 (pf_rm_er, meilleure politique fixe alimentaire de v2), isolé de danger_zone_oracle_v3.json le 2026-09-07 : run_campaign.py applique les overrides de bras avant la grille et la grille l'emporte sur tout chemin commun (run_campaign.py:159), donc un override de bras sur danger_zone_count y serait toujours écrasé par 4 ou 6. Grille vide ici : danger_zone_oracle_base_v1.json fixe déjà danger_zone_count=0. Mêmes seeds de calibration et seeds réservés que danger_zone_oracle_v3.json — un seul run par seed, sans grille à balayer puisque le danger est désactivé.",
+  "base_config": "../danger_zone_oracle_base_v1.json",
+  "arms": [
+    {"name": "pf_rm_er", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer"}}
+  ],
+  "parameter_grid": {},
+  "seeds": [20260921, 20260922, 20260923, 20260924, 20260925, 20260926, 20260927, 20260928, 20260929, 20260930, 20261001, 20261002],
+  "reserved_seeds": [20270921, 20270922, 20270923, 20270924, 20270925, 20270926, 20270927, 20270928, 20270929, 20270930, 20271001, 20271002],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_danger_zone_oracle_v3_control"
+}
