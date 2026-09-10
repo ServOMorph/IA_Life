@@ -57,6 +57,75 @@ coût 0,6 / `danger_reaction_range` 8,0 / base v2) pour voir si la tendance mono
 seuils du gate ou plafonne — auquel cas trancher entre enrichir davantage la mécanique et
 abandonner l'axe danger (branche Échec de la roadmap).
 
+## Phase 3 — extension de densité, limite observée (2026-09-09)
+
+La campagne `danger_zone_density_probe_v2.json` a exécuté les quatre bras sur les 12 seeds de
+calibration, aux densités 25, 30 et 40 (144 runs). Les 4 560 événements
+`danger_placement` sont tous au statut `placed` : aucun point ne souffre d'un échec de placement.
+Le rapport `results/_danger_zone_density_probe_v2/gate_report.json` conclut qu'aucun des trois
+points ne franchit le gate causal :
+
+| Zones | Coût évite < vise | Résultat évite > vise | Résultat évite > aléatoire | Survie évite / ignore / vise / aléatoire |
+|---:|---:|---:|---:|---|
+| 25 | 8/12 | 6/12 | 5/12 | 0,58 / 0,42 / 0,17 / 0,50 |
+| 30 | 8/12 | 8/12 | 4/12 | 0,58 / 0,42 / 0,17 / 0,58 |
+| 40 | 9/12 | 8/12 | 6/12 | 0,67 / 0,58 / 0,08 / 0,50 |
+
+Le point 40 est le plus proche des seuils sur la comparaison évite/vise, mais reste sous les
+seuils 10/12 et 9/12, et l'avantage contre `aleatoire` demeure faible (6/12). L'augmentation de
+densité ne franchit donc pas le gate et ne suit plus une tendance monotone exploitable sur les
+trois critères appariés. C'est une limite de la mécanique testée, pas un problème de placement.
+La branche Échec de la Phase 3 s'applique : ne pas ouvrir les seeds réservés ni raccorder le
+danger au learner ; une décision est requise entre une seconde itération de mécanique et
+l'abandon de cet axe.
+
+## Décision (2026-09-09)
+
+Seconde itération de la mécanique de danger retenue. Les seeds réservés restent fermés ; le
+paramètre ou mécanisme à modifier doit être spécifié et une nouvelle campagne de calibration
+versionnée avant exécution.
+
+## Seconde itération — coût de faim (2026-09-09)
+
+La campagne `danger_zone_cost_probe_v1.json` a évalué 0,8 / 1,0 / 1,2 à 40 zones, rayon 6,0 et
+`danger_reaction_range` 8,0 (144 runs, 12 seeds de calibration). Aucun point ne passe le gate :
+
+| Coût | Coût évite < vise | Résultat évite > vise | Résultat évite > aléatoire | Survie évite / ignore / vise / aléatoire |
+|---:|---:|---:|---:|---|
+| 0,8 | 10/12 | 9/12 | 5/12 | 0,83 / 0,50 / 0,25 / 0,83 |
+| 1,0 | 9/12 | 9/12 | 4/12 | 0,58 / 0,25 / 0,08 / 0,58 |
+| 1,2 | 8/12 | 5/12 | 4/12 | 0,58 / 0,58 / 0,17 / 0,50 |
+
+Le coût 0,8 franchit les critères évite/vise mais échoue nettement contre `aleatoire` (5/12) :
+le coût seul ne transforme pas l'avantage causal de l'évitement en avantage robuste face à une
+politique qui alterne les réponses. Augmenter ce coût le dégrade plutôt qu'il ne le renforce.
+Les seeds réservés n'ont pas été ouverts.
+
+## Seconde itération — placement sur approche et portée de réaction (2026-09-09/10)
+
+Le mode `approche_roncier` place une zone sur le segment entre le spawn Rouge et un roncier, à
+`rayon + marge` du roncier. Le premier essai a révélé que le rayon de sécurité appliqué à tous
+les ronciers empêchait certains placements. La correction conserve la sécurité des spawns mais
+retire cette exclusion pour les ronciers voisins en mode approche. Le sweep de 12 seeds pose alors
+12/12 zones par seed ; la campagne v2 pose 1 728/1 728 zones demandées.
+
+La calibration v2 (192 runs, 6/12 zones × marges 1/3, coût 0,8) ne passe aucun point. Le meilleur
+point sur le critère de survie est 12 zones / marge 3 : coût `eviter < viser` 8/12, résultat
+`eviter > viser` 5/12, résultat `eviter > aleatoire` 3/12. Le placement est donc fonctionnel,
+mais ne crée pas une séparation causale suffisante.
+
+Le probe ciblé de portée (144 runs, 12 zones / marge 3, portées 10/12/15 m) invalide l'hypothèse
+d'une réaction trop tardive : aucun point ne franchit le gate et `eviter > aleatoire` reste à
+4/12, 1/12 et 2/12. La fuite rectiligne détourne l'agent de sa ressource sans lui offrir un
+contournement. Ne pas poursuivre les réglages numériques de cette réponse ; les seeds réservés
+restent fermés et aucun raccord au learner n'est autorisé.
+
+## Décision en attente
+
+Choisir entre une seconde mécanique, fondée sur un contournement stateful qui reprend ensuite la
+navigation vers la ressource, et l'abandon de l'axe danger. Cette décision précède toute nouvelle
+campagne de calibration.
+
 ## Décision
 
 Ne pas reprendre directement les Phases 4 à 6 de `roadmap_apprentissage_v2.md`. Construire d'abord

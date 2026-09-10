@@ -1,0 +1,11 @@
+{
+  "campaign_id": "danger-zone-approach-placement-sweep-v1",
+  "_comment": "Contrat de placement Phase 2 (2026-09-09) : 12 zones d'approche doivent etre posees sur chacune des seeds de calibration. Simulation courte, sans bras de politique ni seeds reserves.",
+  "base_config": "../danger_zone_approach_smoke_v1.json",
+  "parameter_grid": {},
+  "seeds": [20260921, 20260922, 20260923, 20260924, 20260925, 20260926, 20260927, 20260928, 20260929, 20260930, 20261001, 20261002],
+  "reserved_seeds": [20270921, 20270922, 20270923, 20270924, 20270925, 20270926, 20270927, 20270928, 20270929, 20270930, 20271001, 20271002],
+  "repetitions": 1,
+  "python_timeout_seconds": 30,
+  "output_dir": "../../results/_danger_zone_approach_placement_sweep_v1"
+}

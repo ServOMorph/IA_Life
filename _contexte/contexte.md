@@ -10,12 +10,10 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
 Phases 1 à 8 closes ; axe apprentissage v2 suspendu après égalité statistique avec le hasard.
-`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT], Phase 3 [EN COURS] — calibration
-engagée le 2026-09-08, gate causal jamais franchi mais 3 causes d'échec en cascade identifiées et
-corrigées (tirage `aleatoire` tenu par intervalle, surcouche danger bornée par
-`danger_reaction_range`, plafond de survie remonté par `hunger_depletion_rate` 0,70 dans
-`danger_zone_oracle_base_v2.json`) ; densité de zones en cours d'augmentation (tendance monotone
-claire, 20 zones pas encore suffisant). v2 interdite jusqu'au gate v3 réservé.
+`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT], Phase 3 [EN COURS]. Le placement
+`approche_roncier` est validé (1 728/1 728 zones posées), mais aucune calibration ne franchit le
+gate causal. La fuite rectiligne ne bat pas `aleatoire`, même à portée accrue ; décision requise
+entre un contournement stateful et l'abandon de l'axe. Les seeds réservés restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-29 : axe d'évolution suivant retenu — apprentissage individuel (option 1B,
@@ -74,4 +72,9 @@ claire, 20 zones pas encore suffisant). v2 interdite jusqu'au gate v3 réservé.
   `danger_reaction_range`, plafond de survie remonté par `hunger_depletion_rate` 0,70 —
   `danger_zone_oracle_base_v2.json`, v1 conservé). Densité de zones testée jusqu'à 20 (tendance
   monotone, pas encore suffisant). Voir
+  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
+- 2026-09-10 : seconde itération de placement sur approche de roncier validée techniquement
+  (smoke, sweep 12 seeds, 1 728/1 728 placements) mais gate causal toujours en échec. Le probe
+  de portée 10/12/15 m invalide l'hypothèse d'une réaction trop tardive : une fuite rectiligne
+  perturbe la ressource sans fournir de contournement. Voir
   `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.

@@ -2,6 +2,7 @@ extends Node3D
 
 const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 const DangerZoneScript = preload("res://scripts/danger_zone.gd")
+const DangerZonePlacement = preload("res://scripts/danger_zone_placement.gd")
 
 const MAP_SIZE := 160.0
 const WALL_HEIGHT := 3.0
@@ -935,6 +936,9 @@ func _spawn_danger_zones() -> void:
 		return
 	var rng := RandomNumberGenerator.new()
 	rng.seed = _experiment_seed + DANGER_RNG_SEED_OFFSET
+	if GameConfig.danger_zone_placement_mode == DangerZonePlacement.MODE_APPROCHE_RONCIER:
+		_spawn_approach_danger_zones(rng)
+		return
 	var half := maxf(0.0, MAP_SIZE / 2.0 - WALL_THICKNESS - GameConfig.danger_zone_radius - GameConfig.danger_zone_safety_radius)
 	for index in GameConfig.danger_zone_count:
 		var placed := false
@@ -944,7 +948,7 @@ func _spawn_danger_zones() -> void:
 			var candidate := Vector3(x, _terrain_height(x, z) + 0.05, z)
 			if not _danger_position_is_safe(candidate):
 				continue
-			_spawn_danger_zone(index, candidate, attempt + 1)
+			_spawn_danger_zone(index, candidate, attempt + 1, {"placement_mode": DangerZonePlacement.MODE_ALEATOIRE})
 			placed = true
 			break
 		if not placed:
@@ -955,19 +959,66 @@ func _spawn_danger_zones() -> void:
 				"seed": _experiment_seed,
 				"placement_attempt": DANGER_PLACEMENT_ATTEMPTS,
 				"status": "failed",
+				"placement_mode": DangerZonePlacement.MODE_ALEATOIRE,
 			})
 
-func _danger_position_is_safe(candidate: Vector3) -> bool:
+func _spawn_approach_danger_zones(rng: RandomNumberGenerator) -> void:
+	var candidates: Array = []
+	for ronce in _ronces:
+		if is_instance_valid(ronce):
+			candidates.append(ronce)
+	for index in range(candidates.size() - 1, 0, -1):
+		var swap_index := rng.randi_range(0, index)
+		var temporary = candidates[index]
+		candidates[index] = candidates[swap_index]
+		candidates[swap_index] = temporary
+	var spawn_index := GameConfig.danger_zone_approach_spawn_index
+	var spawn_2d: Vector2 = SPAWN_POINTS[spawn_index]
+	var spawn_position := Vector3(spawn_2d.x, 0.0, spawn_2d.y)
+	var placed_count := 0
+	for ronce in candidates:
+		if placed_count >= GameConfig.danger_zone_count:
+			break
+		var source_position: Vector3 = ronce.global_position
+		var candidate := DangerZonePlacement.approach_position(spawn_position, source_position, GameConfig.danger_zone_radius, GameConfig.danger_zone_approach_clearance)
+		if candidate.is_zero_approx():
+			continue
+		candidate.y = _terrain_height(candidate.x, candidate.z) + 0.05
+		if not _danger_position_is_safe(candidate, ronce, false):
+			continue
+		_spawn_danger_zone(placed_count, candidate, 1, {
+			"placement_mode": DangerZonePlacement.MODE_APPROCHE_RONCIER,
+			"approach_spawn_index": spawn_index,
+			"approach_spawn_position": [spawn_position.x, spawn_position.y, spawn_position.z],
+			"source_ronce_position": [source_position.x, source_position.y, source_position.z],
+			"approach_clearance": GameConfig.danger_zone_approach_clearance,
+		})
+		placed_count += 1
+	for index in range(placed_count, GameConfig.danger_zone_count):
+		GameLogger.log_event_data(DangerZoneContract.EVENT_PLACEMENT, "Zone dangereuse %d non placée" % index, {
+			"zone_id": "danger_%02d" % index,
+			"position": [],
+			"radius": GameConfig.danger_zone_radius,
+			"seed": _experiment_seed,
+			"placement_attempt": 1,
+			"status": "failed",
+			"placement_mode": DangerZonePlacement.MODE_APPROCHE_RONCIER,
+			"approach_spawn_index": spawn_index,
+		})
+
+func _danger_position_is_safe(candidate: Vector3, ignored_ronce = null, check_ronces := true) -> bool:
 	var safety := GameConfig.danger_zone_safety_radius + GameConfig.danger_zone_radius
 	for spawn in SPAWN_POINTS:
 		if Vector2(candidate.x, candidate.z).distance_to(spawn) < safety:
 			return false
+	if not check_ronces:
+		return true
 	for ronce in _ronces:
-		if is_instance_valid(ronce) and candidate.distance_to(ronce.global_position) < safety:
+		if ronce != ignored_ronce and is_instance_valid(ronce) and candidate.distance_to(ronce.global_position) < safety:
 			return false
 	return true
 
-func _spawn_danger_zone(index: int, position: Vector3, attempt: int) -> void:
+func _spawn_danger_zone(index: int, position: Vector3, attempt: int, placement_data: Dictionary = {}) -> void:
 	var zone := DangerZoneScript.new()
 	zone.name = "DangerZone_%02d" % index
 	zone.zone_id = "danger_%02d" % index
@@ -1002,14 +1053,16 @@ func _spawn_danger_zone(index: int, position: Vector3, attempt: int) -> void:
 	zone.add_to_group("danger_zone")
 	add_child(zone)
 	_danger_zones.append(zone)
-	GameLogger.log_event_data(DangerZoneContract.EVENT_PLACEMENT, "Zone dangereuse %s placée" % zone.zone_id, {
+	var event_data := {
 		"zone_id": zone.zone_id,
 		"position": [position.x, position.y, position.z],
 		"radius": zone.radius,
 		"seed": _experiment_seed,
 		"placement_attempt": attempt,
 		"status": "placed",
-	})
+	}
+	event_data.merge(placement_data, true)
+	GameLogger.log_event_data(DangerZoneContract.EVENT_PLACEMENT, "Zone dangereuse %s placée" % zone.zone_id, event_data)
 
 func _spawn_dev_spawn_ronces() -> void:
 	var offsets := [Vector2(6, 0), Vector2(-6, 0), Vector2(0, 6), Vector2(0, -6)]

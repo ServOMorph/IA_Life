@@ -1,0 +1,24 @@
+{
+  "campaign_id": "danger-zone-approach-probe-v1",
+  "_comment": "Phase 2 du placement approche_roncier (2026-09-09) : calibration uniquement sur les 12 seeds d'entrainement. Balaye le nombre de ronciers gardes et la marge de pose ; rayon, cout et plage de reaction restent fixes au meilleur signal de l'iteration precedente. Les seeds reserves restent intacts.",
+  "base_config": "../danger_zone_oracle_base_v2.json",
+  "arms": [
+    {"name": "danger_eviter", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "eviter", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "danger_ignorer", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "danger_viser", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "viser", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "aleatoire", "agents.individual.Rouge.danger_reaction_range": 8.0}}
+  ],
+  "parameter_grid": {
+    "environment.game_config.danger_zone_count": [6, 12],
+    "environment.game_config.danger_zone_radius": [6.0],
+    "environment.game_config.danger_hunger_cost_rate": [0.8],
+    "environment.game_config.danger_zone_placement_mode": ["approche_roncier"],
+    "environment.game_config.danger_zone_approach_spawn_index": [0],
+    "environment.game_config.danger_zone_approach_clearance": [1.0, 3.0]
+  },
+  "seeds": [20260921, 20260922, 20260923, 20260924, 20260925, 20260926, 20260927, 20260928, 20260929, 20260930, 20261001, 20261002],
+  "reserved_seeds": [20270921, 20270922, 20270923, 20270924, 20270925, 20270926, 20270927, 20270928, 20270929, 20270930, 20271001, 20271002],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_danger_zone_approach_probe_v1"
+}

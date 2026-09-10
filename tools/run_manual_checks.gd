@@ -1,6 +1,7 @@
 extends Node
 
 const DangerContract = preload("res://scripts/danger_zone_contract.gd")
+const DangerPlacement = preload("res://scripts/danger_zone_placement.gd")
 const CharacterScript = preload("res://scripts/character.gd")
 
 # Vérifications automatisées pour les anciens tests manuels trop coûteux à reproduire.
@@ -46,6 +47,7 @@ func _run() -> void:
 	_test_experiment_config_overrides()
 	_test_experiment_config_validation()
 	_test_danger_zone_contract()
+	_test_danger_approach_placement_contract()
 	_test_danger_zone_integration()
 	_test_experiment_config_teleport_event()
 	_test_danger_perception_visible_direction_and_distance()
@@ -402,6 +404,32 @@ func _test_danger_zone_contract() -> void:
 	_expect(is_equal_approx(DangerContract.hunger_cost([1.5], 4.0), 6.0), "Danger Phase 0 : une exposition simple doit coûter taux × durée simulée.")
 	_expect(is_equal_approx(DangerContract.hunger_cost([1.5, 0.75], 4.0), 6.0), "Danger Phase 0 : deux zones superposées doivent appliquer le coût maximal, pas la somme.")
 	_expect(is_equal_approx(DangerContract.hunger_cost([], 2.0), 0.0), "Danger Phase 0 : après sortie, le coût de danger doit cesser immédiatement.")
+
+func _test_danger_approach_placement_contract() -> void:
+	_expect((VariableRegistry.GAME_CONFIG["danger_zone_placement_mode"]["options"] as Array).has(DangerPlacement.MODE_APPROCHE_RONCIER), "Danger approche : le mode approche_roncier doit être déclaré.")
+	var configured := ExperimentConfig.from_raw({"environment": {"game_config": {
+		"danger_zone_count": 2,
+		"danger_zone_radius": 6.0,
+		"danger_zone_placement_mode": DangerPlacement.MODE_APPROCHE_RONCIER,
+		"danger_zone_approach_spawn_index": 0,
+		"danger_zone_approach_clearance": 2.0,
+	}}})
+	_expect(configured.is_valid(), "Danger approche : les paramètres de placement valides doivent être acceptés.")
+	_expect(configured.normalized["environment"]["game_config"]["danger_zone_placement_mode"] == DangerPlacement.MODE_APPROCHE_RONCIER, "Danger approche : le mode doit être normalisé.")
+	var invalid_spawn := ExperimentConfig.from_raw({"environment": {"game_config": {"danger_zone_approach_spawn_index": 4}}})
+	_expect(not invalid_spawn.is_valid(), "Danger approche : un index de spawn hors [0,3] doit être refusé.")
+	var spawn := Vector3(-40.0, 0.0, -40.0)
+	var ronce := Vector3(20.0, 0.5, 20.0)
+	var placed := DangerPlacement.approach_position(spawn, ronce, 6.0, 2.0)
+	var horizontal_offset := placed - ronce
+	horizontal_offset.y = 0.0
+	_expect(is_equal_approx(horizontal_offset.length(), 8.0), "Danger approche : la zone doit rester à rayon + marge du roncier source.")
+	var spawn_to_ronce := ronce - spawn
+	spawn_to_ronce.y = 0.0
+	var spawn_to_zone := placed - spawn
+	spawn_to_zone.y = 0.0
+	_expect(spawn_to_zone.normalized().is_equal_approx(spawn_to_ronce.normalized()), "Danger approche : la zone doit être sur le segment spawn-roncier.")
+	_expect(DangerPlacement.approach_position(spawn, spawn, 6.0, 2.0).is_zero_approx(), "Danger approche : un roncier confondu avec le spawn ne doit pas produire de position exploitable.")
 
 func _test_danger_zone_integration() -> void:
 	var character := _make_character()

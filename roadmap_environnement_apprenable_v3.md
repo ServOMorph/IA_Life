@@ -183,10 +183,11 @@ calibration, jamais les seeds réservés) :
    `eviter` devient la meilleure politique (0,58, devant `ignorer` 0,50) ; les 3 critères
    d'accord progressent 6→7/12, 3→6/12, 2→5/12, mais restent sous les seuils requis (9-10/12).
 
-Session arrêtée sur ce palier (décision utilisateur). Prochaine étape : pousser le probe de
-densité à 25/30/40 zones sur le même point fixe (rayon 6,0 / coût 0,6 / `danger_reaction_range`
-8,0 / base v2) pour voir si la tendance monotone franchit les seuils ou plafonne. Outil de gate :
-`tools/check_danger_calibration.py`. Détail complet :
+Depuis, les probes de densité 25/30/40, de coût 0,8/1,0/1,2 et de placement sur approche des
+ronciers ont tous échoué le gate. Le placement approche est complet depuis sa correction
+(1 728/1 728 zones), mais un probe de portée 10/12/15 m démontre que la fuite rectiligne ne bat
+pas `aleatoire`. Prochaine étape : décision utilisateur entre un mécanisme de contournement
+stateful et l'abandon de l'axe ; ne pas ouvrir les seeds réservés. Détail complet :
 `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
 
 **Gate causal obligatoire** :

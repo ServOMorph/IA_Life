@@ -1,3 +1,19 @@
+## v0.32 — 2026-09-10
+
+### Ajouté
+- `approche_roncier` : placement déterministe des zones sur l'approche spawn-ressource, avec
+  télémétrie de provenance, smoke à 12 zones et sweep sur les 12 seeds de calibration.
+- Campagnes versionnées de calibration du placement et de la portée de réaction.
+
+### Corrigé
+- Le placement approche ne rejette plus les ronciers voisins : 1 728/1 728 zones demandées sont
+  posées sur la campagne v2.
+
+### Modifié
+- La calibration Phase 3 v3 conclut que la fuite rectiligne ne sépare pas `eviter` d'`aleatoire`;
+  les seeds réservés restent fermés, dans l'attente d'une décision sur un contournement stateful
+  ou l'abandon de l'axe danger.
+
 ## v0.31 — 2026-09-08
 
 ### Ajouté

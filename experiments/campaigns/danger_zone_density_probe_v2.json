@@ -1,0 +1,21 @@
+{
+  "campaign_id": "danger-zone-density-probe-v2",
+  "_comment": "Extension Phase 3 (2026-09-08) du probe v1 : les densites 10/15/20 ont montre une tendance monotone sans franchir le gate causal. Meme point fixe et memes 12 seeds de calibration ; uniquement danger_zone_count est etendu a 25/30/40. Les reserved_seeds restent intacts.",
+  "base_config": "../danger_zone_oracle_base_v2.json",
+  "arms": [
+    {"name": "danger_eviter", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "eviter", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "danger_ignorer", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "danger_viser", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "viser", "agents.individual.Rouge.danger_reaction_range": 8.0}},
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "aleatoire", "agents.individual.Rouge.danger_reaction_range": 8.0}}
+  ],
+  "parameter_grid": {
+    "environment.game_config.danger_zone_count": [25, 30, 40],
+    "environment.game_config.danger_zone_radius": [6.0],
+    "environment.game_config.danger_hunger_cost_rate": [0.6]
+  },
+  "seeds": [20260921, 20260922, 20260923, 20260924, 20260925, 20260926, 20260927, 20260928, 20260929, 20260930, 20261001, 20261002],
+  "reserved_seeds": [20270921, 20270922, 20270923, 20270924, 20270925, 20270926, 20270927, 20270928, 20270929, 20270930, 20271001, 20271002],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_danger_zone_density_probe_v2"
+}

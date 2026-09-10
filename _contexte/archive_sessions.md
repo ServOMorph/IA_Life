@@ -26,6 +26,25 @@ Aucune.
 
 ---
 
+# Session du 2026-09-08
+
+## Décisions prises
+- Phase 3 de `roadmap_environnement_apprenable_v3.md` engagée ; trois causes d'échec ont été corrigées ou amendées.
+
+## Livrables produits ou modifiés
+- Ajoutés : `danger_reaction_range`, `tools/check_danger_calibration.py`, la base v2 et les campagnes de diagnostic initiales.
+
+## Hypothèses validées / invalidées
+- EN ATTENTE : la densité accrue doit encore franchir le gate causal.
+
+## Prochaine étape exacte
+Pousser la densité à 25/30/40 zones sur les 12 seeds de calibration.
+
+## Question bloquante pour la session suivante
+Aucune.
+
+---
+
 # Session du 2026-08-17
 
 ## Décisions prises
