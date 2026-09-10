@@ -1,5 +1,12 @@
 # Roadmap — Apprentissage durable et mesurable
 
+> **Proposition de réorientation — 2026-09-10, non adoptée.**
+> Une [analyse du code et de travaux Web/GitHub](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md)
+> et une [roadmap de remplacement proposée](D:/ServOMorph/IA_Life/roadmap_apprentissage_fonctionnel_proposition.md)
+> avancent la persistance et l'évaluation, puis une preuve alimentaire progressive.
+> Elles proposent de retirer le danger du chemin critique. Les statuts, verdicts et interdictions
+> historiques ci-dessous restent inchangés tant que cette réorientation n'est pas adoptée.
+
 Créée le : 2026-08-30
 Succède à `roadmap_apprentissage.md` (4 phases closes, effet 1B non généralisé).
 Tranche l'action P1 de `signals.md` : **ni « affiner la discrétisation » seul, ni bascule 1C

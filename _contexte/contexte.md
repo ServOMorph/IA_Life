@@ -8,12 +8,11 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 `gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
-Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
-Phases 1 à 8 closes ; axe apprentissage v2 suspendu après égalité statistique avec le hasard.
-`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT], Phase 3 [EN COURS]. Le contournement
-avec cible et côté mémorisés échoue à la calibration : 10/12 contre `viser`, 5/12 contre
-`aleatoire`, survie maximale 0,42. Une récupération de collision v3 est écrite et testée, mais
-non mesurée ; recherche d'alternatives en pause. Les seeds réservés restent fermés.
+Laboratoire headless reproductible : configurations versionnées, logs JSONL et campagnes parallélisées.
+L'axe apprentissage v2 reste suspendu ; le contournement danger v2 échoue au gate et v3 reste non mesuré.
+Une analyse sourcée et une roadmap d'apprentissage alimentaire progressive sont produites, mais non adoptées.
+Le chemin RL actuel requiert un reset complet, des observations de ressources et un retour événementiel avant entraînement.
+Les seeds réservés de danger restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-30 : `roadmap_apprentissage.md` close côté code (Phases 2-4). Phase 2 : récompense sur

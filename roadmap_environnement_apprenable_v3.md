@@ -1,5 +1,12 @@
 # Roadmap — Environnement apprenable v3 : zones dangereuses
 
+> **Proposition de réorientation — 2026-09-10, non adoptée.**
+> La [roadmap d'apprentissage proposée](D:/ServOMorph/IA_Life/roadmap_apprentissage_fonctionnel_proposition.md)
+> prévoit une première preuve alimentaire indépendante du danger, sur la base de cette
+> [analyse sourcée](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md).
+> Le danger deviendrait une extension. Cette proposition ne valide aucun candidat, ne modifie
+> aucun statut ci-dessous et n'autorise pas l'ouverture des seeds réservés.
+
 Créée le : 2026-09-01
 Statut : **[EN COURS — Phases 0-2 FAIT, Phase 3 EN COURS, préalable à la reprise de `roadmap_apprentissage_v2.md`]**
 

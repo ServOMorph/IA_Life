@@ -1,3 +1,13 @@
+## v0.34 — 2026-09-10
+
+### Ajouté
+- Analyse sourcée du système d'apprentissage, des limites du bridge RL et de références Web/GitHub.
+- Proposition de roadmap : persistance entre épisodes, tâche alimentaire progressive, validation indépendante,
+  puis extensions danger et LLM conditionnelles.
+
+### Modifié
+- Roadmaps apprentissage v2 et environnement v3 reliées à la proposition, sans modifier leurs statuts.
+
 ## v0.33 — 2026-09-10
 
 ### Ajouté

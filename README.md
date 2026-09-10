@@ -60,58 +60,17 @@ interchangeable automate/LLM (Ollama local, repli automatique sur erreur), et un
 générique (portée, angle, occlusion) qui remplace la découverte par contact seul et absorbe
 la perception sociale par code partagé (`Character._perceive`).
 
-L'axe d'apprentissage individuel a commencé avec un troisième décideur
-(`scripts/adaptive_decider.gd`) qui apprend, pendant une seule vie, quelle action de recherche de
-nourriture marche selon la situation de faim. La première roadmap, désormais archivée dans
-`_docs/archives/roadmap_apprentissage.md`, est close (4 phases [FAIT]) : l'apprentissage intra-vie
-1B ne rend pas de façon fiable en une vie
-(effet non généralisé sur 2 seeds, `learning_rate` sans levier). Un diagnostic racine identifie
-cinq défauts structurels (≈ 1 bit apprenable par vie, récompense quasi constante hors repas,
-aucune propagation du crédit, S3 sans choix sur 63 % des décisions, gate posé sur le `reward`
-interne). La suite est `roadmap_apprentissage_v2.md` (créée le 2026-08-30) : approche par
-étapes gatées sur une métrique de résultat — débit expérimental, calibrage de l'environnement +
-oracle de politiques fixes, récompense événementielle + amorçage TD, élargissement de l'espace
-d'action, persistance de table entre vies, protocole statistique — avec un benchmark avant/après
-à bras figés (`_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`).
+L'axe d'apprentissage individuel dispose d'un décideur adaptatif tabulaire, d'une récompense
+événementielle et d'un amorçage TD. Il reste suspendu après un avantage non démontré face aux
+contrôles appariés. Le mécanisme de danger est également en calibration : le contournement v2
+échoue face à `aleatoire` et le candidat v3 reste non mesuré ; les seeds réservés restent fermés.
 
-Phases 0 à 3 de la v2 closes ; **l'axe apprentissage individuel est suspendu (2026-09-01,
-branche « Échec » du critère de succès)**. Phase 0 : `tools/run_campaign.py` parallélisé
-(`--jobs`, `--retries`, bras nommés `arms`), bras gelé `adaptatif_v1`. Phase 1 : décideur
-`politique_fixe`, environnement de référence gelé, gate franchi à 12 seeds (politique fixe sur
-souvenir 83 % vs errance pure 17 %). Phase 2 : récompense événementielle (+1 cueillette,
-coût de survie −c·Δt, −1 terminal) + amorçage par différence temporelle (γ 0,9) — le décideur
-adaptatif franchit alors le plateau sans-apprentissage. Phase 3 : espace d'action S3 porté de
-1 à 5 actions de navigation (`errance`, `cap_maintenu`, `demi_tour`, `zone_inconnue`,
-`zone_connue`), S2 gagne `souvenir_ancien`. L'environnement a été enrichi et re-gelé en v2
-(`experiments/apprentissage_env_ref_v2.json` — digestion différée retirée, faim plus rapide)
-pour retrouver de la dynamique dans les métriques de résultat. Verdict M1 v2 : le décideur
-adaptatif (meilleur bras en agrégat, survie 0,67) **ne se sépare pas de la sélection d'action
-aléatoire ni du décideur gelé au seed apparié**. Une table `(situation, action)` discrète ne
-bat pas le hasard sur cette tâche. Le code des Phases 2-3 est conservé (tests verts, gates de
-la Phase 3 passés) ; les Phases 4-6 ne sont pas engagées. Détail :
-`_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
-
-La suite est `roadmap_environnement_apprenable_v3.md` : introduire des zones dangereuses
-localisées qui ajoutent un coût de faim, puis démontrer avec des politiques fixes
-`eviter|ignorer|viser` que le choix de direction bat réellement le hasard. La calibration utilise
-12 seeds et la confirmation 12 seeds réservés. Phases 0-1 closes le 2026-09-06 : la mécanique est
-implémentée (zones `Area3D` statiques placées de façon déterministe depuis la seed, coût de faim
-au temps simulé égal au taux maximal des zones actives, télémétrie `danger_placement|enter|
-exposure|exit`) et validée en headless et en fenêtré (`run_danger_windowed.py`, panneau dev avec
-relance sur seed ou nombre de zones choisis). Phase 2 close le 2026-09-07 : les zones sont
-perçues par `Character._perceive`, et le décideur `politique_fixe` reçoit une surcouche
-`fixed_policy_danger` (ignorer/eviter/viser/aleatoire) isolée de la politique alimentaire. Gate
-causal franchi sur scénario scripté (seed 2) : exposition eviter 0,75 s < ignorer 1,73/1,47 s <
-viser 11,98 s, reproductible. Phase 3 (calibration) engagée le 2026-09-08 : le gate causal n'est
-pas encore franchi, mais trois causes d'échec en cascade ont été diagnostiquées et corrigées —
-un bug de tirage aléatoire par frame, une surcouche danger trop invasive (bornée depuis par
-`danger_reaction_range`), et un plafond de survie hors danger sous 0,50 sur les seeds de
-calibration (remonté par `hunger_depletion_rate` 0,70 dans une base amendée
-`danger_zone_oracle_base_v2.json`). Les probes de densité, de coût et de placement sur approche
-des ronciers restent sous le gate. Le contournement avec cible et côté mémorisés réduit le coût
-mais échoue face à `aleatoire` (5/12 seeds, seuil 9/12 ; survie maximale 0,42). Une récupération
-de collision est préparée, sans campagne ; la recherche d'alternatives est en pause. Les seeds
-réservés restent fermés et la roadmap v2 suspendue.
+Une analyse du code et des références externes a produit une roadmap non adoptée : commencer par
+la conservation des acquis entre épisodes et une tâche alimentaire simple, puis progresser vers
+le monde complet. Le chemin RL existant doit d'abord fournir un reset complet du monde, des
+observations de ressources et un retour événementiel. Voir
+`_docs/2026-09-10_recherche_apprentissage.md` et
+`roadmap_apprentissage_fonctionnel_proposition.md`.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne
