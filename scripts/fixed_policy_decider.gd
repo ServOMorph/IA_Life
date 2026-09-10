@@ -49,6 +49,8 @@ var fixed_action_s1 := ACTION_RONCE_VISIBLE
 var fixed_action_s2 := ACTION_RONCE_MEMORISEE
 var fixed_action_s3 := ACTION_ERRANCE
 var fixed_policy_danger := DANGER_IGNORER
+var danger_navigation_mode := "rectiligne"
+var _detour = preload("res://scripts/danger_detour.gd").new()
 
 var _danger_aleatoire_timer := 0.0
 var _danger_aleatoire_choice := DANGER_EVITER
@@ -63,9 +65,11 @@ func configure_fixed(action_s1: String, action_s2: String, action_s3: String, da
 func decide(observation: Dictionary) -> Dictionary:
 	var action: Dictionary = super.decide(observation)
 	if fixed_policy_danger == DANGER_IGNORER or bool(observation.get("manual_control", false)):
+		_detour.reset()
 		return action
 	var toward_danger := Vector3(observation.get("danger_response_direction", Vector3.ZERO))
-	if toward_danger.is_zero_approx():
+	var sensed_center: bool = danger_navigation_mode == "contournement" and not (observation.get("navigation_dangers", []) as Array).is_empty()
+	if toward_danger.is_zero_approx() and _detour.target.is_empty() and not sensed_center:
 		return action
 	var resolved_policy := fixed_policy_danger
 	if resolved_policy == DANGER_ALEATOIRE:
@@ -74,6 +78,31 @@ func decide(observation: Dictionary) -> Dictionary:
 			_danger_aleatoire_choice = DANGER_VISER if _rng.randf() < 0.5 else DANGER_EVITER
 			_danger_aleatoire_timer = decision_interval_seconds
 		resolved_policy = _danger_aleatoire_choice
+	if danger_navigation_mode == "contournement":
+		if resolved_policy == DANGER_EVITER and _is_hunger_situation(observation):
+			var previous_phase: String = _detour.phase
+			var direction: Vector3 = _detour.steer(
+				Vector3(observation.get("position", Vector3.ZERO)),
+				observation.get("navigation_targets", {}).get(action["goal"], {}),
+				observation.get("navigation_dangers", []), float(observation.get("delta", 0.0)),
+				observation.get("invalid_target_ids", []))
+			if previous_phase != _detour.phase or _detour.reason != "":
+				var target_position: Vector3 = _detour.target.get("position", Vector3.ZERO)
+				var obstacle_position: Vector3 = _detour.obstacle.get("position", Vector3.ZERO)
+				GameLogger.log_event_data("danger_navigation", "%s : %s" % [agent_name, _detour.phase], {
+					"agent": agent_name, "phase": _detour.phase, "reason": _detour.reason,
+					"target_id": _detour.target.get("id", ""), "side": _detour.side,
+					"target_position": [target_position.x, target_position.y, target_position.z],
+					"obstacle_position": [obstacle_position.x, obstacle_position.y, obstacle_position.z],
+					"obstacle_radius": _detour.obstacle.get("radius", 0.0),
+				})
+			if not direction.is_zero_approx():
+				return {"goal": "danger_%s" % _detour.phase, "direction": direction, "renew_wander": false}
+			# Sans cible alimentaire, le repli historique permet de sortir d'une zone subie.
+			if not bool(observation.get("in_danger", false)):
+				return action
+		else:
+			_detour.reset()
 	var oriented := toward_danger if resolved_policy == DANGER_VISER else -toward_danger
 	return {"goal": "danger_%s" % resolved_policy, "direction": oriented.normalized(), "renew_wander": false}
 

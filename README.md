@@ -108,10 +108,10 @@ un bug de tirage aléatoire par frame, une surcouche danger trop invasive (born�
 `danger_reaction_range`), et un plafond de survie hors danger sous 0,50 sur les seeds de
 calibration (remonté par `hunger_depletion_rate` 0,70 dans une base amendée
 `danger_zone_oracle_base_v2.json`). Les probes de densité, de coût et de placement sur approche
-des ronciers restent sous le gate ; ce placement pose désormais 1 728/1 728 zones, mais la fuite
-rectiligne ne bat pas `aleatoire`, même à portée de réaction accrue. Une décision est requise
-entre un contournement stateful et l'abandon de l'axe ; les seeds réservés restent fermés et la
-roadmap v2 suspendue.
+des ronciers restent sous le gate. Le contournement avec cible et côté mémorisés réduit le coût
+mais échoue face à `aleatoire` (5/12 seeds, seuil 9/12 ; survie maximale 0,42). Une récupération
+de collision est préparée, sans campagne ; la recherche d'alternatives est en pause. Les seeds
+réservés restent fermés et la roadmap v2 suspendue.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

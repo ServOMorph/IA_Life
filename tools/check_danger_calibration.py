@@ -83,7 +83,9 @@ def evaluate_point(grid_key: tuple, arms: dict[str, dict[int, dict[str, Any]]], 
         if sorted(arms[arm]) != seeds:
             return {"grid_key": grid_key, "incomplete": [f"{arm}:seeds_mismatch"]}
 
-    eviter, viser, ignorer, aleatoire = (arms[a] for a in REQUIRED_ARMS)
+    eviter = arms["danger_eviter"]
+    viser = arms["danger_viser"]
+    aleatoire = arms["aleatoire"]
 
     cost_agree = sum(1 for s in seeds if eviter[s]["danger_cost"] < viser[s]["danger_cost"])
     result_agree_viser = sum(1 for s in seeds if result_tuple(eviter[s]) > result_tuple(viser[s]))

@@ -1,7 +1,7 @@
 # Contexte — ia_life
 
 ## Objectif (immuable sauf décision explicite)
-Créer un environnement Godot avec 2 personnages lowpoly pilotés chacun par un LLM, capables de se déplacer et de communiquer entre eux (loggé), afin d'étudier l'évolution de leurs comportements face aux modifications de l'environnement de jeu.
+Créer un environnement Godot avec 4 personnages lowpoly, dont un est piloté par le développeur et les autres par des LLM, capables de se déplacer et de communiquer entre eux (loggé), afin d'étudier l'évolution de leurs comportements face aux modifications de l'environnement de jeu.
 
 ## Stack / contraintes techniques (stable, rarement modifié)
 Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les campagnes ;
@@ -10,22 +10,12 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible (configs versionnées, logs JSONL, campagnes parallélisées).
 Phases 1 à 8 closes ; axe apprentissage v2 suspendu après égalité statistique avec le hasard.
-`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT], Phase 3 [EN COURS]. Le placement
-`approche_roncier` est validé (1 728/1 728 zones posées), mais aucune calibration ne franchit le
-gate causal. La fuite rectiligne ne bat pas `aleatoire`, même à portée accrue ; décision requise
-entre un contournement stateful et l'abandon de l'axe. Les seeds réservés restent fermés.
+`roadmap_environnement_apprenable_v3.md` : Phases 0-2 [FAIT], Phase 3 [EN COURS]. Le contournement
+avec cible et côté mémorisés échoue à la calibration : 10/12 contre `viser`, 5/12 contre
+`aleatoire`, survie maximale 0,42. Une récupération de collision v3 est écrite et testée, mais
+non mesurée ; recherche d'alternatives en pause. Les seeds réservés restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-29 : axe d'évolution suivant retenu — apprentissage individuel (option 1B,
-  « heuristiques apprises ») : le personnage apprend en une vie quelle action de recherche de
-  nourriture marche selon sa situation de faim (table `(situation, action) → score`). 1A
-  (évolution/sélection) et 1C (RL formel) écartées pour l'instant. Plan : `roadmap_apprentissage.md`.
-- 2026-08-30 : Phase 1 de `roadmap_apprentissage.md` close (décideur adaptatif + engagement sur
-  l'action) ; correction de deux bugs de mécanique préexistants (seuil de recherche de
-  nourriture inversé, aucune sortie d'objectif de cueillette atteint) affectant automate et LLM
-  mock, revalidée sur six campagnes de référence rejouées à seeds identiques — voir
-  `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md` et
-  `_docs/decisions/2026-08-29_engagement-decision-adaptatif.md`.
 - 2026-08-30 : `roadmap_apprentissage.md` close côté code (Phases 2-4). Phase 2 : récompense sur
   la fenêtre d'engagement + MAJ en ligne + pénalité terminale + logs. Phase 3 : gate recalibré
   (bras de contrôle `exploration_epsilon` 1,0, même seed) franchi sur un seed. Phase 4 (balayage
@@ -78,3 +68,7 @@ entre un contournement stateful et l'abandon de l'axe. Les seeds réservés rest
   de portée 10/12/15 m invalide l'hypothèse d'une réaction trop tardive : une fuite rectiligne
   perturbe la ressource sans fournir de contournement. Voir
   `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
+- 2026-09-10 : contournement stateful testé sur calibration — coût évité nul et 10/12 contre
+  `viser`, mais 5/12 seulement contre `aleatoire`, survie maximale 0,42. Échec du gate ; v3
+  propose une récupération de collision non mesurée. Voir
+  `_docs/decisions/2026-09-10_contournement-stateful.md`.

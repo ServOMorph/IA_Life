@@ -26,6 +26,28 @@ Aucune.
 
 ---
 
+# Session du 2026-09-10
+
+## Décisions prises
+- Le placement sur approche de roncier est validé ; la fuite rectiligne est invalidée comme réponse suffisante au danger pour créer une tâche apprenable.
+
+## Livrables produits ou modifiés
+- `approche_roncier` : placement déterministe, télémétrie, smoke et sweep de seeds.
+- Campagnes v2 de placement et de portée de réaction : exécutées sur les seeds de calibration.
+
+## Hypothèses validées / invalidées
+- VALIDE : 1 728/1 728 zones de la campagne v2 sont placées.
+- INVALIDE : augmenter la portée de réaction suffit à faire battre `aleatoire` par `eviter`.
+- EN ATTENTE : un contournement stateful peut-il créer la séparation causale exigée ?
+
+## Prochaine étape exacte
+Demander la décision entre un contournement stateful et l'abandon de l'axe danger ; ne pas ouvrir les seeds réservés avant un gate de calibration franchi.
+
+## Question bloquante pour la session suivante
+Faut-il implémenter un contournement stateful ou abandonner l'axe danger ?
+
+---
+
 # Session du 2026-09-08
 
 ## Décisions prises

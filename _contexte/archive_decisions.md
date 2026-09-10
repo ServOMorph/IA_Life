@@ -76,3 +76,10 @@
   `_docs/decisions/2026-08-27_phase8-vision-perception.md`.
 - 2026-08-27 : Points ouverts Phase 7 clos — prompt few-shot LLM jugé non nécessaire, coopération
   sociale validée statistiquement (5 seeds, jamais nulle).
+
+---
+
+- 2026-08-29 : axe d'évolution retenu — apprentissage individuel intra-vie (1B), table
+  `(situation, action) → score` sur la faim ; 1A et 1C écartés à ce stade.
+- 2026-08-30 : Phase 1 de la première roadmap apprentissage close : décideur adaptatif engagé,
+  correctifs de recherche/cueillette revalidés sur les campagnes de référence.

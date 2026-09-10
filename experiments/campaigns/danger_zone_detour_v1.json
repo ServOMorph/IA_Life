@@ -1,0 +1,25 @@
+{
+  "campaign_id": "danger-zone-detour-v1",
+  "_comment": "Hypothese 2026-09-10 : conserver cible et cote de contournement restaure la cueillette. Point unique herite du probe approche 12 zones / marge 3 / rayon 6 / cout 0.8 / reaction 8. Meme primitive pour eviter et les choix eviter du bras aleatoire. Calibration exclusivement. Controle sans danger hors grille pour ne pas ecraser son nombre de zones.",
+  "base_config": "../danger_zone_oracle_base_v2.json",
+  "arms": [
+    {"name": "danger_eviter", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "eviter", "environment.game_config.danger_zone_count": 12}},
+    {"name": "danger_ignorer", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer", "environment.game_config.danger_zone_count": 12}},
+    {"name": "danger_viser", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "viser", "environment.game_config.danger_zone_count": 12}},
+    {"name": "aleatoire", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "aleatoire", "environment.game_config.danger_zone_count": 12}},
+    {"name": "pf_rm_er", "overrides": {"agents.individual.Rouge.fixed_policy_danger": "ignorer", "environment.game_config.danger_zone_count": 0}}
+  ],
+  "parameter_grid": {
+    "agents.individual.Rouge.danger_navigation_mode": ["contournement"],
+    "agents.individual.Rouge.danger_reaction_range": [8.0],
+    "environment.game_config.danger_zone_radius": [6.0],
+    "environment.game_config.danger_hunger_cost_rate": [0.8],
+    "environment.game_config.danger_zone_placement_mode": ["approche_roncier"],
+    "environment.game_config.danger_zone_approach_spawn_index": [0],
+    "environment.game_config.danger_zone_approach_clearance": [3.0]
+  },
+  "seeds": [20260921, 20260922, 20260923, 20260924, 20260925, 20260926, 20260927, 20260928, 20260929, 20260930, 20261001, 20261002],
+  "repetitions": 1,
+  "python_timeout_seconds": 900,
+  "output_dir": "../../results/_danger_zone_detour_v1"
+}

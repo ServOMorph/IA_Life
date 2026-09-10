@@ -85,7 +85,7 @@ def main() -> int:
             for line in mismatches:
                 print(f"  - {line}", file=sys.stderr)
             return 1
-        if compared == 0 or compared < len(run_names) - 1:
+        if compared == 0 or skipped:
             print(f"INDETERMINE : seulement {compared}/{len(run_names)} runs comparables (trop de crashs Godot).", file=sys.stderr)
             return 1
 

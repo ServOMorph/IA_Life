@@ -36,6 +36,9 @@ func _ready() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
+	_test_danger_detour()
+	_test_detour_decider_integration()
+	_test_detour_collision_recovery()
 	_test_game_data_settings()
 	_test_manual_berry_harvest()
 	_test_memory_navigation()
@@ -607,6 +610,43 @@ func _test_danger_response_direction_active_zone_ignores_reaction_range() -> voi
 	character.free()
 	zone.free()
 
+func _test_danger_detour() -> void:
+	var script = preload("res://scripts/danger_detour.gd")
+	var destination := {"id": "resource", "position": Vector3(12, 0, 0)}
+	var zone := {"id": "zone", "position": Vector3.ZERO, "radius": 6.0}
+	for step in [1.0 / 60.0, 1.0 / 30.0]:
+		var nav = script.new()
+		var pos := Vector3(-10, 0, 0)
+		var min_distance := INF
+		var kept_side := 0.0
+		var resumed := false
+		for tick in range(900):
+			var candidate: Dictionary = destination if tick == 0 else {"id": "other", "position": Vector3(-20, 0, 20)}
+			var direction: Vector3 = nav.steer(pos, candidate, [zone] if tick == 0 else [], step)
+			if tick == 0:
+				kept_side = nav.side
+			if nav.phase == "detour":
+				_expect(nav.side == kept_side, "Contournement : côté conservé sans visibilité.")
+			if not nav.target.is_empty():
+				_expect(nav.target["id"] == "resource", "Contournement : cible conservée malgré nouvelle ressource.")
+			resumed = resumed or nav.phase == "resume"
+			if nav.reason == "arrived":
+				break
+			pos += direction * 5.0 * step
+			min_distance = minf(min_distance, pos.length())
+		_expect(pos.distance_to(destination["position"]) <= script.ARRIVAL, "Contournement : ressource atteinte.")
+		_expect(min_distance > 6.0 and resumed, "Contournement : sans exposition puis reprise directe.")
+	var nav = script.new()
+	_expect(nav.steer(Vector3(-10, 0, 20), destination, [zone], 0.1).is_zero_approx(), "Contournement : danger hors trajet ignoré.")
+	nav.steer(Vector3(-10, 0, 0), destination, [zone], 0.1)
+	nav.steer(Vector3(-10, 0, 0), {}, [], 0.1, ["resource"])
+	_expect(nav.target.is_empty() and nav.reason == "target_invalid", "Contournement : ressource vidée libère la cible.")
+	nav.steer(Vector3(-10, 0, 0), destination, [zone], 0.1)
+	nav.steer(Vector3(-10, 0, 0), {}, [], 31.0)
+	_expect(nav.target.is_empty() and nav.reason == "timeout", "Contournement : blocage physique borné.")
+	var escape: Vector3 = nav.steer(Vector3.ZERO, destination, [zone], 0.1)
+	_expect(escape.is_finite() and not escape.is_zero_approx(), "Contournement : centre de zone non singulier.")
+
 func _test_fixed_policy_danger_dispatch() -> void:
 	_expect(VariableRegistry.CHARACTER.has("fixed_policy_danger"), "Politique fixe danger registre : fixed_policy_danger (Phase 2 v3) doit être déclaré.")
 	_expect((VariableRegistry.CHARACTER["fixed_policy_danger"]["options"] as Array).has("eviter"), "Politique fixe danger registre : 'eviter' doit figurer dans les options de fixed_policy_danger.")
@@ -620,6 +660,71 @@ func _test_fixed_policy_danger_dispatch() -> void:
 ## Observation de base hors situation de faim (fixed_policy_s1/s2/s3 sans effet), pour
 ## isoler la surcouche danger de la politique alimentaire — cf. principe d'isolation de la
 ## Phase 2 (roadmap_environnement_apprenable_v3).
+func _test_detour_collision_recovery() -> void:
+	var nav = preload("res://scripts/danger_detour.gd").new()
+	var target := {"id": "resource", "position": Vector3(12, 0, 0)}
+	var zone := {"id": "zone", "position": Vector3.ZERO, "radius": 6.0}
+	var pos := Vector3(-10, 0, 0)
+	nav.steer(pos, target, [zone], 0.1)
+	var original_side: float = nav.side
+	var reversals := 0
+	for i in range(50):
+		nav.steer(pos, {}, [], 0.1)
+		if nav.reason == "blocked_reverse":
+			reversals += 1
+	_expect(reversals == 1 and nav.side == -original_side, "Contournement : un seul changement de côté après collision persistante.")
+	_expect(nav.target["id"] == "resource", "Contournement : collision conserve la cible.")
+	for i in range(400):
+		var direction: Vector3 = nav.steer(pos, {}, [], 1.0 / 60.0)
+		if nav.reason == "arrived":
+			break
+		pos += direction * 5.0 / 60.0
+	_expect(pos.distance_to(target["position"]) < 0.8, "Contournement : rejoint la cible après récupération de collision.")
+
+func _test_detour_decider_integration() -> void:
+	var decider := _make_fixed_danger_decider("eviter", 7)
+	decider.danger_navigation_mode = "contournement"
+	var obs := _fixed_danger_observation({
+		"hunger": 40.0, "has_visible_ronce": true,
+		"position": Vector3(-10, 0, 0), "danger_response_direction": Vector3.RIGHT,
+		"visible_ronce_direction": Vector3.RIGHT,
+		"navigation_targets": {"ronce_visible": {"id": "resource", "position": Vector3(12, 0, 0)}},
+		"navigation_dangers": [{"id": "zone", "position": Vector3.ZERO, "radius": 6.0}],
+	})
+	var action := decider.decide(obs)
+	_expect(action["goal"] == "danger_detour", "Contournement : raccord au décideur fixe.")
+	obs["danger_response_direction"] = Vector3.ZERO
+	obs["navigation_dangers"] = []
+	obs["navigation_targets"] = {}
+	obs["has_visible_ronce"] = false
+	action = decider.decide(obs)
+	_expect(action["goal"] == "danger_detour", "Contournement : poursuit après perte de vision.")
+	obs["manual_control"] = true
+	action = decider.decide(obs)
+	_expect(action["goal"] == "controle_manuel" and decider._detour.target.is_empty(), "Contournement : contrôle manuel annule la cible.")
+	obs["manual_control"] = false
+	obs["has_visible_ronce"] = true
+	obs["danger_response_direction"] = Vector3.RIGHT
+	obs["navigation_targets"] = {"ronce_visible": {"id": "resource", "position": Vector3(12, 0, 0)}}
+	obs["navigation_dangers"] = [{"id": "zone", "position": Vector3.ZERO, "radius": 6.0}]
+	var random_decider := _make_fixed_danger_decider("aleatoire", 7)
+	random_decider.danger_navigation_mode = "contournement"
+	random_decider._danger_aleatoire_timer = 1.0
+	random_decider._danger_aleatoire_choice = "eviter"
+	var random_action := random_decider.decide(obs)
+	var fixed_action := decider.decide(obs)
+	_expect(random_action == fixed_action, "Contournement : même primitive pour le choix aléatoire eviter.")
+	random_decider._danger_aleatoire_choice = "viser"
+	random_action = random_decider.decide(obs)
+	_expect(random_action["goal"] == "danger_viser" and random_decider._detour.target.is_empty(), "Contournement : choix viser annule le détour.")
+	_expect(decider.updates_total == 0 and random_decider.updates_total == 0, "Contournement : aucune mise à jour du learner.")
+	decider._detour.reset()
+	obs["position"] = Vector3.ZERO
+	obs["danger_response_direction"] = Vector3.ZERO
+	obs["in_danger"] = true
+	action = decider.decide(obs)
+	_expect(action["goal"] == "danger_detour" and not action["direction"].is_zero_approx(), "Contournement : démarre aussi au centre exact du danger.")
+
 func _fixed_danger_observation(overrides: Dictionary = {}) -> Dictionary:
 	var observation := _adaptive_observation({
 		"hunger": 95.0,

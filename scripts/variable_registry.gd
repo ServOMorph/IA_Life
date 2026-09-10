@@ -24,6 +24,7 @@ const GAME_CONFIG: Dictionary = {
 }
 
 const CHARACTER: Dictionary = {
+	"danger_navigation_mode": {"label": "Navigation danger", "description": "Réponse d'évitement historique ou contournement avec cible mémorisée. Même primitive pour le bras aléatoire.", "scope": "individuelle", "category": "décision", "type": "enum", "options": ["rectiligne", "contournement"], "default": "rectiligne", "dynamic": false, "live_editable": false},
 	"move_speed": {"label": "Vitesse de déplacement", "description": "Vitesse de déplacement horizontale de l'agent.", "scope": "individuelle", "category": "déplacement", "type": "float", "min": 0.0, "max": 20.0, "default": 2.5, "dynamic": false, "live_editable": true},
 	"hunger": {"label": "Faim initiale", "description": "Niveau de faim de l'agent au démarrage (0 = mort, 100 = rassasié).", "scope": "individuelle", "category": "alimentation", "type": "float", "min": 0.0, "max": 100.0, "default": 100.0, "dynamic": true, "live_editable": false},
 	"hunger_depletion_rate": {"label": "Taux de déplétion de la faim", "description": "Vitesse à laquelle la faim diminue au fil du temps.", "scope": "individuelle", "category": "alimentation", "type": "float", "min": 0.0, "max": 20.0, "default": 0.6, "dynamic": false, "live_editable": false},

@@ -37,6 +37,7 @@ const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 @export var fixed_policy_s2: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s2"])
 @export var fixed_policy_s3: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_s3"])
 @export var fixed_policy_danger: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_danger"])
+@export var danger_navigation_mode: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["danger_navigation_mode"])
 @export var danger_reaction_range: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["danger_reaction_range"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
@@ -153,6 +154,7 @@ func _build_decider():
 		"politique_fixe":
 			var fixed := FixedPolicyDecider.new()
 			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, fixed_policy_s3, fixed_policy_danger, adaptive_decision_interval_seconds, display_name, decider_seed + hash(display_name))
+			fixed.danger_navigation_mode = danger_navigation_mode
 			return fixed
 		_:
 			return BaselineDecider.new()
@@ -343,6 +345,10 @@ func _apply_decision(scaled_delta: float) -> void:
 		"visible_danger_direction": danger_info["visible_danger_direction"],
 		"visible_danger_distance": danger_info["visible_danger_distance"],
 		"danger_response_direction": _danger_response_direction(danger_info),
+		"position": position,
+		"navigation_targets": _navigation_targets() if danger_navigation_mode == "contournement" else {},
+		"navigation_dangers": _navigation_dangers() if danger_navigation_mode == "contournement" else [],
+		"invalid_target_ids": _visible_empty_resource_ids() if danger_navigation_mode == "contournement" else [],
 	})
 	if not (action.has("goal") and action.has("direction") and action.has("renew_wander")
 			and action["goal"] is String and action["direction"] is Vector3 and action["renew_wander"] is bool):
@@ -616,6 +622,46 @@ func _direction_to_nearest_visible_ronce() -> Vector3:
 			nearest_distance = entry["distance"]
 			nearest_direction = entry["direction"]
 	return nearest_direction
+
+func _target_snapshot(node) -> Dictionary:
+	if not is_instance_valid(node):
+		return {}
+	return {"id": str(node.get_path()), "position": node.position}
+
+func _navigation_targets() -> Dictionary:
+	var visible = null
+	var nearest := INF
+	for entry in _visible_entities:
+		if entry["type"] == "roncier" and bool(entry["state"].get("has_berries", false)) and entry["distance"] < nearest:
+			visible = entry["node"]
+			nearest = entry["distance"]
+	return {
+		"ronce_visible": _target_snapshot(visible),
+		"ronce_memorisee": _target_snapshot(_nearest_usable_memory()),
+		"souvenir_ancien": _target_snapshot(_oldest_usable_memory()),
+	}
+
+func _visible_empty_resource_ids() -> Array:
+	var ids: Array = []
+	for entry in _visible_entities:
+		if entry["type"] == "roncier" and not bool(entry["state"].get("has_berries", false)):
+			ids.append(str(entry["node"].get_path()))
+	return ids
+
+func _navigation_dangers() -> Array:
+	var known: Dictionary = {}
+	for entry in _visible_entities:
+		if entry["type"] == "danger" and entry["distance"] <= danger_reaction_range:
+			var zone = entry["node"]
+			known[zone.zone_id] = {"id": zone.zone_id, "position": zone.position, "radius": zone.radius}
+	for zone in _active_danger_zones.values():
+		known[zone.zone_id] = {"id": zone.zone_id, "position": zone.position, "radius": zone.radius}
+	var ids := known.keys()
+	ids.sort()
+	var zones: Array = []
+	for id in ids:
+		zones.append(known[id])
+	return zones
 
 ## Danger le plus proche perçu par la vision générique (soumis à portée, angle et
 ## occlusion, comme tout autre type perceptible). Indépendant de l'exposition physique :

@@ -1,3 +1,18 @@
+## v0.33 — 2026-09-10
+
+### Ajouté
+- Contournement stateful des zones dangereuses : cible et côté mémorisés, télémétrie de navigation,
+  campagnes versionnées et tests automatisés.
+- Mode headless opt-in à pas fixe 60 Hz, reproduisant 8/8 summaries archivés et les contrôles
+  séquentiel/parallèle sans modifier `game_speed`.
+
+### Corrigé
+- L'évaluateur de calibration compare désormais `danger_eviter` à `danger_viser`, pas à `ignorer`.
+
+### Modifié
+- Le candidat de contournement v2 échoue au gate Phase 3 : 10/12 contre `viser`, 5/12 contre
+  `aleatoire`, survie maximale 0,42. V3, avec récupération de collision, reste non mesuré.
+
 ## v0.32 — 2026-09-10
 
 ### Ajouté

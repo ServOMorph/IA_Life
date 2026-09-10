@@ -205,6 +205,13 @@ seuils ci-dessus sont écrits avant la campagne et ne sont pas reformulés aprè
 l'échec vient du placement, d'un effet trop faible ou d'une tâche encore dominée par le hasard,
 puis demander une décision : seconde itération de mécanique ou abandon.
 
+**Itération de contournement (2026-09-10)** : cible et côté mémorisés. Le candidat v2 échoue :
+critères 1/2/3 à 10/12, 10/12, 5/12 et survie maximale 0,42. Les logs montrent 7 timeouts sur
+20 détours, compatibles avec des collisions bloquantes. V3 introduit un unique changement de côté
+après immobilisation, mais reste non mesuré à la pause. Décision et campagnes :
+`_docs/decisions/2026-09-10_contournement-stateful.md`. L'évaluateur compare désormais correctement
+`danger_eviter` à `danger_viser`; aucun seed réservé n'a été ouvert.
+
 ### Phase 4 — Confirmation réservée et gel v3 [À FAIRE]
 
 - Prendre le meilleur environnement sans consulter les seeds réservés.

@@ -36,9 +36,17 @@ def run_headless(overrides: dict, timeout_seconds: int = 150) -> int:
     env["IA_LIFE_HEADLESS_CONFIG"] = str(config_path)
     env["IA_LIFE_PROJECT_REVISION"] = project_revision()
 
+    command = [str(GODOT_EXE), "--headless", "--path", str(PROJECT_DIR)]
+    fixed_fps = env.get("IA_LIFE_HEADLESS_FIXED_FPS", "")
+    if fixed_fps:
+        if fixed_fps != "60":
+            config_path.unlink(missing_ok=True)
+            raise ValueError("IA_LIFE_HEADLESS_FIXED_FPS doit valoir 60 ou etre absent.")
+        command.extend(["--fixed-fps", fixed_fps])
+
     try:
         result = subprocess.run(
-            [str(GODOT_EXE), "--headless", "--path", str(PROJECT_DIR)],
+            command,
             env=env,
             timeout=timeout_seconds,
         )
