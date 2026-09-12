@@ -1,7 +1,11 @@
 # Roadmap — Dangers sur approche de ressources
 
 Créée le : 2026-09-09
-Statut : **[EN COURS]**
+Statut : **[EN PAUSE — Phases 1-2 FAIT, axe danger conditionnel]**
+
+Le placement sur approche a atteint sa limite expérimentale : aucun point ne passe le gate causal.
+Il n'ouvre pas les seeds réservés et ne relance pas l'axe danger, désormais extension conditionnelle
+de `roadmap_apprentissage_fonctionnel_proposition.md`.
 
 ## Objectif
 

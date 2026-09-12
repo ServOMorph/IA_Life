@@ -1,4 +1,4 @@
-# Signals — ia_life (MAJ 2026-09-10)
+# Signals — ia_life (MAJ 2026-09-12)
 
 ## Actions ouvertes
 
@@ -21,25 +21,25 @@
 - `scripts/check_kit.py` est absent : écart connu de `/close`, non bloquant pour les livrables applicatifs.
 - `AGENTS.md` et `GEMINI.md` sont des changements utilisateur hors périmètre, non inclus au commit.
 
-## Dernière session (2026-09-10)
+## Dernière session (2026-09-12)
 
-# Session du 2026-09-10
+# Session du 2026-09-12
 
 ## Décisions prises
-- Réorientation adoptée : la preuve alimentaire entre épisodes devient le chemin critique ; le danger devient une extension conditionnelle.
+- Réorientation confirmée : la preuve alimentaire entre épisodes reste le chemin critique ; le danger demeure une extension conditionnelle.
 
 ## Livrables produits ou modifiés
-- `_docs/2026-09-10_recherche_apprentissage.md` : analyse du code et recherches Web/GitHub sourcées.
-- `roadmap_apprentissage_fonctionnel_proposition.md` : roadmap de recherche, implémentation et validation.
-- `roadmap_apprentissage_v2.md`, `roadmap_environnement_apprenable_v3.md` : renvois vers la proposition, sans changement de statut.
+- `_docs/decisions/2026-09-10_reorientation-apprentissage.md` : décision d'adoption enregistrée.
+- `roadmap_apprentissage_fonctionnel_proposition.md` : statut Phase 0 et périmètre critique confirmés.
+- `README.md`, `_contexte/` : état courant aligné avec la décision.
 
 ## Hypothèses validées / invalidées
-- VALIDE : le chemin RL existant n'est qu'un socle de transport ; son reset, observation et retour ne suffisent pas encore à entraîner une politique alimentaire.
-- INVALIDE : l'échec des politiques fixes de danger suffit à conclure que le système global est inapprenable.
+- VALIDE : la Phase 0 est le préalable mesurable à toute implémentation d'apprentissage persistante.
+- INVALIDE : la calibration du danger est un préalable au chemin alimentaire.
 - EN ATTENTE : une table persistante apprend-elle une tâche alimentaire contrôlée avant tout recours à PPO ou à l'affinage d'un LLM ?
 
 ## Prochaine étape exacte
-Exécuter la Phase 0 : contrat d'épisode, seeds, bras, critères et budget préenregistrés.
+Exécuter la Phase 0 : versionner le contrat d'épisode, les seeds, les bras, les critères et le budget avant toute mesure.
 
 ## Question bloquante pour la session suivante
 Aucune.

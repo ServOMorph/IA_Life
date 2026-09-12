@@ -65,7 +65,7 @@ L'axe d'apprentissage individuel dispose d'un décideur adaptatif tabulaire, d'u
 contrôles appariés. Le mécanisme de danger est également en calibration : le contournement v2
 échoue face à `aleatoire` et le candidat v3 reste non mesuré ; les seeds réservés restent fermés.
 
-Une analyse du code et des références externes a produit une roadmap non adoptée : commencer par
+Une analyse du code et des références externes a produit une roadmap adoptée, en Phase 0 : commencer par
 la conservation des acquis entre épisodes et une tâche alimentaire simple, puis progresser vers
 le monde complet. Le chemin RL existant doit d'abord fournir un reset complet du monde, des
 observations de ressources et un retour événementiel. Voir

@@ -152,7 +152,7 @@ zone) : exposition `eviter` 0,75 s < `ignorer` 1,73/1,47 s < `viser` 11,98 s, re
 régression sur `p1_fixed_policy_selftest.json` (`check_fixed_policy.py`). 12 tests ajoutés à
 `run_manual_checks.gd`.
 
-### Phase 3 — Calibration sur seeds d'entraînement [EN COURS — engagée 2026-09-08]
+### Phase 3 — Calibration sur seeds d'entraînement [EN PAUSE — engagée 2026-09-08]
 
 - Balayer une petite grille : nombre de zones × rayon × coût de faim. Commencer grossier, puis
   raffiner une seule fois autour du meilleur candidat.
@@ -193,8 +193,8 @@ calibration, jamais les seeds réservés) :
 Depuis, les probes de densité 25/30/40, de coût 0,8/1,0/1,2 et de placement sur approche des
 ronciers ont tous échoué le gate. Le placement approche est complet depuis sa correction
 (1 728/1 728 zones), mais un probe de portée 10/12/15 m démontre que la fuite rectiligne ne bat
-pas `aleatoire`. Prochaine étape : décision utilisateur entre un mécanisme de contournement
-stateful et l'abandon de l'axe ; ne pas ouvrir les seeds réservés. Détail complet :
+pas `aleatoire`. L'axe est en pause comme extension conditionnelle ; ne pas ouvrir les seeds
+réservés. Détail complet :
 `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
 
 **Gate causal obligatoire** :

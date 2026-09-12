@@ -1,3 +1,9 @@
+## v0.35 — 2026-09-12
+
+### Modifié
+- Roadmap d'apprentissage adoptée : Phase 0 active, preuve alimentaire persistante prioritaire et axe danger conditionnel.
+- Documentation d'état et contexte alignés avec cette décision.
+
 ## v0.34 — 2026-09-10
 
 ### Ajouté
