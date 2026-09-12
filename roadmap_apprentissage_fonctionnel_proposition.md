@@ -115,6 +115,8 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 **Tests créés et exécutés.** Contact et stock réels, ressource hors contact sans récompense, symétrie des actions, reproductibilité, absence de réponse préchargée, sauvegarde/recharge et évaluation figée.
 
+**Correctif (2026-09-12).** La première exécution T0 a détecté une violation de l'évaluation figée : la sélection gloutonne créait une cellule Q absente et mettait à jour l'état RNG. Les deux écritures sont supprimées hors entraînement ; une régression après entraînement couvre ce cas. Les lanceurs T0 redirigent aussi le journal interne Godot dans `logs/`, car l'environnement d'exécution ne peut pas ouvrir le journal par défaut sous `user://logs`. La campagne n'est pas concluante et doit être réexécutée intégralement.
+
 **Gate proposé.** Sur validation, au moins 0,90 de réussite, gain d'au moins 0,30 sur l'initialisation et l'aléatoire comparable, gain positif pour chaque entraînement de développement. Confirmer la conservation après recharge. Ce gate est un jalon d'ingénierie, pas la preuve finale sur le monde complet.
 
 **Échec.** Si le contrôle scripté échoue, corriger le scénario/moteur. Si lui seul réussit, examiner observations, transitions et fréquence des premiers succès avant tout nouvel algorithme. À budget épuisé, publier la cause établie ou l'incertitude ; ne pas relancer une grille de danger.

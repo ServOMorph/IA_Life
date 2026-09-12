@@ -30,6 +30,7 @@ func _run() -> void:
 		return
 	_output_path = args[1]
 	var kind := args[3]
+	var succeeded := true
 	var initialization_seed := int(args[5])
 	if initialization_seed not in [310001001, 310001002, 310001003]:
 		push_error("Seed d'initialisation T0 invalide.")
@@ -41,13 +42,16 @@ func _run() -> void:
 			await _evaluate_initial(initialization_seed)
 			await _evaluate_random(initialization_seed)
 		"trained":
-			await _train_and_evaluate(initialization_seed, false)
+			succeeded = await _train_and_evaluate(initialization_seed, false)
 		"reset":
-			await _train_and_evaluate(initialization_seed, true)
+			succeeded = await _train_and_evaluate(initialization_seed, true)
 		_:
 			push_error("Type de lignée T0 invalide.")
 			get_tree().quit(2)
 			return
+	if not succeeded:
+		get_tree().quit(1)
+		return
 	if not _write_records():
 		push_error("Écriture des résultats T0 impossible.")
 		get_tree().quit(1)
@@ -90,7 +94,7 @@ func _evaluate_random(initialization_seed: int) -> void:
 		var result := await _run_random_episode(card_seed, rng)
 		_add_record("random_valid", initialization_seed, card_seed, 0, result, "random:%d" % rng.state)
 
-func _train_and_evaluate(initialization_seed: int, reset_each_episode: bool) -> void:
+func _train_and_evaluate(initialization_seed: int, reset_each_episode: bool) -> bool:
 	var table = _new_table(initialization_seed)
 	var completed_episodes := 0
 	for checkpoint in CHECKPOINTS:
@@ -107,8 +111,9 @@ func _train_and_evaluate(initialization_seed: int, reset_each_episode: bool) -> 
 			var result := await _run_episode(table, card_seed, false, false)
 			if table.checksum() != before:
 				push_error("L'évaluation T0 a modifié la table.")
-				return
+				return false
 			_add_record(arm, initialization_seed, card_seed, checkpoint, result, before)
+	return true
 
 func _new_table(initialization_seed: int):
 	var table := T0QTable.new()

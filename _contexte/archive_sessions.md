@@ -24,8 +24,6 @@ Phase 3 : calibration sur seeds d'entraînement (grille zones × rayon × coût 
 ## Question bloquante pour la session suivante
 Aucune.
 
----
-
 # Session du 2026-09-12
 
 ## Décisions prises
@@ -469,6 +467,28 @@ Aucune — checkpoint Phase 1 posé, /compact fait, Phase 2 prête.
 ## Prochaine étape exacte
 Phase 2 de `roadmap_environnement_apprenable_v3.md` : perception `_perceive` des zones, décideur
 `fixed_policy_danger` en surcouche, config smoke à `events` scriptés, gate sur scénario scripté.
+
+## Question bloquante pour la session suivante
+Aucune.
+
+---
+
+# Session du 2026-09-12
+
+## Décisions prises
+- T0 v2 retient une ronce à 2 m, sans récompense de distance, avant toute campagne.
+
+## Livrables produits ou modifiés
+- Scénario Godot T0, table persistante, tests de transitions et validateur de résultats : créés.
+- Exécuteur parallèle de neuf lignées, contrat T0 v2 et décision associée : créés.
+
+## Hypothèses validées / invalidées
+- VALIDE : contacts, cueillette, persistance, évaluation figée et contrôle scripté T0 sont testés.
+- INVALIDE : T0 v1 à 8 m est adapté à un Q-learning sparse-reward dans le budget fixé ; pivot v2 à 2 m.
+- EN ATTENTE : la table persistante atteint-elle le gate T0 sur les 96 validations ?
+
+## Prochaine étape exacte
+Exécuter `python tools/run_t0_campaign.py --output experiments/t0_v2_results.jsonl --jobs 3`, puis conclure le gate T0 sur le lot complet.
 
 ## Question bloquante pour la session suivante
 Aucune.

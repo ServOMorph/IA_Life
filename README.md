@@ -66,8 +66,9 @@ contrôles appariés. Le mécanisme de danger est également en calibration : le
 échoue face à `aleatoire` et le candidat v3 reste non mesuré ; les seeds réservés restent fermés.
 
 La roadmap d'apprentissage alimentaire est en Phase 2 : T0 v2 utilise une arène physique, une
-cueillette réelle, une table persistante et un exécuteur parallèle isolé. La campagne complète
-reste à mesurer ; aucun avantage appris n'est encore établi. Voir
+cueillette réelle, une table persistante et un exécuteur parallèle isolé. Une première tentative
+a révélé puis corrigé une mutation de table pendant l'évaluation ; la campagne complète reste à
+réexécuter et aucun avantage appris n'est encore établi. Voir
 `roadmap_apprentissage_fonctionnel_proposition.md`.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant

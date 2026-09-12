@@ -1,7 +1,7 @@
 extends Node
 
 const T0QTable = preload("res://scripts/t0_q_table.gd")
-const CHECKPOINT := "user://t0_transition_test.json"
+const CHECKPOINT := "res://logs/t0_transition_test.json"
 
 var _failures: Array[String] = []
 
@@ -13,6 +13,7 @@ func _run() -> void:
 	_test_terminal_and_truncation()
 	_test_reward_counted_once()
 	_test_frozen_evaluation()
+	_test_frozen_selection_after_training()
 	_test_save_reload_and_rng()
 	_test_incompatible_checkpoint_rejected()
 	_test_incompatible_schema_rejected()
@@ -63,6 +64,18 @@ func _test_frozen_evaluation() -> void:
 	var checksum := table.checksum()
 	_expect(not table.apply_transition(0, state, 3, 1.0, state, true, false, false), "Une évaluation figée ne doit pas mettre à jour la table.")
 	_expect(table.checksum() == checksum, "Le checksum doit rester invariant pendant l'évaluation.")
+
+func _test_frozen_selection_after_training() -> void:
+	var table := _table()
+	var state := table.state_key(3, true, T0QTable.START_ACTION)
+	var training_rng := RandomNumberGenerator.new()
+	training_rng.state = table.training_rng_state
+	table.select_epsilon_greedy(state, 1.0, training_rng)
+	var checksum := table.checksum()
+	var evaluation_rng := RandomNumberGenerator.new()
+	evaluation_rng.state = table.training_rng_state
+	table.select_epsilon_greedy(state, 0.0, evaluation_rng)
+	_expect(table.checksum() == checksum, "Une sélection figée après entraînement ne doit pas modifier le RNG de la table.")
 
 func _test_save_reload_and_rng() -> void:
 	var table := _table()

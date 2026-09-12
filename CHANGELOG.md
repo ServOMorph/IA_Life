@@ -1,3 +1,9 @@
+## v0.37 — 2026-09-12
+
+### Corrigé
+- T0 : l'évaluation figée ne modifie plus la table Q (RNG ou cellules absentes) et une lignée en erreur ne produit plus un faux succès.
+- Lanceurs Godot T0 : journaux internes redirigés dans le projet, avec reconnaissance du succès des tests malgré l'avertissement de certificats Windows.
+
 ## v0.36 — 2026-09-12
 
 ### Ajouté

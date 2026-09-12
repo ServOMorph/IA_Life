@@ -30,7 +30,9 @@ func state_key(resource_sector: int, resource_visible: bool, previous_action: in
 	return "%d:%d:%d" % [resource_sector, 1 if resource_visible else 0, previous_action]
 
 func select_greedy(state: String) -> int:
-	var values := _state_values(state)
+	if not _values.has(state):
+		return 0
+	var values: Array = _values[state]
 	var best_action := 0
 	var best_value := float(values[0])
 	for action in range(1, ACTION_COUNT):
@@ -41,13 +43,15 @@ func select_greedy(state: String) -> int:
 	return best_action
 
 func select_epsilon_greedy(state: String, epsilon: float, rng: RandomNumberGenerator) -> int:
-	if epsilon > 0.0 and rng.randf() < epsilon:
-		var random_action := rng.randi_range(0, ACTION_COUNT - 1)
+	if epsilon > 0.0:
+		if rng.randf() < epsilon:
+			var random_action := rng.randi_range(0, ACTION_COUNT - 1)
+			training_rng_state = rng.state
+			return random_action
+		var greedy_action := select_greedy(state)
 		training_rng_state = rng.state
-		return random_action
-	var action := select_greedy(state)
-	training_rng_state = rng.state
-	return action
+		return greedy_action
+	return select_greedy(state)
 
 func apply_transition(step_index: int, state: String, action: int, reward: float, next_state: String, terminated: bool, truncated: bool, training: bool = true) -> bool:
 	if not training:

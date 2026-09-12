@@ -41,7 +41,7 @@ def _expected_record(arm: str, initialization_seed: int, card_seed: int, checkpo
 
 
 def worker_command(output: Path, kind: str, initialization_seed: int) -> list[str]:
-    return [str(GODOT_EXE), "--headless", "--path", str(PROJECT_DIR), "--scene", "tools/t0_campaign.tscn", "--", "--output", str(output), "--kind", kind, "--initialization-seed", str(initialization_seed)]
+    return [str(GODOT_EXE), "--headless", "--path", str(PROJECT_DIR), "--log-file", str(output.with_suffix(".godot.log")), "--scene", "tools/t0_campaign.tscn", "--", "--output", str(output), "--kind", kind, "--initialization-seed", str(initialization_seed)]
 
 
 def run_worker(output: Path, kind: str, initialization_seed: int) -> tuple[Path, bool, int]:

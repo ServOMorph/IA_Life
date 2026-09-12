@@ -10,9 +10,9 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible : configurations versionnées, logs JSONL et campagnes parallélisées.
 La roadmap d'apprentissage alimentaire est en Phase 2 : T0 v2, table persistante et exécuteur isolé sont prêts.
-La campagne T0 n'est pas exécutée ; aucun gain d'apprentissage n'est établi.
+Une première tentative T0 est invalide avant agrégation ; l'évaluation figée et les lanceurs Godot ont été corrigés et testés.
+La campagne complète reste à réexécuter ; aucun gain d'apprentissage n'est établi.
 Le contournement danger v2 échoue au gate et v3 reste non mesuré, désormais extension conditionnelle.
-Le chemin RL actuel requiert un reset complet, des observations de ressources et un retour événementiel avant entraînement.
 Les seeds réservés de danger et de test T0 restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
