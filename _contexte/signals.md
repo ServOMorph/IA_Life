@@ -2,20 +2,21 @@
 
 ## Actions ouvertes
 
-- [P1|ouvert] Formaliser le contrat de la Phase 0 de l'apprentissage alimentaire.
-  fait quand: observations, actions, reset, seeds, bras, critères et budget sont versionnés avant toute mesure.
-  réf: `roadmap_apprentissage_fonctionnel_proposition.md` (Phase 0), `_docs/2026-09-10_recherche_apprentissage.md`.
+- [P1|ouvert] Exécuter puis analyser la campagne T0 v2 en processus isolés.
+  fait quand: les 1 248 résultats attendus sont complets, validés sans doublon et le gate T0 est conclu.
+  réf: `experiments/apprentissage_t0_contrat_v2.md`, `tools/run_t0_campaign.py`, `tools/t0_results.py`.
 - [P2|ouvert] Finaliser ou écarter le candidat v3 de contournement avant toute nouvelle campagne de danger.
   fait quand: le mécanisme a des tests verts et une campagne versionnée, ou son abandon est documenté.
   réf: `scripts/danger_detour.gd`, `experiments/campaigns/danger_zone_detour_v3.json`, `_docs/decisions/2026-09-10_contournement-stateful.md`.
-- [P3|dormant] Axe danger v3 en pause pendant la Phase 0 de l'apprentissage alimentaire.
+- [P3|dormant] Axe danger v3 en pause pendant la Phase 2 de l'apprentissage alimentaire.
   fait quand: une décision relance ou clôt l'axe danger, avec un candidat et une campagne documentés si relancé.
   réf: `roadmap_environnement_apprenable_v3.md`, `_docs/decisions/2026-09-10_contournement-stateful.md`.
 
 ## Contexte chaud
 
-- L'analyse relève trois limites du chemin RL actuel : reset du monde incomplet, observation sans ressources alimentaires et récompense hors mort presque constante ; aucune correction n'est encore appliquée.
-- La roadmap adoptée commence par une table persistante sur une micro-tâche alimentaire, avant une interface Gymnasium/PPO conditionnelle, puis les dangers et le LLM comme extensions mesurées.
+- Les Phases 0 et 1 de la roadmap alimentaire sont closes : contrat T0 v2, table persistante et validateur de résultats sont en place.
+- T0 v2 conserve la récompense de cueillette réelle et rapproche la ronce à 2 m ; la campagne est prête mais non exécutée.
+- Une exécution T0 à l'horizon prend 11,92 s réelles et environ 24 Mo statiques ; `tools/run_t0_campaign.py --jobs 3` sépare les neuf lignées sans modifier `game_speed`.
 - Contournement v2 : coût évité nul et 10/12 contre `viser`, mais 5/12 seulement contre `aleatoire` ; survie maximale 0,42. Le gate Phase 3 échoue, seeds réservés fermés.
 - `IA_LIFE_HEADLESS_FIXED_FPS=60` accélère les campagnes sans changer le pas de simulation : 8/8 summaries complets identiques hors `session_id`, et 4/4 comparaisons séquentiel/parallèle identiques.
 - `scripts/check_kit.py` est absent : écart connu de `/close`, non bloquant pour les livrables applicatifs.
@@ -26,20 +27,19 @@
 # Session du 2026-09-12
 
 ## Décisions prises
-- Réorientation confirmée : la preuve alimentaire entre épisodes reste le chemin critique ; le danger demeure une extension conditionnelle.
+- T0 v2 retient une ronce à 2 m, sans récompense de distance, avant toute campagne.
 
 ## Livrables produits ou modifiés
-- `_docs/decisions/2026-09-10_reorientation-apprentissage.md` : décision d'adoption enregistrée.
-- `roadmap_apprentissage_fonctionnel_proposition.md` : statut Phase 0 et périmètre critique confirmés.
-- `README.md`, `_contexte/` : état courant aligné avec la décision.
+- Scénario Godot T0, table persistante, tests de transitions et validateur de résultats : créés.
+- Exécuteur parallèle de neuf lignées, contrat T0 v2 et décision associée : créés.
 
 ## Hypothèses validées / invalidées
-- VALIDE : la Phase 0 est le préalable mesurable à toute implémentation d'apprentissage persistante.
-- INVALIDE : la calibration du danger est un préalable au chemin alimentaire.
-- EN ATTENTE : une table persistante apprend-elle une tâche alimentaire contrôlée avant tout recours à PPO ou à l'affinage d'un LLM ?
+- VALIDE : contacts, cueillette, persistance, évaluation figée et contrôle scripté T0 sont testés.
+- INVALIDE : T0 v1 à 8 m est adapté à un Q-learning sparse-reward dans le budget fixé ; pivot v2 à 2 m.
+- EN ATTENTE : la table persistante atteint-elle le gate T0 sur les 96 validations ?
 
 ## Prochaine étape exacte
-Exécuter la Phase 0 : versionner le contrat d'épisode, les seeds, les bras, les critères et le budget avant toute mesure.
+Exécuter `python tools/run_t0_campaign.py --output experiments/t0_v2_results.jsonl --jobs 3`, puis conclure le gate T0 sur le lot complet.
 
 ## Question bloquante pour la session suivante
 Aucune.

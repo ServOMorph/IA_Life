@@ -1,3 +1,12 @@
+## v0.36 — 2026-09-12
+
+### Ajouté
+- T0 v2 : scénario alimentaire physique, table Q persistante, tests de transitions et validateur de résultats.
+- Exécuteur de neuf lignées isolées pour la campagne T0, sans accélération de `game_speed`.
+
+### Modifié
+- Roadmap alimentaire : Phases 0-1 closes, Phase 2 engagée ; ronce T0 fixée à 2 m sans récompense de distance.
+
 ## v0.35 — 2026-09-12
 
 ### Modifié

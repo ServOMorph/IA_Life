@@ -26,6 +26,29 @@ Aucune.
 
 ---
 
+# Session du 2026-09-12
+
+## Décisions prises
+- Réorientation confirmée : la preuve alimentaire entre épisodes reste le chemin critique ; le danger demeure une extension conditionnelle.
+
+## Livrables produits ou modifiés
+- `_docs/decisions/2026-09-10_reorientation-apprentissage.md` : décision d'adoption enregistrée.
+- `roadmap_apprentissage_fonctionnel_proposition.md` : statut Phase 0 et périmètre critique confirmés.
+- `README.md`, `_contexte/` : état courant aligné avec la décision.
+
+## Hypothèses validées / invalidées
+- VALIDE : la Phase 0 est le préalable mesurable à toute implémentation d'apprentissage persistante.
+- INVALIDE : la calibration du danger est un préalable au chemin alimentaire.
+- EN ATTENTE : une table persistante apprend-elle une tâche alimentaire contrôlée avant PPO ou LLM ?
+
+## Prochaine étape exacte
+Exécuter la Phase 0 : versionner le contrat d'épisode, les seeds, les bras, les critères et le budget avant toute mesure.
+
+## Question bloquante pour la session suivante
+Aucune.
+
+---
+
 # Session du 2026-09-10
 
 ## Décisions prises

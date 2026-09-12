@@ -176,6 +176,19 @@ func set_rl_action(action: int) -> void:
 	var directions := [Vector3.FORWARD, Vector3(-1, 0, -1), Vector3.LEFT, Vector3(-1, 0, 1), Vector3.BACK, Vector3(1, 0, 1), Vector3.RIGHT]
 	_rl_direction = directions[clamp(action, 0, directions.size() - 1)].normalized()
 
+func set_t0_action(action: int) -> void:
+	var directions := [
+		Vector3.FORWARD,
+		Vector3(1, 0, -1),
+		Vector3.RIGHT,
+		Vector3(1, 0, 1),
+		Vector3.BACK,
+		Vector3(-1, 0, 1),
+		Vector3.LEFT,
+		Vector3(-1, 0, -1),
+	]
+	_rl_direction = directions[clamp(action, 0, directions.size() - 1)].normalized()
+
 func reset_for_rl(spawn_position: Vector3) -> void:
 	position = spawn_position
 	velocity = Vector3.ZERO

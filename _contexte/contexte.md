@@ -9,10 +9,11 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible : configurations versionnées, logs JSONL et campagnes parallélisées.
-La roadmap d'apprentissage alimentaire est adoptée, en Phase 0 ; elle remplace le chemin critique de la v2.
+La roadmap d'apprentissage alimentaire est en Phase 2 : T0 v2, table persistante et exécuteur isolé sont prêts.
+La campagne T0 n'est pas exécutée ; aucun gain d'apprentissage n'est établi.
 Le contournement danger v2 échoue au gate et v3 reste non mesuré, désormais extension conditionnelle.
 Le chemin RL actuel requiert un reset complet, des observations de ressources et un retour événementiel avant entraînement.
-Les seeds réservés de danger restent fermés.
+Les seeds réservés de danger et de test T0 restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-30 : bifurcation de l'axe apprentissage tranchée — approche par étapes plutôt que
@@ -67,3 +68,6 @@ Les seeds réservés de danger restent fermés.
   critique : persistance entre épisodes, micro-tâche, interface d'entraînement puis monde complet.
   L'axe danger devient une extension conditionnelle ; les résultats et seeds historiques restent
   isolés. Voir `_docs/decisions/2026-09-10_reorientation-apprentissage.md`.
+- 2026-09-12 : T0 v2 fixe une ronce à 2 m sans récompense de distance ; scénario physique,
+  table persistante, validation et exécution parallèle par lignées sont prêts. La campagne n'a pas
+  été lancée ; aucun gain n'est conclu. Voir `_docs/decisions/2026-09-12_t0-alimentaire-v2.md`.
