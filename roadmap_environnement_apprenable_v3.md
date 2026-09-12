@@ -1,14 +1,14 @@
 # Roadmap — Environnement apprenable v3 : zones dangereuses
 
-> **Proposition de réorientation — 2026-09-10, non adoptée.**
-> La [roadmap d'apprentissage proposée](D:/ServOMorph/IA_Life/roadmap_apprentissage_fonctionnel_proposition.md)
+> **Réorientation adoptée — 2026-09-10.**
+> La [roadmap d'apprentissage](D:/ServOMorph/IA_Life/roadmap_apprentissage_fonctionnel_proposition.md)
 > prévoit une première preuve alimentaire indépendante du danger, sur la base de cette
 > [analyse sourcée](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md).
-> Le danger deviendrait une extension. Cette proposition ne valide aucun candidat, ne modifie
-> aucun statut ci-dessous et n'autorise pas l'ouverture des seeds réservés.
+> Le danger est une extension conditionnelle : cette décision ne valide aucun candidat, ne modifie
+> aucun résultat ci-dessous et n'autorise pas l'ouverture des seeds réservés.
 
 Créée le : 2026-09-01
-Statut : **[EN COURS — Phases 0-2 FAIT, Phase 3 EN COURS, préalable à la reprise de `roadmap_apprentissage_v2.md`]**
+Statut : **[EN PAUSE — Phases 0-2 FAIT, Phase 3 non close ; extension conditionnelle de l'apprentissage]**
 
 ## Objectif
 
@@ -269,11 +269,12 @@ aucune campagne adaptative n'a encore utilisé les seeds réservés.
 - **Explosion de l'espace d'état.** Parade : état prioritaire de danger, pas de combinaison de
   toutes les situations alimentaires avec tous les niveaux de danger.
 
-## Condition de déblocage de `roadmap_apprentissage_v2.md`
+## Condition historique de déblocage de `roadmap_apprentissage_v2.md`
 
-Cette roadmap débloque l'autre roadmap **uniquement quand les Phases 0 à 5 sont [FAIT] et que le
-gate de la Phase 4 passe sur les 12 seeds réservés**. À ce moment-là, modifier
-`roadmap_apprentissage_v2.md` pour :
+Avant la réorientation adoptée le 2026-09-10, cette roadmap devait débloquer l'autre roadmap
+uniquement quand les Phases 0 à 5 étaient [FAIT] et que le gate de la Phase 4 passait sur les
+12 seeds réservés. Cette condition ne bloque plus l'apprentissage alimentaire ; elle reste
+nécessaire pour déclarer l'ancien axe danger validé.
 
 1. remplacer le bandeau « AXE SUSPENDU » par « REPRISE AUTORISÉE SUR ENVIRONNEMENT v3 » ;
 2. insérer une Phase 3b de raccord danger (observation, action, reward, schéma et tests) ;

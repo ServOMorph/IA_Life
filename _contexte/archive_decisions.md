@@ -1,5 +1,14 @@
 # Décisions structurantes archivées
 
+- 2026-08-30 : `roadmap_apprentissage.md` close côté code (Phases 2-4). Phase 2 : récompense sur
+  la fenêtre d'engagement + MAJ en ligne + pénalité terminale + logs. Phase 3 : gate recalibré
+  (bras de contrôle `exploration_epsilon` 1,0, même seed) franchi sur un seed. Phase 4 (balayage
+  `learning_rate` × `exploration_epsilon`, 2 seeds) : l'avantage 1B ne généralise pas,
+  `learning_rate` sans effet mesurable — discrétisation probablement trop grossière pour
+  apprendre en une vie. Bifurcation d'axe à trancher (affiner 1B, ou 1A/1C). Voir
+  `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`. `llm_vs_automate_v1` rejoué
+  post-correction : pas de régression avec le vrai LLM.
+
 - 2026-08-28 : Pont `com_telephone` migré vers le projet Roberto (hôte du serveur + template de
   référence unique). IA_Life devient un projet raccordé (README léger + `/roberto` surveillant
   `messages_ia_life.log` chez Roberto). Serveur/PWA retirés du dépôt IA_Life. Clôt l'action

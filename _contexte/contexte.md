@@ -9,20 +9,12 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible : configurations versionnées, logs JSONL et campagnes parallélisées.
-L'axe apprentissage v2 reste suspendu ; le contournement danger v2 échoue au gate et v3 reste non mesuré.
-Une analyse sourcée et une roadmap d'apprentissage alimentaire progressive sont produites, mais non adoptées.
+La roadmap d'apprentissage alimentaire est adoptée, en Phase 0 ; elle remplace le chemin critique de la v2.
+Le contournement danger v2 échoue au gate et v3 reste non mesuré, désormais extension conditionnelle.
 Le chemin RL actuel requiert un reset complet, des observations de ressources et un retour événementiel avant entraînement.
 Les seeds réservés de danger restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-30 : `roadmap_apprentissage.md` close côté code (Phases 2-4). Phase 2 : récompense sur
-  la fenêtre d'engagement + MAJ en ligne + pénalité terminale + logs. Phase 3 : gate recalibré
-  (bras de contrôle `exploration_epsilon` 1,0, même seed) franchi sur un seed. Phase 4 (balayage
-  `learning_rate` × `exploration_epsilon`, 2 seeds) : l'avantage 1B ne généralise pas,
-  `learning_rate` sans effet mesurable — discrétisation probablement trop grossière pour
-  apprendre en une vie. Bifurcation d'axe à trancher (affiner 1B, ou 1A/1C). Voir
-  `_docs/decisions/2026-08-30_apprentissage-intra-vie-faim.md`. `llm_vs_automate_v1` rejoué
-  post-correction : pas de régression avec le vrai LLM.
 - 2026-08-30 : bifurcation de l'axe apprentissage tranchée — approche par étapes plutôt que
   « affiner la discrétisation » seul ou bascule 1C immédiate. `roadmap_apprentissage_v2.md` créée
   (diagnostic en 5 défauts structurels, 7 phases gatées sur métrique de résultat, benchmark
@@ -71,3 +63,7 @@ Les seeds réservés de danger restent fermés.
   `viser`, mais 5/12 seulement contre `aleatoire`, survie maximale 0,42. Échec du gate ; v3
   propose une récupération de collision non mesurée. Voir
   `_docs/decisions/2026-09-10_contournement-stateful.md`.
+- 2026-09-10 : réorientation adoptée — la roadmap alimentaire progressive devient le chemin
+  critique : persistance entre épisodes, micro-tâche, interface d'entraînement puis monde complet.
+  L'axe danger devient une extension conditionnelle ; les résultats et seeds historiques restent
+  isolés. Voir `_docs/decisions/2026-09-10_reorientation-apprentissage.md`.

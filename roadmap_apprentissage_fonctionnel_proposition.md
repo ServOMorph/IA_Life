@@ -1,6 +1,6 @@
-# Roadmap proposée — Apprentissage fonctionnel dans IA_Life
+# Roadmap — Apprentissage fonctionnel dans IA_Life
 
-Proposition du 10 septembre 2026. Non adoptée, aucune phase de développement engagée.
+Adoptée le 10 septembre 2026. Statut : **[EN COURS — Phase 0]**.
 Analyse de référence : [diagnostic et recherche Web/GitHub](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md).
 
 Cette proposition remplace, si elle est retenue, le chemin critique « calibration du danger → reprise de l'apprentissage ». Elle conserve les résultats historiques, mais donne la priorité à une preuve d'apprentissage alimentaire entre épisodes. Les dangers deviennent une extension ; un agent LLM utilisant des compétences ou une mémoire d'expérience reste une destination explicite du projet.
@@ -75,7 +75,7 @@ Première preuve tabulaire : checkpoints à 0, 10, 50, 200 et 1 000 épisodes ma
 
 Mesurer d'abord transitions utiles/seconde, coût des resets et mémoire utilisée. Estimer ensuite `durée = transitions totales / débit observé + évaluations + resets`. Conserver `game_speed = 1` ; revalider séparément toute accélération à pas physique constant pour le nouveau chemin. Au plus deux variantes de représentation et une voie de repli algorithmique après le candidat principal : pas de recherche ouverte de combinaisons.
 
-## Phase 0 — Fixer la tâche et le protocole [TODO]
+## Phase 0 — Fixer la tâche et le protocole [EN COURS — engagée le 2026-09-10]
 
 **Recherche restante.** Utiliser le diagnostic déjà livré ; ne pas refaire une revue générale. Examiner seulement les points manquants : budget local, compatibilité Python/Godot, disponibilité d'une scène réduite réutilisant les mécaniques alimentaires. Relier chaque choix à une hypothèse mesurable.
 
@@ -213,4 +213,4 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 Les recherches initiales sont consignées dans l'analyse liée ; chaque phase complète uniquement la question nécessaire à sa réalisation. Insérer une phase de refactorisation dédiée seulement si une dette observée rend la suite difficile, et en expliciter le motif. Ne pas modifier les statuts pendant le développement : les preuves sont consignées, `/close` prononce la clôture.
 
-La rédaction de ce plan ne lance aucune de ses phases et ne déclenche pas les checkpoints. Ceux-ci s'appliquent lors de l'exécution future, entre phases. Le premier chantier à engager après adoption est le contrat d'épisode, suivi de la conservation des acquis et de T0.
+La Phase 0 est le chantier en cours. Les checkpoints s'appliquent entre phases ; la Phase 1 ne commence qu'après le checkpoint de la Phase 0 et confirmation écrite de l'utilisateur.

@@ -1,11 +1,11 @@
 # Roadmap — Apprentissage durable et mesurable
 
-> **Proposition de réorientation — 2026-09-10, non adoptée.**
+> **Réorientation adoptée — 2026-09-10.**
 > Une [analyse du code et de travaux Web/GitHub](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md)
-> et une [roadmap de remplacement proposée](D:/ServOMorph/IA_Life/roadmap_apprentissage_fonctionnel_proposition.md)
-> avancent la persistance et l'évaluation, puis une preuve alimentaire progressive.
-> Elles proposent de retirer le danger du chemin critique. Les statuts, verdicts et interdictions
-> historiques ci-dessous restent inchangés tant que cette réorientation n'est pas adoptée.
+> et une [roadmap adoptée](D:/ServOMorph/IA_Life/roadmap_apprentissage_fonctionnel_proposition.md)
+> avance la persistance et l'évaluation, puis une preuve alimentaire progressive.
+> Elle remplace le chemin critique de cette roadmap. Les statuts et verdicts historiques ci-dessous
+> restent des résultats archivés ; les Phases 4 à 6 ne sont plus le plan d'exécution.
 
 Créée le : 2026-08-30
 Succède à `roadmap_apprentissage.md` (4 phases closes, effet 1B non généralisé).
@@ -22,11 +22,11 @@ que le signal d'apprentissage est exploitable.
 > Détail : `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
 > Rouvrir la Phase 6 (approximation de fonction) ou une v3 seulement sur décision explicite.
 >
-> **Préalable v3 planifié (2026-09-01), sans levée de suspension.**
+> **Préalable v3 historique (remplacé le 2026-09-10).**
 > `roadmap_environnement_apprenable_v3.md` doit d'abord démontrer qu'une politique fixe
 > d'évitement de zones dangereuses bat le hasard sur 12 seeds réservés. Si toutes ses Phases 0-5
-> passent, cette roadmap sera amendée avec une Phase 3b, une baseline v3, puis reprendra à la
-> Phase 4. Jusque-là, ne pas relancer M2 v2, M3 ou les Phases 4-6.
+> passent, cette roadmap aurait été amendée avec une Phase 3b, une baseline v3, puis reprise à la
+> Phase 4. La roadmap adoptée remplace désormais cette dépendance ; ne pas relancer M2 v2, M3 ou les Phases 4-6.
 
 ## Diagnostic — pourquoi l'apprentissage actuel ne peut pas tenir
 
