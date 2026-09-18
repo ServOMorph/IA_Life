@@ -45,7 +45,7 @@ def worker_command(output: Path, kind: str, initialization_seed: int) -> list[st
 
 
 def run_worker(output: Path, kind: str, initialization_seed: int) -> tuple[Path, bool, int]:
-    completed = subprocess.run(worker_command(output, kind, initialization_seed), cwd=PROJECT_DIR, capture_output=True, text=True)
+    completed = subprocess.run(worker_command(output, kind, initialization_seed), cwd=PROJECT_DIR, capture_output=True, text=True, encoding="utf-8")
     succeeded = output.exists() and "SUCCÈS : campagne T0 terminée" in completed.stdout
     if not succeeded:
         sys.stderr.write(completed.stdout + completed.stderr)

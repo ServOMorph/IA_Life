@@ -5,21 +5,23 @@ const ACTION_COUNT := 8
 const ACTION_TICKS := 15
 const HORIZON_ACTIONS := 48
 const ARENA_HALF_SIZE := 12.0
-const RESOURCE_DISTANCE := 2.0
+const DEFAULT_RESOURCE_DISTANCE := 2.0
 
 const CharacterScript = preload("res://scripts/character.gd")
 const RonceScript = preload("res://scripts/ronce.gd")
 
 var card_seed := 0
 var resource_sector := 0
+var resource_distance := DEFAULT_RESOURCE_DISTANCE
 var character
 var ronce
 var action_count := 0
 var picked := false
 
-func configure(seed: int) -> void:
+func configure(seed: int, distance: float = DEFAULT_RESOURCE_DISTANCE) -> void:
 	card_seed = seed
 	resource_sector = posmod(seed, ACTION_COUNT)
+	resource_distance = distance
 
 func _ready() -> void:
 	GameSpeed.time_scale = 1.0
@@ -83,7 +85,7 @@ func _add_character() -> void:
 func _add_ronce() -> void:
 	ronce = RonceScript.new()
 	ronce.name = "RonceT0"
-	ronce.position = _sector_direction(resource_sector) * RESOURCE_DISTANCE + Vector3(0, 0.5, 0)
+	ronce.position = _sector_direction(resource_sector) * resource_distance + Vector3(0, 0.5, 0)
 	ronce.berries = 1
 	ronce.collision_layer = 0
 	ronce.collision_mask = 1

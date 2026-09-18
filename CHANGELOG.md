@@ -645,3 +645,7 @@
 
 ### Corrigé
 - Contrat RL : pas de décision de 0,25 s simulée et récompense de survie à +0,005/s.
+## v0.38 — 2026-09-18
+
+### Modifié
+- T0 v2 : campagne complète validée (1 248 résultats) ; gate atteint au checkpoint 1 000.

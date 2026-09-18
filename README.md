@@ -65,10 +65,10 @@ L'axe d'apprentissage individuel dispose d'un décideur adaptatif tabulaire, d'u
 contrôles appariés. Le mécanisme de danger est également en calibration : le contournement v2
 échoue face à `aleatoire` et le candidat v3 reste non mesuré ; les seeds réservés restent fermés.
 
-La roadmap d'apprentissage alimentaire est en Phase 2 : T0 v2 utilise une arène physique, une
-cueillette réelle, une table persistante et un exécuteur parallèle isolé. Une première tentative
-a révélé puis corrigé une mutation de table pendant l'évaluation ; la campagne complète reste à
-réexécuter et aucun avantage appris n'est encore établi. Voir
+La roadmap d'apprentissage alimentaire a franchi la Phase 2 : T0 v2 utilise une arène physique,
+une cueillette réelle, une table persistante et un exécuteur parallèle isolé. La campagne complète
+contient 1 248 résultats valides ; le candidat entraîné atteint 96/96 au checkpoint 1 000, contre
+36/96 pour l'initialisation figée et 70/96 pour l'aléatoire. Voir
 `roadmap_apprentissage_fonctionnel_proposition.md`.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
@@ -77,6 +77,5 @@ faisait sortir un agent d'un objectif de cueillette atteint. Corrigés et revali
 six campagnes de référence et sur `llm_vs_automate_v1` (vrai LLM Ollama) rejoués à seeds
 identiques — détail : `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`.
 
-L'assistant vocal `com_telephone` (pilotage du projet depuis un téléphone) n'est plus hébergé
-ici : le pont a été migré vers le projet Roberto le 2026-08-28. IA_Life en est un projet
-raccordé — `ROBERTO/com_telephone/` se limite à un README et la commande `/roberto`.
+L'intégration historique `com_telephone` a été retirée d'IA_Life. Le pilotage distant passe
+désormais par les fonctions Remote Control de Codex ou Claude Code.

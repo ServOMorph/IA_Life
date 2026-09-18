@@ -9,9 +9,9 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible : configurations versionnées, logs JSONL et campagnes parallélisées.
-La roadmap d'apprentissage alimentaire est en Phase 2 : T0 v2, table persistante et exécuteur isolé sont prêts.
-Une première tentative T0 est invalide avant agrégation ; l'évaluation figée et les lanceurs Godot ont été corrigés et testés.
-La campagne complète reste à réexécuter ; aucun gain d'apprentissage n'est établi.
+La roadmap d'apprentissage alimentaire a franchi la preuve T0 v2 : 1 248 résultats complets et valides.
+Le candidat entraîné réussit 96/96 au checkpoint 1 000, contre 36/96 initialement et 70/96 pour l'aléatoire ; le reset par épisode reste à 36/96.
+La prochaine étape est T1, qui requiert un contrat préenregistré avant toute mesure.
 Le contournement danger v2 échoue au gate et v3 reste non mesuré, désormais extension conditionnelle.
 Les seeds réservés de danger et de test T0 restent fermés.
 
@@ -71,3 +71,5 @@ Les seeds réservés de danger et de test T0 restent fermés.
 - 2026-09-12 : T0 v2 fixe une ronce à 2 m sans récompense de distance ; scénario physique,
   table persistante, validation et exécution parallèle par lignées sont prêts. La campagne n'a pas
   été lancée ; aucun gain n'est conclu. Voir `_docs/decisions/2026-09-12_t0-alimentaire-v2.md`.
+- 2026-09-18 : T0 v2 atteint son gate sur 1 248 résultats valides : `scripted` et les trois
+  lignées `trained` réussissent 96/96 au checkpoint 1 000 ; les contrôles restent inférieurs.

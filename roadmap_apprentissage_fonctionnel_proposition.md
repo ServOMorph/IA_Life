@@ -1,6 +1,6 @@
 # Roadmap — Apprentissage fonctionnel dans IA_Life
 
-Adoptée le 10 septembre 2026. Statut : **[EN COURS — Phase 2]**.
+Adoptée le 10 septembre 2026. Statut : **[EN ATTENTE — Phase 2 FAIT, confirmation requise avant Phase 3]**.
 Analyse de référence : [diagnostic et recherche Web/GitHub](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md).
 
 Cette roadmap remplace le chemin critique « calibration du danger → reprise de l'apprentissage ». Elle conserve les résultats historiques, mais donne la priorité à une preuve d'apprentissage alimentaire entre épisodes. Les dangers deviennent une extension ; un agent LLM utilisant des compétences ou une mémoire d'expérience reste une destination explicite du projet.
@@ -103,7 +103,7 @@ Les campagnes tabulaires peuvent d'abord utiliser un processus Godot frais par �
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 2 — Première preuve alimentaire entre épisodes [EN COURS — 2026-09-12]
+## Phase 2 — Première preuve alimentaire entre épisodes [FAIT — 2026-09-18]
 
 **Recherche ciblée.** Définir un exercice où la bonne réponse dépend d'une observation et où le moteur sait exécuter toutes les options. S'inspirer des tâches élémentaires MiniGrid sans importer sa simulation à la place de Godot.
 
@@ -116,6 +116,8 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **Tests créés et exécutés.** Contact et stock réels, ressource hors contact sans récompense, symétrie des actions, reproductibilité, absence de réponse préchargée, sauvegarde/recharge et évaluation figée.
 
 **Correctif (2026-09-12).** La première exécution T0 a détecté une violation de l'évaluation figée : la sélection gloutonne créait une cellule Q absente et mettait à jour l'état RNG. Les deux écritures sont supprimées hors entraînement ; une régression après entraînement couvre ce cas. Les lanceurs T0 redirigent aussi le journal interne Godot dans `logs/`, car l'environnement d'exécution ne peut pas ouvrir le journal par défaut sous `user://logs`. La campagne n'est pas concluante et doit être réexécutée intégralement.
+
+**Résultat (2026-09-18).** La campagne v2 contient 1 248 résultats valides, sans doublon ni identifiant inattendu. `scripted` et les trois lignées `trained` réussissent 96/96 au checkpoint 1 000 ; `initial_frozen` totalise 36/96, `random_valid` 70/96 et `reset_each_episode` 36/96. Les six critères du gate T0 sont atteints.
 
 **Gate proposé.** Sur validation, au moins 0,90 de réussite, gain d'au moins 0,30 sur l'initialisation et l'aléatoire comparable, gain positif pour chaque entraînement de développement. Confirmer la conservation après recharge. Ce gate est un jalon d'ingénierie, pas la preuve finale sur le monde complet.
 

@@ -24,6 +24,10 @@ func _run() -> void:
 		await _run_probe()
 		get_tree().quit(0)
 		return
+	if args.size() == 3 and args[0] == "--calibrate-random":
+		await _run_calibration(args[1], args[2])
+		get_tree().quit(0)
+		return
 	if args.size() != 6 or args[0] != "--output" or args[2] != "--kind" or args[4] != "--initialization-seed":
 		push_error("Usage : --probe ou --output chemin --kind baseline|trained|reset --initialization-seed seed")
 		get_tree().quit(2)
@@ -143,8 +147,8 @@ func _run_episode(table, card_seed: int, training: bool, epsilon_enabled: bool) 
 	await _free_scenario(scenario)
 	return result
 
-func _run_random_episode(card_seed: int, rng: RandomNumberGenerator) -> Dictionary:
-	var scenario = await _new_scenario(card_seed)
+func _run_random_episode(card_seed: int, rng: RandomNumberGenerator, distance: float = T0Scenario.DEFAULT_RESOURCE_DISTANCE) -> Dictionary:
+	var scenario = await _new_scenario(card_seed, distance)
 	var result: Dictionary = {}
 	while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
 		result = await scenario.execute_action(rng.randi_range(0, 7))
@@ -152,12 +156,31 @@ func _run_random_episode(card_seed: int, rng: RandomNumberGenerator) -> Dictiona
 	await _free_scenario(scenario)
 	return result
 
-func _new_scenario(card_seed: int):
+func _new_scenario(card_seed: int, distance: float = T0Scenario.DEFAULT_RESOURCE_DISTANCE):
 	var scenario = T0Scenario.new()
-	scenario.configure(card_seed)
+	scenario.configure(card_seed, distance)
 	add_child(scenario)
 	await get_tree().physics_frame
 	return scenario
+
+func _run_calibration(distance_str: String, rng_seed_str: String) -> void:
+	var distance := float(distance_str)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = int(rng_seed_str)
+	var successes := 0
+	var total := 0
+	for card_seed in range(310000301, 310000333):
+		var result := await _run_random_episode(card_seed, rng, distance)
+		if bool(result.get("success", false)):
+			successes += 1
+		total += 1
+	print(JSON.stringify({
+		"distance": distance,
+		"rng_seed": int(rng_seed_str),
+		"successes": successes,
+		"total": total,
+		"success_rate": float(successes) / float(total),
+	}))
 
 func _free_scenario(scenario) -> void:
 	scenario.queue_free()
