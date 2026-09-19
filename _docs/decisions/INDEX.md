@@ -6,6 +6,7 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 
 | Date | Décision | Statut | Détail |
 |------|----------|--------|--------|
+| 2026-09-19 | Gate T0 v2 non atteint : gain contre `random_valid` sous le seuil (0,25-0,28 < 0,30), corrige la clôture du 2026-09-18 | invalidé | [detail](2026-09-19_gate-t0-non-atteint.md) |
 | 2026-09-12 | T0 alimentaire v2 : ronce à 2 m, récompense limitée à la cueillette réelle | validé pour campagne | [detail](2026-09-12_t0-alimentaire-v2.md) |
 | 2026-09-10 | Réorientation de l'apprentissage : preuve alimentaire persistante avant extension danger | validé | [detail](2026-09-10_reorientation-apprentissage.md) |
 | 2026-09-10 | Contournement avec cible et côté mémorisés ; correction d'inversion des bras dans l'évaluateur | en cours — candidat v2 invalidé contre `aleatoire`, v3 non mesuré | [detail](2026-09-10_contournement-stateful.md) |

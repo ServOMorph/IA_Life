@@ -1,3 +1,11 @@
+## v0.38 — 2026-09-19
+
+### Corrigé
+- T0 v2 : le gate Phase 2 n'est pas atteint (gain contre `random_valid` sous le seuil de 0,30), contrairement au verdict de la clôture du 2026-09-18. Roadmap, contexte et README corrigés.
+
+### Ajouté
+- T0 : mode de calibration `--calibrate-random <distance> <rng_seed>` (`tools/t0_campaign.gd`, `scripts/t0_scenario.gd`) pour mesurer la réussite de l'aléatoire seul à distance variable, sur des seeds dédiés hors validation.
+
 ## v0.37 — 2026-09-12
 
 ### Corrigé

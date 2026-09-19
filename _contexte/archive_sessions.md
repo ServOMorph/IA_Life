@@ -492,3 +492,28 @@ Exécuter `python tools/run_t0_campaign.py --output experiments/t0_v2_results.js
 
 ## Question bloquante pour la session suivante
 Aucune.
+
+---
+
+# Session du 2026-09-18
+
+## Décisions prises
+- Le gate T0 v2 est atteint ; la progression vers T1 reste soumise à un nouveau contrat préenregistré.
+
+## Livrables produits ou modifiés
+- `experiments/t0_v2_results.jsonl` : 1 248 résultats de la campagne T0 v2.
+- `experiments/t0_v2_results.jsonl.workers/` : sorties isolées des neuf lignées.
+
+## Hypothèses validées / invalidées
+- VALIDE : le lot est complet et conforme ; `scripted` réussit 96/96 et `trained` 96/96 au checkpoint 1 000.
+- VALIDE : chaque lignée entraînée dépasse `initial_frozen` (12/32) et `random_valid` (23-24/32) ; `reset_each_episode` reste à 12/32.
+
+## Prochaine étape exacte
+Écrire et verrouiller le contrat T1 avant toute nouvelle campagne.
+
+## Question bloquante pour la session suivante
+Aucune.
+
+**Correction (2026-09-19) : le verdict « gate atteint » ci-dessus est erroné. Le gain contre
+`random_valid` (23-24/32, soit 0,25-0,28 de gain) est sous le seuil de 0,30 requis — voir la
+session du 2026-09-19 et `_docs/decisions/2026-09-19_gate-t0-non-atteint.md`.**

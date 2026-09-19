@@ -9,32 +9,16 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible : configurations versionnées, logs JSONL et campagnes parallélisées.
-La roadmap d'apprentissage alimentaire a franchi la preuve T0 v2 : 1 248 résultats complets et valides.
-Le candidat entraîné réussit 96/96 au checkpoint 1 000, contre 36/96 initialement et 70/96 pour l'aléatoire ; le reset par épisode reste à 36/96.
-La prochaine étape est T1, qui requiert un contrat préenregistré avant toute mesure.
+La roadmap d'apprentissage alimentaire reste en Phase 2 : le gate T0 v2 n'est pas atteint (clôture
+du 2026-09-18 corrigée le 2026-09-19) — gain contre `random_valid` sous le seuil de 0,30 (0,25-0,28
+selon la lignée), malgré 96/96 pour `trained`@1000 et une conservation confirmée.
+Une calibration de `random_valid` seul suggère une ronce à ~3 m plutôt que 2 m ; aucun contrat v3
+n'est rédigé ni verrouillé. Le travail T1 engagé en parallèle repose sur la prémisse (erronée) que
+la Phase 2 était close et doit être réexaminé.
 Le contournement danger v2 échoue au gate et v3 reste non mesuré, désormais extension conditionnelle.
 Les seeds réservés de danger et de test T0 restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-08-30 : bifurcation de l'axe apprentissage tranchée — approche par étapes plutôt que
-  « affiner la discrétisation » seul ou bascule 1C immédiate. `roadmap_apprentissage_v2.md` créée
-  (diagnostic en 5 défauts structurels, 7 phases gatées sur métrique de résultat, benchmark
-  avant/après à 6 bras figés). `roadmap_apprentissage.md` close ; `roadmap_roberto_multiprojet.md`
-  et `roadmap_experimentation.md` archivées dans `_docs/archives/`.
-- 2026-09-01 : Phases 0-1 de `roadmap_apprentissage_v2.md` closes. Phase 0 : parallélisme
-  reproductible de `run_campaign.py` (`--jobs/--retries`, bras nommés `arms`), bras gelé
-  `adaptatif_v1`. Phase 1 : décideur `politique_fixe`, environnement de référence gelé
-  (`vision` 15 / `hunger` 0,7 / `ronce` 30), gate franchi à n=12 (`pf_er_rm` 0,83 vs `pf_er_er`
-  0,17 ; bit apprenable = décision S2), mesure M0 prise. `pf_rv_rm` ≡ `automate` ; `aleatoire`
-  meilleur bras M0 (0,92). Voir `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md`.
-- 2026-09-01 : Phases 2-3 closes + **axe apprentissage suspendu** (branche « Échec »). Phase 2 :
-  récompense événementielle + amorçage TD (γ 0,9), franchit le plateau sans-apprentissage
-  (`adaptatif_v1` 0,50 < `aleatoire` 0,58) — mécanisme conservé. Phase 3 : espace d'action S3
-  ×5 + `souvenir_ancien` ; gates (a)/(b) passés (le second sur env v2 enrichi). Environnement
-  re-gelé en v2 (`eat_hunger_threshold` 90, `hunger` 0,9), rupture M0 v1 assumée. M1 v2 :
-  `adaptatif_courant` (0,67) ne se sépare pas de `aleatoire` (0,58) ni de `adaptatif_v1` au
-  seed apparié → suspension, M2-M5 et Phase 6 non engagées. Voir
-  `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
 - 2026-09-01 : environnement apprenable v3 planifié avant toute reprise du learner. Zones
   dangereuses localisées avec coût de faim, oracle fixe `eviter|ignorer|viser`, calibration puis
   validation sur 12 seeds réservés. La v2 ne sera débloquée qu'après ce gate — voir
@@ -73,3 +57,7 @@ Les seeds réservés de danger et de test T0 restent fermés.
   été lancée ; aucun gain n'est conclu. Voir `_docs/decisions/2026-09-12_t0-alimentaire-v2.md`.
 - 2026-09-18 : T0 v2 atteint son gate sur 1 248 résultats valides : `scripted` et les trois
   lignées `trained` réussissent 96/96 au checkpoint 1 000 ; les contrôles restent inférieurs.
+- 2026-09-19 : correction — le gate T0 v2 n'est pas atteint. Gain `trained`@1000 contre
+  `random_valid` = 0,271 agrégé (0,25-0,28 par lignée), sous le seuil de 0,30. Calibration
+  complémentaire : `random_valid` seul tombe de 0,73 (2 m) à ~0,31-0,47 (3 m). Voir
+  `_docs/decisions/2026-09-19_gate-t0-non-atteint.md`.

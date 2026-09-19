@@ -92,3 +92,25 @@
   `(situation, action) → score` sur la faim ; 1A et 1C écartés à ce stade.
 - 2026-08-30 : Phase 1 de la première roadmap apprentissage close : décideur adaptatif engagé,
   correctifs de recherche/cueillette revalidés sur les campagnes de référence.
+
+---
+
+- 2026-08-30 : bifurcation de l'axe apprentissage tranchée — approche par étapes plutôt que
+  « affiner la discrétisation » seul ou bascule 1C immédiate. `roadmap_apprentissage_v2.md` créée
+  (diagnostic en 5 défauts structurels, 7 phases gatées sur métrique de résultat, benchmark
+  avant/après à 6 bras figés). `roadmap_apprentissage.md` close ; `roadmap_roberto_multiprojet.md`
+  et `roadmap_experimentation.md` archivées dans `_docs/archives/`.
+- 2026-09-01 : Phases 0-1 de `roadmap_apprentissage_v2.md` closes. Phase 0 : parallélisme
+  reproductible de `run_campaign.py` (`--jobs/--retries`, bras nommés `arms`), bras gelé
+  `adaptatif_v1`. Phase 1 : décideur `politique_fixe`, environnement de référence gelé
+  (`vision` 15 / `hunger` 0,7 / `ronce` 30), gate franchi à n=12 (`pf_er_rm` 0,83 vs `pf_er_er`
+  0,17 ; bit apprenable = décision S2), mesure M0 prise. `pf_rv_rm` ≡ `automate` ; `aleatoire`
+  meilleur bras M0 (0,92). Voir `_docs/decisions/2026-08-31_calibrage-environnement-oracle.md`.
+- 2026-09-01 : Phases 2-3 closes + **axe apprentissage suspendu** (branche « Échec »). Phase 2 :
+  récompense événementielle + amorçage TD (γ 0,9), franchit le plateau sans-apprentissage
+  (`adaptatif_v1` 0,50 < `aleatoire` 0,58) — mécanisme conservé. Phase 3 : espace d'action S3
+  ×5 + `souvenir_ancien` ; gates (a)/(b) passés (le second sur env v2 enrichi). Environnement
+  re-gelé en v2 (`eat_hunger_threshold` 90, `hunger` 0,9), rupture M0 v1 assumée. M1 v2 :
+  `adaptatif_courant` (0,67) ne se sépare pas de `aleatoire` (0,58) ni de `adaptatif_v1` au
+  seed apparié → suspension, M2-M5 et Phase 6 non engagées. Voir
+  `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
