@@ -103,7 +103,7 @@ Les campagnes tabulaires peuvent d'abord utiliser un processus Godot frais par �
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 2 — Première preuve alimentaire entre épisodes [EN COURS — 2026-09-19, gate non atteint]
+## Phase 2 — Première preuve alimentaire entre épisodes [EN COURS — 2026-09-24, gate non atteint]
 
 **Recherche ciblée.** Définir un exercice où la bonne réponse dépend d'une observation et où le moteur sait exécuter toutes les options. S'inspirer des tâches élémentaires MiniGrid sans importer sa simulation à la place de Godot.
 
@@ -121,9 +121,11 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 **Correctif (2026-09-19).** Le calcul du 2026-09-18 est erroné sur le critère de gain contre l'aléatoire. Sur les mêmes 1 248 résultats : gain agrégé `trained`@1000 contre `random_valid` = 1,000 − 0,729 = 0,271, sous le seuil de 0,30 ; par lignée d'initialisation, ce gain vaut 0,281 / 0,250 / 0,281 (310001001/002/003), les trois sous le seuil. Le gate T0 v2 n'est donc **pas atteint** en l'état — voir `_docs/decisions/2026-09-19_gate-t0-non-atteint.md`. Calibration complémentaire (aléatoire seul, seeds 310000301-332, hors validation) : `random_valid` tombe à 0,31-0,47 à 3 m contre 0,73 à 2 m, ce qui suggère qu'une ronce légèrement plus éloignée dégagerait la marge requise sans revenir à la rareté du contrat v1 (8 m). Aucun contrat v3 n'est encore rédigé ni verrouillé.
 
+**Résultat T0 v3 (2026-09-24).** Le contrat v3 fixe une ronce à 3 m et de nouvelles réserves. Son lot complet de 1 248 résultats est conforme, mais le gate échoue : `scripted` réussit 96/96, tandis que `trained` atteint 44/96 (0,458) contre 58/96 (0,604) pour `random_valid`. Les checkpoints préenregistrés retenus sont 1000, 200 et 1000 ; chaque lignée entraînée reste sous l'aléatoire. La distance seule ne crée donc pas la séparation requise. T1 reste gelé et toute suite exige une nouvelle hypothèse écrite ; voir `_docs/decisions/2026-09-24_t0-v3-gate-non-atteint.md`.
+
 **Gate proposé.** Sur validation, au moins 0,90 de réussite, gain d'au moins 0,30 sur l'initialisation et l'aléatoire comparable, gain positif pour chaque entraînement de développement. Confirmer la conservation après recharge. Ce gate est un jalon d'ingénierie, pas la preuve finale sur le monde complet.
 
-**Échec.** Si le contrôle scripté échoue, corriger le scénario/moteur. Si lui seul réussit, examiner observations, transitions et fréquence des premiers succès avant tout nouvel algorithme. À budget épuisé, publier la cause établie ou l'incertitude ; ne pas relancer une grille de danger.
+**Échec.** Si le contrôle scripté échoue, corriger le scénario/moteur. Si lui seul réussit, examiner observations, transitions et fréquence des premiers succès avant tout nouvel algorithme. Après deux contrats T0 échoués, décider explicitement du pivot ou de l'abandon avant toute nouvelle campagne ; ne pas relancer une grille de danger ni T1.
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.

@@ -10,6 +10,7 @@ func _ready() -> void:
 
 func _run() -> void:
 	await _test_scripted_all_sectors()
+	await _test_v3_distance_all_sectors()
 	await _test_no_reward_outside_contact()
 	await _test_action_symmetry()
 	await _test_reproducibility()
@@ -27,6 +28,16 @@ func _test_scripted_all_sectors() -> void:
 		var result := await _scripted_episode(310000000 + sector)
 		_expect(bool(result["success"]), "Le contrôle scripté doit cueillir le secteur %d." % sector)
 		_expect(int(result["berries_picked"]) == 1 and int(result["ronce_berries"]) == 0, "Le succès du secteur %d doit vider la vraie ronce." % sector)
+
+func _test_v3_distance_all_sectors() -> void:
+	for sector in range(8):
+		var scenario = await _new_scenario(330000000 + sector, 3.0)
+		_expect(is_equal_approx(scenario.resource_distance, 3.0), "T0 v3 doit placer la ronce à 3 m.")
+		var result: Dictionary = {}
+		while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
+			result = await scenario.execute_action(scenario.resource_sector)
+		_expect(bool(result.get("success", false)), "Le contrôle scripté T0 v3 doit réussir au secteur %d." % sector)
+		await _free_scenario(scenario)
 
 func _test_no_reward_outside_contact() -> void:
 	var scenario = await _new_scenario(310000101)
@@ -81,9 +92,9 @@ func _scripted_episode(seed: int) -> Dictionary:
 	await _free_scenario(scenario)
 	return summary
 
-func _new_scenario(seed: int):
+func _new_scenario(seed: int, distance: float = T0Scenario.DEFAULT_RESOURCE_DISTANCE):
 	var scenario := T0Scenario.new()
-	scenario.configure(seed)
+	scenario.configure(seed, distance)
 	add_child(scenario)
 	await get_tree().physics_frame
 	return scenario

@@ -9,20 +9,13 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 
 ## État actuel (réécrit intégralement à chaque /close)
 Laboratoire headless reproductible : configurations versionnées, logs JSONL et campagnes parallélisées.
-La roadmap d'apprentissage alimentaire reste en Phase 2 : le gate T0 v2 n'est pas atteint (clôture
-du 2026-09-18 corrigée le 2026-09-19) — gain contre `random_valid` sous le seuil de 0,30 (0,25-0,28
-selon la lignée), malgré 96/96 pour `trained`@1000 et une conservation confirmée.
-Une calibration de `random_valid` seul suggère une ronce à ~3 m plutôt que 2 m ; aucun contrat v3
-n'est rédigé ni verrouillé. Le travail T1 engagé en parallèle repose sur la prémisse (erronée) que
-la Phase 2 était close et doit être réexaminé.
-Le contournement danger v2 échoue au gate et v3 reste non mesuré, désormais extension conditionnelle.
-Les seeds réservés de danger et de test T0 restent fermés.
+La roadmap d'apprentissage alimentaire reste en Phase 2 : T0 v2 et T0 v3 échouent le gate face à
+`random_valid`. T0 v3 à 3 m produit 1 248 résultats conformes, mais `trained` atteint 0,458 contre
+0,604 pour l'aléatoire ; déplacer la ronce ne suffit donc pas. T1 reste gelé jusqu'à une décision
+sur le pivot ou l'abandon de T0. Le contournement danger v2 échoue au gate et v3 reste non mesuré,
+désormais extension conditionnelle. Les seeds réservés de danger, T0 et T1 restent fermés.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-09-01 : environnement apprenable v3 planifié avant toute reprise du learner. Zones
-  dangereuses localisées avec coût de faim, oracle fixe `eviter|ignorer|viser`, calibration puis
-  validation sur 12 seeds réservés. La v2 ne sera débloquée qu'après ce gate — voir
-  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
 - 2026-09-06 : Phases 0-1 de `roadmap_environnement_apprenable_v3.md` closes — mécanique de zones
   dangereuses (Area3D statiques, RNG dérivé de la seed, coût de faim au temps simulé = taux max,
   télémétrie `danger_*`) validée headless + fenêtré. Outillage dev : autoload `DevState` (overrides
@@ -61,3 +54,6 @@ Les seeds réservés de danger et de test T0 restent fermés.
   `random_valid` = 0,271 agrégé (0,25-0,28 par lignée), sous le seuil de 0,30. Calibration
   complémentaire : `random_valid` seul tombe de 0,73 (2 m) à ~0,31-0,47 (3 m). Voir
   `_docs/decisions/2026-09-19_gate-t0-non-atteint.md`.
+- 2026-09-24 : T0 v3 (ronce à 3 m) est invalidé : 1 248 résultats conformes, mais `trained`
+  atteint 0,458 contre 0,604 pour `random_valid` et échoue au seuil absolu. T1 reste gelé ; voir
+  `_docs/decisions/2026-09-24_t0-v3-gate-non-atteint.md`.

@@ -3,23 +3,34 @@ extends Node
 const T0QTable = preload("res://scripts/t0_q_table.gd")
 const T0Scenario = preload("res://scripts/t0_scenario.gd")
 
-const FINGERPRINT := "t0_contract_v2|resource_distance=2.0|actions=8|ticks=15|horizon=48|alpha=0.20|gamma=0.90"
 const CHECKPOINTS := [0, 10, 50, 200, 1000]
 
 var _output_path := ""
 var _records: Array = []
 var _training_cards: Array[int] = []
 var _validation_cards: Array[int] = []
+var _experiment_id := "t0_contract_v2"
+var _fingerprint := "t0_contract_v2|resource_distance=2.0|actions=8|ticks=15|horizon=48|alpha=0.20|gamma=0.90"
+var _resource_distance := 2.0
+var _initialization_seeds: Array[int] = [310001001, 310001002, 310001003]
+var _random_seed_base := 310002001
+var _training_seed_start := 310000001
+var _validation_seed_start := 310000101
 
 func _ready() -> void:
-	for card_seed in range(310000001, 310000017):
-		_training_cards.append(card_seed)
-	for card_seed in range(310000101, 310000133):
-		_validation_cards.append(card_seed)
 	call_deferred("_run")
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
+	if args.size() == 3 and args[0] == "--probe" and args[1] == "--contract":
+		if args[2] != "t0_contract_v3":
+			push_error("Contrat T0 inconnu.")
+			get_tree().quit(2)
+			return
+		_configure_v3()
+		await _run_probe()
+		get_tree().quit(0)
+		return
 	if args.size() == 1 and args[0] == "--probe":
 		await _run_probe()
 		get_tree().quit(0)
@@ -28,15 +39,23 @@ func _run() -> void:
 		await _run_calibration(args[1], args[2])
 		get_tree().quit(0)
 		return
+	if args.size() == 8 and args[6] == "--contract":
+		if args[7] != "t0_contract_v3":
+			push_error("Contrat T0 inconnu.")
+			get_tree().quit(2)
+			return
+		_configure_v3()
+		args = args.slice(0, 6)
 	if args.size() != 6 or args[0] != "--output" or args[2] != "--kind" or args[4] != "--initialization-seed":
-		push_error("Usage : --probe ou --output chemin --kind baseline|trained|reset --initialization-seed seed")
+		push_error("Usage : --probe ou --output chemin --kind baseline|trained|reset --initialization-seed seed [--contract t0_contract_v3]")
 		get_tree().quit(2)
 		return
+	_configure_cards()
 	_output_path = args[1]
 	var kind := args[3]
 	var succeeded := true
 	var initialization_seed := int(args[5])
-	if initialization_seed not in [310001001, 310001002, 310001003]:
+	if initialization_seed not in _initialization_seeds:
 		push_error("Seed d'initialisation T0 invalide.")
 		get_tree().quit(2)
 		return
@@ -65,11 +84,11 @@ func _run() -> void:
 
 func _run_probe() -> void:
 	var started_ms := Time.get_ticks_msec()
-	var table = _new_table(310001001)
-	var result := await _run_episode(table, 310000101, false, false)
+	var table = _new_table(_initialization_seeds[0])
+	var result := await _run_episode(table, _validation_seed_start, false, false)
 	var elapsed_ms := Time.get_ticks_msec() - started_ms
 	print(JSON.stringify({
-		"probe": "t0_contract_v2",
+		"probe": _experiment_id,
 		"elapsed_seconds": float(elapsed_ms) / 1000.0,
 		"actions": result["actions"],
 		"success": result["success"],
@@ -93,7 +112,7 @@ func _evaluate_initial(initialization_seed: int) -> void:
 
 func _evaluate_random(initialization_seed: int) -> void:
 	var rng := RandomNumberGenerator.new()
-	rng.seed = 310002001 + (initialization_seed - 310001001)
+	rng.seed = _random_seed_base + _initialization_seeds.find(initialization_seed)
 	for card_seed in _validation_cards:
 		var result := await _run_random_episode(card_seed, rng)
 		_add_record("random_valid", initialization_seed, card_seed, 0, result, "random:%d" % rng.state)
@@ -121,11 +140,11 @@ func _train_and_evaluate(initialization_seed: int, reset_each_episode: bool) -> 
 
 func _new_table(initialization_seed: int):
 	var table := T0QTable.new()
-	table.configure(FINGERPRINT, initialization_seed)
+	table.configure(_fingerprint, initialization_seed)
 	return table
 
 func _run_episode(table, card_seed: int, training: bool, epsilon_enabled: bool) -> Dictionary:
-	var scenario = await _new_scenario(card_seed)
+	var scenario = await _new_scenario(card_seed, _resource_distance)
 	table.begin_episode()
 	var previous_action := T0QTable.START_ACTION
 	var result: Dictionary = {}
@@ -188,7 +207,7 @@ func _free_scenario(scenario) -> void:
 
 func _add_record(arm: String, initialization_seed: int, card_seed: int, checkpoint: int, result: Dictionary, checksum: String) -> void:
 	_records.append({
-		"experiment_id": "t0_contract_v2",
+		"experiment_id": _experiment_id,
 		"arm": arm,
 		"initialization_seed": initialization_seed,
 		"card_seed": card_seed,
@@ -198,8 +217,25 @@ func _add_record(arm: String, initialization_seed: int, card_seed: int, checkpoi
 		"truncated": bool(result.get("truncated", false)),
 		"actions": int(result.get("actions", 0)),
 		"table_checksum": checksum,
-		"config_fingerprint": FINGERPRINT,
+		"config_fingerprint": _fingerprint,
 	})
+
+func _configure_v3() -> void:
+	_experiment_id = "t0_contract_v3"
+	_fingerprint = "t0_contract_v3|resource_distance=3.0|actions=8|ticks=15|horizon=48|alpha=0.20|gamma=0.90"
+	_resource_distance = 3.0
+	_initialization_seeds = [330001001, 330001002, 330001003]
+	_random_seed_base = 330002001
+	_training_seed_start = 330000001
+	_validation_seed_start = 330000101
+
+func _configure_cards() -> void:
+	_training_cards.clear()
+	_validation_cards.clear()
+	for card_seed in range(_training_seed_start, _training_seed_start + 16):
+		_training_cards.append(card_seed)
+	for card_seed in range(_validation_seed_start, _validation_seed_start + 32):
+		_validation_cards.append(card_seed)
 
 func _write_records() -> bool:
 	var file := FileAccess.open(_output_path, FileAccess.WRITE)

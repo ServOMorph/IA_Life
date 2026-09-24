@@ -65,13 +65,12 @@ L'axe d'apprentissage individuel dispose d'un décideur adaptatif tabulaire, d'u
 contrôles appariés. Le mécanisme de danger est également en calibration : le contournement v2
 échoue face à `aleatoire` et le candidat v3 reste non mesuré ; les seeds réservés restent fermés.
 
-La roadmap d'apprentissage alimentaire reste en Phase 2 : T0 v2 utilise une arène physique, une
-cueillette réelle, une table persistante et un exécuteur parallèle isolé. La campagne complète
-contient 1 248 résultats valides ; le candidat entraîné atteint 96/96 au checkpoint 1 000, contre
-36/96 pour l'initialisation figée et 70/96 pour l'aléatoire, mais le gain contre l'aléatoire
-(0,25-0,28 selon la lignée) reste sous le seuil de 0,30 requis par le gate. Voir
+La roadmap d'apprentissage alimentaire reste en Phase 2 : les lots complets T0 v2 et T0 v3
+échouent le gate face à l'aléatoire. T0 v3, avec une ronce à 3 m et de nouvelles seeds, contient
+1 248 résultats conformes : `trained` atteint 44/96 (0,458), contre 58/96 (0,604) pour
+`random_valid`. T1 est gelé jusqu'à une décision explicite de pivot ou d'abandon de T0. Voir
 `roadmap_apprentissage_fonctionnel_proposition.md` et
-`_docs/decisions/2026-09-19_gate-t0-non-atteint.md`.
+`_docs/decisions/2026-09-24_t0-v3-gate-non-atteint.md`.
 
 Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
 l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne

@@ -1,3 +1,11 @@
+## v0.39 — 2026-09-24
+
+### Ajouté
+- Contrat, campagne, validateur et résultats T0 v3 (ronce à 3 m, nouvelles seeds, 1 248 résultats).
+
+### Corrigé
+- Verdict T0 v3 : le gate Phase 2 n'est pas atteint ; `trained` reste sous `random_valid`.
+
 ## v0.38 — 2026-09-19
 
 ### Corrigé

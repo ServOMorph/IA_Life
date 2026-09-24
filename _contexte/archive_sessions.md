@@ -517,3 +517,24 @@ Aucune.
 **Correction (2026-09-19) : le verdict « gate atteint » ci-dessus est erroné. Le gain contre
 `random_valid` (23-24/32, soit 0,25-0,28 de gain) est sous le seuil de 0,30 requis — voir la
 session du 2026-09-19 et `_docs/decisions/2026-09-19_gate-t0-non-atteint.md`.**
+
+---
+
+# Session du 2026-09-19
+
+## Décisions prises
+- Correction : le gate T0 v2 n'est pas atteint ; la clôture du 2026-09-18 est invalidée sur ce point.
+
+## Livrables produits ou modifiés
+- `scripts/t0_scenario.gd`, `tools/t0_campaign.gd` : calibration aléatoire à distance variable.
+- `_docs/decisions/2026-09-19_gate-t0-non-atteint.md` et les contextes : verdict T0 v2 corrigé.
+
+## Hypothèses validées / invalidées
+- INVALIDE : le gain T0 v2 contre `random_valid` satisfait le seuil de 0,30.
+- EN ATTENTE : une distance proche de 3 m rétablit-elle une marge suffisante ?
+
+## Prochaine étape exacte
+Décider et verrouiller une correction T0 avant toute nouvelle campagne complète.
+
+## Question bloquante pour la session suivante
+Aucune.

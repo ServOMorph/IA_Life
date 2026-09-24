@@ -1,5 +1,10 @@
 # Décisions structurantes archivées
 
+- 2026-09-01 : environnement apprenable v3 planifié avant toute reprise du learner. Zones
+  dangereuses localisées avec coût de faim, oracle fixe `eviter|ignorer|viser`, calibration puis
+  validation sur 12 seeds réservés. La v2 ne sera débloquée qu'après ce gate — voir
+  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
+
 - 2026-08-30 : `roadmap_apprentissage.md` close côté code (Phases 2-4). Phase 2 : récompense sur
   la fenêtre d'engagement + MAJ en ligne + pénalité terminale + logs. Phase 3 : gate recalibré
   (bras de contrôle `exploration_epsilon` 1,0, même seed) franchi sur un seed. Phase 4 (balayage
