@@ -82,19 +82,23 @@ func checksum() -> String:
 		canonical.append([key, _values[key]])
 	return JSON.stringify({"schema_version": SCHEMA_VERSION, "config_fingerprint": config_fingerprint, "episode_count": episode_count, "training_rng_state": training_rng_state, "values": canonical})
 
-func save_checkpoint(path: String) -> Error:
+func save_checkpoint(path: String, lossless: bool = false) -> Error:
 	var file := FileAccess.open(path, FileAccess.WRITE)
 	if file == null:
 		return FileAccess.get_open_error()
-	file.store_string(JSON.stringify({
+	var payload := {
 		"schema_version": SCHEMA_VERSION,
 		"config_fingerprint": config_fingerprint,
 		"alpha": alpha,
 		"gamma": gamma,
 		"episode_count": episode_count,
 		"training_rng_state": str(training_rng_state),
-		"values": _values,
-	}))
+	}
+	if lossless:
+		payload["values_binary"] = Marshalls.raw_to_base64(var_to_bytes(_values))
+	else:
+		payload["values"] = _values
+	file.store_string(JSON.stringify(payload, "", true, true))
 	file.close()
 	return OK
 
@@ -110,8 +114,18 @@ static func load_checkpoint(path: String, expected_fingerprint: String) -> T0QTa
 		return null
 	if parsed.get("config_fingerprint", "") != expected_fingerprint:
 		return null
-	if not parsed.get("values", {}) is Dictionary:
-		return null
+	var values: Dictionary
+	if parsed.has("values_binary"):
+		if not parsed["values_binary"] is String:
+			return null
+		var decoded = bytes_to_var(Marshalls.base64_to_raw(parsed["values_binary"]))
+		if not decoded is Dictionary:
+			return null
+		values = decoded
+	else:
+		if not parsed.get("values", {}) is Dictionary:
+			return null
+		values = parsed["values"]
 	var table = load("res://scripts/t0_q_table.gd").new()
 	table.config_fingerprint = expected_fingerprint
 	table.alpha = float(parsed.get("alpha", -1.0))
@@ -122,7 +136,7 @@ static func load_checkpoint(path: String, expected_fingerprint: String) -> T0QTa
 	table.training_rng_state = int(parsed["training_rng_state"])
 	if table.alpha < 0.0 or table.gamma < 0.0 or table.episode_count < 0:
 		return null
-	table._values = parsed["values"]
+	table._values = values
 	return table
 
 func _state_values(state: String) -> Array:

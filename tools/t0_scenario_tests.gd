@@ -11,6 +11,7 @@ func _ready() -> void:
 func _run() -> void:
 	await _test_scripted_all_sectors()
 	await _test_v3_distance_all_sectors()
+	await _test_distance_progress()
 	await _test_no_reward_outside_contact()
 	await _test_action_symmetry()
 	await _test_reproducibility()
@@ -38,6 +39,18 @@ func _test_v3_distance_all_sectors() -> void:
 			result = await scenario.execute_action(scenario.resource_sector)
 		_expect(bool(result.get("success", false)), "Le contrôle scripté T0 v3 doit réussir au secteur %d." % sector)
 		await _free_scenario(scenario)
+
+func _test_distance_progress() -> void:
+	var toward = await _new_scenario(340000104, 3.0)
+	var toward_result: Dictionary = await toward.execute_action(toward.resource_sector)
+	_expect(float(toward_result["distance_progress"]) > 0.0, "Une action vers la ronce doit donner une progression positive.")
+	_expect(float(toward_result["reward"]) == 0.0, "La progression seule ne doit pas créditer la cueillette.")
+	await _free_scenario(toward)
+	var away = await _new_scenario(340000104, 3.0)
+	var away_result: Dictionary = await away.execute_action((away.resource_sector + 4) % 8)
+	_expect(float(away_result["distance_progress"]) < 0.0, "Une action opposée à la ronce doit donner une progression négative.")
+	_expect(float(away_result["reward"]) == 0.0, "S'éloigner ne doit pas modifier le retour de cueillette.")
+	await _free_scenario(away)
 
 func _test_no_reward_outside_contact() -> void:
 	var scenario = await _new_scenario(310000101)

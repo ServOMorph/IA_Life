@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource path="res://tools/t1_replay.gd" type="Script" id="1"]
+
+[node name="T1Replay" type="Node"]
+script = ExtResource("1")

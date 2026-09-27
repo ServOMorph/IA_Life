@@ -6,6 +6,11 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 
 | Date | Décision | Statut | Détail |
 |------|----------|--------|--------|
+| 2026-09-27 | T1 v4 : premier choix appris (96/96), consommation 70/96 sous le seuil ; Phase 4 ouverte | invalidé | [detail](2026-09-27_t1-v4-gate-non-atteint.md) |
+| 2026-09-27 | T1 v3 : consommation 82/96, premier choix 69/96 ; gate non atteint | invalidé | [detail](2026-09-27_phase4-t1-gate-non-atteint.md) |
+| 2026-09-27 | T1 v2 : consommation 74/96, premier choix 19/96 ; gate non atteint | invalidé | [detail](2026-09-27_t1-v2-gate-non-atteint.md) |
+| 2026-09-26 | Phase 3 : interface TCP/JSONL et adaptateurs Gymnasium T0/monde, gate technique atteint | validé | [detail](2026-09-26_phase3-interface-t0.md) |
+| 2026-09-26 | T0 v4 : première preuve alimentaire entre épisodes, gate atteint | validé | [detail](2026-09-26_t0-v4-gate-atteint.md) |
 | 2026-09-24 | Gate T0 v3 non atteint : `trained` (0,458) reste sous `random_valid` (0,604) malgré la ronce à 3 m | invalidé | [detail](2026-09-24_t0-v3-gate-non-atteint.md) |
 | 2026-09-19 | Gate T0 v2 non atteint : gain contre `random_valid` sous le seuil (0,25-0,28 < 0,30), corrige la clôture du 2026-09-18 | invalidé | [detail](2026-09-19_gate-t0-non-atteint.md) |
 | 2026-09-12 | T0 alimentaire v2 : ronce à 2 m, récompense limitée à la cueillette réelle | validé pour campagne | [detail](2026-09-12_t0-alimentaire-v2.md) |

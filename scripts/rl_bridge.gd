@@ -21,6 +21,9 @@ func start() -> Error:
 		GameLogger.log_event_data("rl_bridge", "Serveur TCP RL prêt", {"port": port})
 	return error
 
+func configure_port(value: int) -> void:
+	port = value
+
 func stop() -> void:
 	if _peer != null:
 		_peer.disconnect_from_host()

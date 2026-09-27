@@ -119,3 +119,22 @@
   `adaptatif_courant` (0,67) ne se sépare pas de `aleatoire` (0,58) ni de `adaptatif_v1` au
   seed apparié → suspension, M2-M5 et Phase 6 non engagées. Voir
   `_docs/decisions/2026-09-01_phase3-bifurcation-suspension-axe-apprentissage.md`.
+
+---
+
+- 2026-09-06 : Phases 0-1 de `roadmap_environnement_apprenable_v3.md` closes — mécanique de zones
+  dangereuses (Area3D statiques, RNG dérivé de la seed, coût de faim au temps simulé = taux max,
+  télémétrie `danger_*`) validée headless + fenêtré. Outillage dev : autoload `DevState` (overrides
+  seed / nb de zones), `run_danger_windowed.py`, panneau dev enrichi ; fix `AnimationPlayer.speed_scale`
+  indexé sur `GameSpeed.time_scale`. Prochaine : Phase 2 (perception + oracle).
+- 2026-09-07 : Phase 2 de `roadmap_environnement_apprenable_v3.md` close — perception du danger
+  raccordée à `_perceive`, décideur `fixed_policy_danger` (ignorer/eviter/viser) en surcouche
+  isolée de la politique alimentaire, événement scripté `teleport_agent`. Gate causal franchi sur
+  scénario scripté (seed 2) : exposition eviter 0,75 s < ignorer 1,73/1,47 s < viser 11,98 s,
+  reproductible ; aucune régression sur l'oracle Phase 1. Prochaine : Phase 3 (calibration).
+- 2026-09-08 : Phase 3 engagée, gate causal jamais franchi mais 3 causes d'échec en cascade
+  corrigées (bug tirage `aleatoire` par frame, surcouche danger bornée par
+  `danger_reaction_range`, plafond de survie remonté par `hunger_depletion_rate` 0,70 —
+  `danger_zone_oracle_base_v2.json`, v1 conservé). Densité de zones testée jusqu'à 20 (tendance
+  monotone, pas encore suffisant). Voir
+  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.

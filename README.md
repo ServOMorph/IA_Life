@@ -50,33 +50,16 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM local via Oll
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
-Le prototype est un laboratoire reproductible : configurations versionnées et hashées,
-logs JSONL, résumés par run, agrégation et campagnes headless. Les expériences utilisent
-une durée simulée déterministe et distinguent configuration fixe et état initial dynamique.
-Les Phases 1 à 8 du laboratoire sont closes : trois campagnes de référence (mémoire, rareté
-des ressources, profils contrastés), un Inspecteur générique piloté par le registre, des
-interactions sociales avancées (communication, coopération, agressivité), un décideur
-interchangeable automate/LLM (Ollama local, repli automatique sur erreur), et une vision
-générique (portée, angle, occlusion) qui remplace la découverte par contact seul et absorbe
-la perception sociale par code partagé (`Character._perceive`).
+Le prototype est un laboratoire headless reproductible avec configurations versionnées,
+campagnes et résultats JSONL. L'apprentissage alimentaire a franchi la première preuve T0 v4 :
+la politique entraînée réussit 96/96 validations, contre 12/96 avant entraînement et 57/96 pour
+l'aléatoire. La recharge des checkpoints reproduit les décisions sur les huit secteurs T0.
 
-L'axe d'apprentissage individuel dispose d'un décideur adaptatif tabulaire, d'une récompense
-événementielle et d'un amorçage TD. Il reste suspendu après un avantage non démontré face aux
-contrôles appariés. Le mécanisme de danger est également en calibration : le contournement v2
-échoue face à `aleatoire` et le candidat v3 reste non mesuré ; les seeds réservés restent fermés.
+La Phase 3 a validé un bridge TCP/JSONL local et deux adaptateurs Gymnasium, pour T0 et le monde
+alimentaire. Le gate technique est atteint ; il ne valide pas l'apprentissage dans le monde complet.
 
-La roadmap d'apprentissage alimentaire reste en Phase 2 : les lots complets T0 v2 et T0 v3
-échouent le gate face à l'aléatoire. T0 v3, avec une ronce à 3 m et de nouvelles seeds, contient
-1 248 résultats conformes : `trained` atteint 44/96 (0,458), contre 58/96 (0,604) pour
-`random_valid`. T1 est gelé jusqu'à une décision explicite de pivot ou d'abandon de T0. Voir
-`roadmap_apprentissage_fonctionnel_proposition.md` et
-`_docs/decisions/2026-09-24_t0-v3-gate-non-atteint.md`.
-
-Cet axe a révélé et corrigé (Phase 1) deux bugs de mécanique préexistants, affectant
-l'automate et le LLM mock : le seuil de recherche de nourriture était inversé, et rien ne
-faisait sortir un agent d'un objectif de cueillette atteint. Corrigés et revalidés sur les
-six campagnes de référence et sur `llm_vs_automate_v1` (vrai LLM Ollama) rejoués à seeds
-identiques — détail : `_docs/decisions/2026-08-29_correction-seuil-recherche-nourriture.md`.
-
-L'intégration historique `com_telephone` a été retirée d'IA_Life. Le pilotage distant passe
-désormais par les fonctions Remote Control de Codex ou Claude Code.
+La roadmap est en Phase 4. T1 v4 obtient 96/96 premiers choix corrects, mais seulement 70/96
+consommations : son gate reste non atteint. Les échecs après le premier pas demandent un diagnostic
+avant un nouveau contrat. Les tests finaux T0/T1 restent fermés ; T2/T3 ne sont pas engagés.
+L'axe danger demeure en pause. Voir `roadmap_apprentissage_fonctionnel_proposition.md` et
+`_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.

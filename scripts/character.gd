@@ -950,6 +950,46 @@ func _decay_memories(scaled_delta: float) -> void:
 func memorized_ronces_count() -> int:
 	return _memories.size()
 
+func training_food_observation(previous_action: int, collided: bool, progress: float) -> Dictionary:
+	var visible: Array = []
+	for entry in _perceive(vision_range, vision_angle_degrees, vision_blocked_by_terrain, "perceptible"):
+		if entry["type"] == "roncier":
+			visible.append(entry)
+	visible.sort_custom(func(a, b): return float(a["distance"]) < float(b["distance"]))
+	var targets: Array = []
+	for index in range(3):
+		if index >= visible.size():
+			targets.append([0.0, 0.0, 0.0, 0.0, 0.0])
+			continue
+		var entry: Dictionary = visible[index]
+		var direction: Vector3 = entry["direction"]
+		targets.append([1.0, direction.x, direction.z, clampf(float(entry["distance"]) / 160.0, 0.0, 1.0), 1.0 if bool(entry["state"].get("has_berries", false)) else 0.0])
+	var known: Array = []
+	for memory in _memories:
+		if is_instance_valid(memory.ronce):
+			known.append(memory)
+	known.sort_custom(func(a, b): return position.distance_squared_to(a.ronce.position) < position.distance_squared_to(b.ronce.position))
+	var memories: Array = []
+	for index in range(3):
+		if index >= known.size():
+			memories.append([0.0, 0.0, 0.0, 0.0, 0.0])
+			continue
+		var memory: Dictionary = known[index]
+		var relative: Vector3 = memory.ronce.position - position
+		relative.y = 0.0
+		var distance := relative.length()
+		var direction := relative / distance if distance > 0.0001 else Vector3.ZERO
+		memories.append([1.0, direction.x, direction.z, clampf(distance / 160.0, 0.0, 1.0), clampf(float(memory.strength) / MEMORY_MAX_STRENGTH, 0.0, 1.0)])
+	return {
+		"hunger": [clampf(hunger / 100.0, 0.0, 1.0)],
+		"inventory": [clampf(float(berries_carried) / maxf(1.0, float(GameConfig.max_berries_carried)), 0.0, 1.0)],
+		"targets": targets,
+		"memories": memories,
+		"collision": 1 if collided else 0,
+		"progress": [clampf(progress, -1.0, 1.0)],
+		"previous_action": previous_action,
+	}
+
 ## Dump de la table apprise, pour les agents en décideur adaptatif uniquement. Appelé à
 ## la mort de faim et en fin de simulation (main.gd) pour les survivants.
 func log_adaptive_table(reason: String) -> void:

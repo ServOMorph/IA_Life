@@ -3,6 +3,7 @@ extends Node3D
 const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 const DangerZoneScript = preload("res://scripts/danger_zone.gd")
 const DangerZonePlacement = preload("res://scripts/danger_zone_placement.gd")
+const RLProtocol = preload("res://scripts/rl_protocol.gd")
 
 const MAP_SIZE := 160.0
 const WALL_HEIGHT := 3.0
@@ -61,6 +62,21 @@ var _rl_simulation_clock := 0.0
 var _rl_steps := 0
 var _rl_max_steps := 40
 var _rl_waiting := true
+var _rl_protocol := RLProtocol.new()
+
+func configure_training_world(seed_value: int) -> void:
+	_experiment_seed = seed_value
+	_character_defaults = {"decider_type": "politique_fixe"}
+	_character_overrides = {"Rouge": {"vision_range": 25.0, "hunger": 50.0}}
+
+func training_character():
+	return _characters[0] if not _characters.is_empty() else null
+
+func training_agents() -> Array:
+	return _characters
+
+func training_resources() -> Array:
+	return _ronces
 
 func _ready() -> void:
 	_dev_mode = OS.get_environment(DEV_MODE_ENV_VAR) != ""
@@ -379,10 +395,15 @@ func _on_rl_message(message: Dictionary) -> void:
 		"reset":
 			_rl_reset(int(message.get("seed", _experiment_seed)), int(message.get("max_steps", 40)))
 		"step":
-			if _rl_waiting:
-				_rl_agent.set_rl_action(int(message.get("action", 0)))
-				_rl_waiting = false
-				GameSpeed.time_scale = 1.0
+			if not message.has("episode_id") or not message.has("step_id"):
+				_rl_bridge.send({"type": "error", "message": "episode_id et step_id requis"})
+				return
+			if not _rl_waiting or not _rl_protocol.accept_step(int(message["episode_id"]), int(message["step_id"])):
+				_rl_bridge.send({"type": "error", "message": "pas RL invalide ou périmé"})
+				return
+			_rl_agent.set_rl_action(int(message.get("action", 0)))
+			_rl_waiting = false
+			GameSpeed.time_scale = 1.0
 		"close":
 			_rl_bridge.send({"type": "closed"})
 			get_tree().quit()
@@ -396,6 +417,7 @@ func _rl_reset(seed_value: int, max_steps: int) -> void:
 	_rl_steps = 0
 	_rl_simulation_clock = 0.0
 	_rl_waiting = true
+	_rl_protocol.reset()
 	_rl_agent.reset_for_rl(_rl_spawn)
 	GameSpeed.time_scale = 0.0
 	_rl_bridge.send({"type": "observation", "observation": _rl_observation(), "reward": 0.0, "terminated": false, "truncated": false, "info": _rl_info()})
@@ -413,7 +435,9 @@ func _process_rl(delta: float) -> void:
 	var reward := 0.005 * 0.25 - 0.001
 	if terminated:
 		reward -= 2.0
-	_rl_waiting = true
+	if terminated or truncated:
+		_rl_protocol.finish()
+		_rl_waiting = true
 	GameSpeed.time_scale = 0.0
 	_rl_bridge.send({"type": "observation", "observation": _rl_observation(), "reward": reward, "terminated": terminated, "truncated": truncated, "info": _rl_info()})
 
@@ -429,7 +453,7 @@ func _rl_observation() -> Array:
 	]
 
 func _rl_info() -> Dictionary:
-	return {"agent": _rl_agent.display_name, "step": _rl_steps, "simulated_seconds": _rl_steps * 0.25, "hunger": _rl_agent.hunger, "berries_picked": _rl_agent.berries_picked_total, "berries_eaten": _rl_agent.berries_eaten_total}
+	return {"agent": _rl_agent.display_name, "episode_id": _rl_protocol.episode_id, "step_id": _rl_protocol.next_step, "step": _rl_steps, "simulated_seconds": _rl_steps * 0.25, "hunger": _rl_agent.hunger, "berries_picked": _rl_agent.berries_picked_total, "berries_eaten": _rl_agent.berries_eaten_total}
 
 func _quit_after_invalid_headless_config() -> void:
 	get_tree().quit(1)

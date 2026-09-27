@@ -16,6 +16,7 @@ var _initialization_seeds: Array[int] = [310001001, 310001002, 310001003]
 var _random_seed_base := 310002001
 var _training_seed_start := 310000001
 var _validation_seed_start := 310000101
+var _progress_reward_scale := 0.0
 
 func _ready() -> void:
 	call_deferred("_run")
@@ -23,11 +24,11 @@ func _ready() -> void:
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	if args.size() == 3 and args[0] == "--probe" and args[1] == "--contract":
-		if args[2] != "t0_contract_v3":
+		if args[2] != "t0_contract_v3" and args[2] != "t0_contract_v4":
 			push_error("Contrat T0 inconnu.")
 			get_tree().quit(2)
 			return
-		_configure_v3()
+		_configure_contract(args[2])
 		await _run_probe()
 		get_tree().quit(0)
 		return
@@ -40,14 +41,14 @@ func _run() -> void:
 		get_tree().quit(0)
 		return
 	if args.size() == 8 and args[6] == "--contract":
-		if args[7] != "t0_contract_v3":
+		if args[7] != "t0_contract_v3" and args[7] != "t0_contract_v4":
 			push_error("Contrat T0 inconnu.")
 			get_tree().quit(2)
 			return
-		_configure_v3()
+		_configure_contract(args[7])
 		args = args.slice(0, 6)
 	if args.size() != 6 or args[0] != "--output" or args[2] != "--kind" or args[4] != "--initialization-seed":
-		push_error("Usage : --probe ou --output chemin --kind baseline|trained|reset --initialization-seed seed [--contract t0_contract_v3]")
+		push_error("Usage : --probe ou --output chemin --kind baseline|trained|reset --initialization-seed seed [--contract t0_contract_v3|t0_contract_v4]")
 		get_tree().quit(2)
 		return
 	_configure_cards()
@@ -129,12 +130,27 @@ func _train_and_evaluate(initialization_seed: int, reset_each_episode: bool) -> 
 			table.finish_training_episode()
 			completed_episodes += 1
 		var arm := "reset_each_episode" if reset_each_episode else "trained"
+		var reloaded_table = null
+		if _experiment_id == "t0_contract_v4" and not reset_each_episode:
+			var checkpoint_path := _output_path + ".checkpoint_%d.json" % checkpoint
+			if table.save_checkpoint(checkpoint_path, true) != OK:
+				push_error("Sauvegarde du checkpoint T0 v4 impossible.")
+				return false
+			reloaded_table = T0QTable.load_checkpoint(checkpoint_path, _fingerprint)
+			if reloaded_table == null or reloaded_table.checksum() != table.checksum():
+				push_error("Recharge du checkpoint T0 v4 non identique.")
+				return false
 		for card_seed in _validation_cards:
 			var before: String = table.checksum()
 			var result := await _run_episode(table, card_seed, false, false)
 			if table.checksum() != before:
 				push_error("L'évaluation T0 a modifié la table.")
 				return false
+			if reloaded_table != null:
+				var replay: Dictionary = await _run_episode(reloaded_table, card_seed, false, false)
+				if replay != result or reloaded_table.checksum() != before:
+					push_error("Le checkpoint T0 v4 rechargé diverge sur la carte %d." % card_seed)
+					return false
 			_add_record(arm, initialization_seed, card_seed, checkpoint, result, before)
 	return true
 
@@ -149,20 +165,26 @@ func _run_episode(table, card_seed: int, training: bool, epsilon_enabled: bool) 
 	var previous_action := T0QTable.START_ACTION
 	var result: Dictionary = {}
 	var step_index := 0
+	var action_trace: Array[int] = []
 	var rng := RandomNumberGenerator.new()
 	rng.state = table.training_rng_state
 	while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
 		var observation: Dictionary = scenario.observation(previous_action)
 		var state: String = table.state_key(observation["resource_sector"], observation["resource_visible"], observation["previous_action"])
 		var action: int = table.select_epsilon_greedy(state, 0.20 if epsilon_enabled else 0.0, rng)
+		action_trace.append(action)
 		result = await scenario.execute_action(action)
 		var next_state: String = table.state_key(scenario.resource_sector, true, action)
-		table.apply_transition(step_index, state, action, float(result["reward"]), next_state, bool(result["terminated"]), bool(result["truncated"]), training)
+		var learning_reward := float(result["reward"])
+		if training:
+			learning_reward += _progress_reward_scale * float(result["distance_progress"])
+		table.apply_transition(step_index, state, action, learning_reward, next_state, bool(result["terminated"]), bool(result["truncated"]), training)
 		previous_action = action
 		step_index += 1
 	if training:
 		table.training_rng_state = rng.state
 	result["actions"] = scenario.action_count
+	result["action_trace"] = action_trace
 	await _free_scenario(scenario)
 	return result
 
@@ -228,6 +250,22 @@ func _configure_v3() -> void:
 	_random_seed_base = 330002001
 	_training_seed_start = 330000001
 	_validation_seed_start = 330000101
+
+func _configure_contract(contract: String) -> void:
+	if contract == "t0_contract_v3":
+		_configure_v3()
+	else:
+		_configure_v4()
+
+func _configure_v4() -> void:
+	_experiment_id = "t0_contract_v4"
+	_fingerprint = "t0_contract_v4|resource_distance=3.0|actions=8|ticks=15|horizon=48|alpha=0.20|gamma=0.90|progress=0.50"
+	_resource_distance = 3.0
+	_initialization_seeds = [340001001, 340001002, 340001003]
+	_random_seed_base = 340002001
+	_training_seed_start = 340000001
+	_validation_seed_start = 340000101
+	_progress_reward_scale = 0.50
 
 func _configure_cards() -> void:
 	_training_cards.clear()

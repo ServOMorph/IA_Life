@@ -1,6 +1,6 @@
 # Roadmap — Apprentissage fonctionnel dans IA_Life
 
-Adoptée le 10 septembre 2026. Statut : **[EN COURS — Phase 2, gate non atteint]**.
+Adoptée le 10 septembre 2026. Statut : **[EN COURS — Phase 4, T1 non validé]**.
 Analyse de référence : [diagnostic et recherche Web/GitHub](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md).
 
 Cette roadmap remplace le chemin critique « calibration du danger → reprise de l'apprentissage ». Elle conserve les résultats historiques, mais donne la priorité à une preuve d'apprentissage alimentaire entre épisodes. Les dangers deviennent une extension ; un agent LLM utilisant des compétences ou une mémoire d'expérience reste une destination explicite du projet.
@@ -103,7 +103,7 @@ Les campagnes tabulaires peuvent d'abord utiliser un processus Godot frais par �
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 2 — Première preuve alimentaire entre épisodes [EN COURS — 2026-09-24, gate non atteint]
+## Phase 2 — Première preuve alimentaire entre épisodes [FAIT — 2026-09-26, T0 v4]
 
 **Recherche ciblée.** Définir un exercice où la bonne réponse dépend d'une observation et où le moteur sait exécuter toutes les options. S'inspirer des tâches élémentaires MiniGrid sans importer sa simulation à la place de Godot.
 
@@ -123,6 +123,8 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 **Résultat T0 v3 (2026-09-24).** Le contrat v3 fixe une ronce à 3 m et de nouvelles réserves. Son lot complet de 1 248 résultats est conforme, mais le gate échoue : `scripted` réussit 96/96, tandis que `trained` atteint 44/96 (0,458) contre 58/96 (0,604) pour `random_valid`. Les checkpoints préenregistrés retenus sont 1000, 200 et 1000 ; chaque lignée entraînée reste sous l'aléatoire. La distance seule ne crée donc pas la séparation requise. T1 reste gelé et toute suite exige une nouvelle hypothèse écrite ; voir `_docs/decisions/2026-09-24_t0-v3-gate-non-atteint.md`.
 
+**Résultat T0 v4 (2026-09-26).** Le nouveau contrat gelé et son signal de progression franchissent le gate sur 1 248 résultats conformes : `trained` 96/96, `initial_frozen` 12/96, `random_valid` 57/96 et `scripted` 96/96. Les trois checkpoints retenus sont conservés et leur recharge reproduit les décisions. Cette preuve porte sur huit secteurs répétés, sans valider le monde complet ; voir `_docs/decisions/2026-09-26_t0-v4-gate-atteint.md`.
+
 **Gate proposé.** Sur validation, au moins 0,90 de réussite, gain d'au moins 0,30 sur l'initialisation et l'aléatoire comparable, gain positif pour chaque entraînement de développement. Confirmer la conservation après recharge. Ce gate est un jalon d'ingénierie, pas la preuve finale sur le monde complet.
 
 **Échec.** Si le contrôle scripté échoue, corriger le scénario/moteur. Si lui seul réussit, examiner observations, transitions et fréquence des premiers succès avant tout nouvel algorithme. Après deux contrats T0 échoués, décider explicitement du pivot ou de l'abandon avant toute nouvelle campagne ; ne pas relancer une grille de danger ni T1.
@@ -130,7 +132,7 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 3 — Interface d'entraînement extensible [TODO]
+## Phase 3 — Interface d'entraînement extensible [FAIT — 2026-09-26]
 
 **Recherche ciblée.** Comparer le bridge local à Godot RL Agents sur le même T0 : compatibilité Windows/Godot, cadence, reset, observation finale, headless et isolation de processus. Choisir un seul transport pour le nouveau chemin ; conserver une table persistante comme candidat si elle suffit.
 
@@ -142,10 +144,14 @@ Unifier les observations alimentaires structurées : faim, inventaire, cibles pe
 
 **Gate.** Le candidat tabulaire conserve sa performance T0 via l'adaptateur. Les contrats passent et le débit permet le budget suivant. Les dépendances sont épinglées après essai local. Une exportation ONNX ou une migration .NET ne fait pas partie du préalable.
 
+**Résultat.** Le bridge local TCP/JSONL et les adaptateurs Gymnasium T0/monde passent le gate technique : 12 tests d'intégration, vérification SB3, 24/24 secteurs T0 sur les trois checkpoints et contrôles de reset, isolation et latence. Le débit monde observé est de 44,7 actions/s sur le probe local ; voir `_docs/decisions/2026-09-26_phase3-interface-t0.md`.
+
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Apprendre une politique alimentaire dans un monde progressif [TODO]
+## Phase 4 — Apprendre une politique alimentaire dans un monde progressif [EN COURS — 2026-09-27, T1 non validé]
+
+**État T1.** Trois contrats successifs ont été mesurés sur leurs validations propres. V2 échoue sur la consommation (74/96) et le premier choix (19/96). V3 atteint 82/96 consommations mais 69/96 premiers choix corrects. V4 atteint 96/96 premiers choix mais 70/96 consommations, sous le seuil de 0,80. Le replay v4 indique des échecs de navigation après le premier pas ; la cause précise reste à isoler. Les tests finaux restent fermés ; T2 et T3 ne sont pas engagés. Voir `_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.
 
 **Recherche ciblée.** Distinguer limite de représentation, exploration et mémoire. La table persistante est le premier contrôle ; un petit réseau PPO/SB3 est le candidat si elle ne représente plus correctement les choix. Utiliser observations structurées et cadences communes, sans vision par pixels à ce stade.
 
@@ -221,4 +227,4 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 Les recherches initiales sont consignées dans l'analyse liée ; chaque phase complète uniquement la question nécessaire à sa réalisation. Insérer une phase de refactorisation dédiée seulement si une dette observée rend la suite difficile, et en expliciter le motif. Ne pas modifier les statuts pendant le développement : les preuves sont consignées, `/close` prononce la clôture.
 
-La Phase 2 est le chantier en cours. Les checkpoints s'appliquent entre phases ; la Phase 3 ne commence qu'après le checkpoint de la Phase 2 et confirmation écrite de l'utilisateur.
+La Phase 4 est le chantier en cours. Les checkpoints s'appliquent entre phases ; la Phase 5 ne commence qu'après le gate et le checkpoint de la Phase 4, puis confirmation écrite de l'utilisateur.

@@ -41,6 +41,7 @@ func execute_action(action: int) -> Dictionary:
 		return {"invalid": true}
 	if picked or action_count >= HORIZON_ACTIONS:
 		return {"invalid": true}
+	var distance_before := Vector2(character.global_position.x - ronce.global_position.x, character.global_position.z - ronce.global_position.z).length()
 	character.set_t0_action(action)
 	for _tick in ACTION_TICKS:
 		await get_tree().physics_frame
@@ -48,10 +49,12 @@ func execute_action(action: int) -> Dictionary:
 			picked = true
 			break
 	action_count += 1
+	var distance_after := Vector2(character.global_position.x - ronce.global_position.x, character.global_position.z - ronce.global_position.z).length()
 	var terminated: bool = picked or character.is_dead
 	var truncated: bool = not terminated and action_count >= HORIZON_ACTIONS
 	return {
 		"reward": 1.0 if picked else (-1.0 if character.is_dead else 0.0),
+		"distance_progress": distance_before - distance_after,
 		"terminated": terminated,
 		"truncated": truncated,
 		"success": picked,

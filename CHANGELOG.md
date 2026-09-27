@@ -1,3 +1,13 @@
+## v0.40 — 2026-09-27
+
+### Ajouté
+- Contrat, campagne, résultats et checkpoints T0 v4 ; gate de la première preuve alimentaire atteint.
+- Bridge TCP/JSONL local, adaptateurs Gymnasium T0/monde et tests d'intégration ; gate technique de la Phase 3 atteint.
+- Contrats, campagnes et diagnostics T1 v2 à v4, avec résultats et replays des checkpoints.
+
+### Modifié
+- Roadmap, contexte, README et journal des décisions : Phase 4 en cours ; T1 v4 sous le seuil de consommation malgré 96/96 premiers choix corrects.
+
 ## v0.39 — 2026-09-24
 
 ### Ajouté

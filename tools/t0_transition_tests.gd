@@ -2,6 +2,7 @@ extends Node
 
 const T0QTable = preload("res://scripts/t0_q_table.gd")
 const CHECKPOINT := "res://logs/t0_transition_test.json"
+const LOSSLESS_CHECKPOINT := "res://logs/t0_lossless_test.json"
 
 var _failures: Array[String] = []
 
@@ -15,11 +16,14 @@ func _run() -> void:
 	_test_frozen_evaluation()
 	_test_frozen_selection_after_training()
 	_test_save_reload_and_rng()
+	_test_lossless_checkpoint()
 	_test_incompatible_checkpoint_rejected()
 	_test_incompatible_schema_rejected()
 	_test_lineages_are_isolated()
 	if FileAccess.file_exists(CHECKPOINT):
 		DirAccess.remove_absolute(CHECKPOINT)
+	if FileAccess.file_exists(LOSSLESS_CHECKPOINT):
+		DirAccess.remove_absolute(LOSSLESS_CHECKPOINT)
 	if _failures.is_empty():
 		print("SUCCÈS : transitions et persistance T0 validées.")
 		get_tree().quit(0)
@@ -93,6 +97,15 @@ func _test_save_reload_and_rng() -> void:
 	var loaded_rng := RandomNumberGenerator.new()
 	loaded_rng.state = loaded.training_rng_state
 	_expect(table.select_epsilon_greedy(state, 1.0, original_rng) == loaded.select_epsilon_greedy(state, 1.0, loaded_rng), "La recharge doit reproduire la suite du RNG d'entraînement.")
+
+func _test_lossless_checkpoint() -> void:
+	var table := _table()
+	var state := table.state_key(3, true, T0QTable.START_ACTION)
+	table.apply_transition(0, state, 5, 0.15738291468312, state, false, false)
+	table.finish_training_episode()
+	_expect(table.save_checkpoint(LOSSLESS_CHECKPOINT, true) == OK, "La sauvegarde sans perte doit réussir.")
+	var loaded := T0QTable.load_checkpoint(LOSSLESS_CHECKPOINT, "t0-contract-v1")
+	_expect(loaded != null and loaded.checksum() == table.checksum(), "La recharge sans perte doit préserver les valeurs Q exactes.")
 
 func _test_incompatible_checkpoint_rejected() -> void:
 	_expect(T0QTable.load_checkpoint(CHECKPOINT, "empreinte-incompatible") == null, "Une empreinte incompatible doit être rejetée.")
