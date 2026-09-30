@@ -68,3 +68,9 @@ finales sont consommées ; une suite exige un contrat de confirmation v2. Un dé
 `politique_apprise` (table figée, repli compté) est livré en jeu à titre expérimental.
 L'axe danger demeure en pause. Voir `roadmap_apprentissage_fonctionnel_proposition.md` et
 `_docs/decisions/2026-09-30_t3-v3-confirmation-critere-non-atteint.md`.
+
+L'axe apprentissage est désormais en pause. Nouvelle orientation : les quatre personnages autonomes
+seront pilotés par un LLM local (`gemma3:1b`) qui choisit cibles et actions (ramasser, manger), avec
+mémoire des coordonnées de ronciers et décision asynchrone sans pause. Roadmap
+`roadmap_survie_llm.md` (Phase 0 en cours, aucun code écrit) ; décision dans
+`_docs/decisions/2026-09-30_survie-pilotee-par-llm.md`.

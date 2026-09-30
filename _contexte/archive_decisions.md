@@ -159,3 +159,7 @@
   été lancée ; aucun gain n'est conclu. Voir `_docs/decisions/2026-09-12_t0-alimentaire-v2.md`.
 - 2026-09-18 : T0 v2 atteint son gate sur 1 248 résultats valides : `scripted` et les trois
   lignées `trained` réussissent 96/96 au checkpoint 1 000 ; les contrôles restent inférieurs.
+- 2026-09-19 : correction — le gate T0 v2 n'est pas atteint. Gain `trained`@1000 contre
+  `random_valid` = 0,271 agrégé (0,25-0,28 par lignée), sous le seuil de 0,30. Calibration
+  complémentaire : `random_valid` seul tombe de 0,73 (2 m) à ~0,31-0,47 (3 m). Voir
+  `_docs/decisions/2026-09-19_gate-t0-non-atteint.md`.

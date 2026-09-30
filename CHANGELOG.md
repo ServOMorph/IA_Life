@@ -1,3 +1,12 @@
+## v0.43 — 2026-09-30
+
+### Ajouté
+- `roadmap_survie_llm.md` : roadmap de la survie pilotée par LLM (4 agents, `gemma3:1b`), Phases 0 à 5.
+- Décision `2026-09-30_survie-pilotee-par-llm.md` : périmètre, décision asynchrone sans pause, mesure à x1.
+
+### Modifié
+- Axe apprentissage T0-T3 mis en pause ; signals, contexte et README alignés.
+
 ## v0.42 — 2026-09-30
 
 ### Ajouté
