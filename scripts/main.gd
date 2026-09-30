@@ -69,6 +69,11 @@ func configure_training_world(seed_value: int) -> void:
 	_character_defaults = {"decider_type": "politique_fixe"}
 	_character_overrides = {"Rouge": {"vision_range": 25.0, "hunger": 50.0}}
 
+func configure_applied_world(seed_value: int, checkpoint_path: String) -> void:
+	_experiment_seed = seed_value
+	_character_defaults = {"decider_type": "politique_fixe"}
+	_character_overrides = {"Rouge": {"vision_range": 25.0, "hunger": 50.0, "decider_type": "politique_apprise", "model_checkpoint_path": checkpoint_path}}
+
 func training_character():
 	return _characters[0] if not _characters.is_empty() else null
 

@@ -1,0 +1,36 @@
+{
+  "format_version": 1,
+  "experiment_id": "t3-applied-demo-v1",
+  "seed": 410000001,
+  "environment": {
+    "game_config": {
+      "max_berries_carried": 3,
+      "pickup_hunger_threshold": 90.0,
+      "eat_hunger_threshold": 50.0,
+      "full_life_berries": 6.0,
+      "ronce_count": 24,
+      "berries_per_ronce": 3,
+      "danger_zone_count": 0
+    }
+  },
+  "agents": {
+    "defaults": {
+      "decider_type": "politique_fixe",
+      "hunger_depletion_rate": 4.0,
+      "memory_capacity": 5,
+      "vision_range": 40.0,
+      "vision_angle_degrees": 360.0
+    },
+    "individual": {
+      "Rouge": {
+        "decider_type": "politique_apprise",
+        "model_checkpoint_path": "res://experiments/t3_confirmation_final_workers/trained_410001101.jsonl.410001101.200.checkpoint.json"
+      }
+    },
+    "initial_state": {
+      "defaults": {"hunger": 50.0}
+    }
+  },
+  "simulation": {"game_speed": 1.0, "max_simulation_seconds": 86400, "quit_on_all_dead": false},
+  "metadata": {"purpose": "démonstration fenêtrée du modèle T3 v3 appliqué (lignée 410001101, checkpoint 200)"}
+}

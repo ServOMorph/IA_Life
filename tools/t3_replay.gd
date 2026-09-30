@@ -10,22 +10,37 @@ func _ready() -> void:
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	if args.size() not in [6, 8] or args[0] != "--checkpoint" or args[2] != "--initialization-seed" or args[4] != "--output":
-		push_error("Usage : --checkpoint chemin --initialization-seed seed --output chemin [--contract v3]")
+	if args.size() < 6 or args.size() > 10 or args.size() % 2 != 0 or args[0] != "--checkpoint" or args[2] != "--initialization-seed" or args[4] != "--output":
+		push_error("Usage : --checkpoint chemin --initialization-seed seed --output chemin [--contract v3|v3c] [--cards validation|final]")
 		get_tree().quit(2)
 		return
 	var fingerprint := FINGERPRINT_V2
 	var schema := "t3_q_table_v2"
 	var seed_base := 400000000
 	var competitors := false
-	if args.size() == 8:
-		if args[6] != "--contract" or args[7] != "v3":
+	var card_first := 101
+	var card_last := 132
+	var contract := ""
+	var cards := ""
+	for index in range(6, args.size(), 2):
+		if args[index] == "--contract":
+			contract = args[index + 1]
+		elif args[index] == "--cards":
+			cards = args[index + 1]
+		else:
 			get_tree().quit(2)
 			return
+	if contract not in ["", "v3", "v3c"] or (contract != "v3c" and cards != "") or (contract == "v3c" and cards not in ["validation", "final"]):
+		get_tree().quit(2)
+		return
+	if contract in ["v3", "v3c"]:
 		fingerprint = FINGERPRINT_V3
 		schema = "t3_q_table_v3"
 		seed_base = 410000000
 		competitors = true
+	if cards == "final":
+		card_first = 201
+		card_last = 264
 	var table = T3QTable.load_checkpoint(args[1], fingerprint, schema)
 	if table == null:
 		push_error("Checkpoint T3 invalide.")
@@ -37,7 +52,7 @@ func _run() -> void:
 		get_tree().quit(1)
 		return
 	var checksum: String = table.checksum()
-	for card_seed in range(seed_base + 101, seed_base + 133):
+	for card_seed in range(seed_base + card_first, seed_base + card_last + 1):
 		var scenario := T3Scenario.new()
 		scenario.configure(card_seed, competitors, 40.0)
 		add_child(scenario)

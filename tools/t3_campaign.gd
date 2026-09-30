@@ -4,7 +4,7 @@ const T3Scenario = preload("res://scripts/t3_scenario.gd")
 const T3QTable = preload("res://scripts/t3_q_table.gd")
 const FINGERPRINT_V2 := "t3_world_v2|agents=1|ronces=24|berries=3|danger=0|hunger=50|depletion=4.0|vision=40|memory=5|actions=8|ticks=15|horizon=80|alpha=0.20|gamma=0.90|epsilon=0.20|progress=0.25|time_cost=0.01"
 const FINGERPRINT_V3 := "t3_world_v3|agents=4|fixed_competitors=3|ronces=24|berries=3|danger=0|hunger=50|depletion=4.0|vision=40|memory=5|actions=8|ticks=15|horizon=80|alpha=0.20|gamma=0.90|epsilon=0.20|progress=0.25|time_cost=0.01"
-const CHECKPOINTS := [0, 10, 50, 200]
+const CHECKPOINTS_DEVELOPMENT := [0, 10, 50, 200]
 const TRAINING_CARDS := 32
 
 var _output_path := ""
@@ -16,20 +16,35 @@ var _seed_base := 400000000
 var _initialization_base := 400001000
 var _random_base := 400002000
 var _competitors := false
+var _checkpoints: Array = CHECKPOINTS_DEVELOPMENT
+var _initialization_count := 3
+var _card_first := 101
+var _card_last := 132
 
 func _ready() -> void:
 	call_deferred("_run")
 
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
-	if args.size() not in [6, 8] or args[0] != "--output" or args[2] != "--kind" or args[4] != "--initialization-seed":
-		push_error("Usage : --output chemin --kind baseline|trained|reset --initialization-seed seed [--contract v3]")
+	if args.size() < 6 or args.size() > 10 or args.size() % 2 != 0 or args[0] != "--output" or args[2] != "--kind" or args[4] != "--initialization-seed":
+		push_error("Usage : --output chemin --kind baseline|trained|reset --initialization-seed seed [--contract v3|v3c] [--cards validation|final]")
 		get_tree().quit(2)
 		return
-	if args.size() == 8:
-		if args[6] != "--contract" or args[7] != "v3":
+	var contract := ""
+	var cards := ""
+	for index in range(6, args.size(), 2):
+		if args[index] == "--contract":
+			contract = args[index + 1]
+		elif args[index] == "--cards":
+			cards = args[index + 1]
+		else:
 			get_tree().quit(2)
 			return
+	if contract not in ["", "v3", "v3c"] or (contract != "v3c" and cards != "") or (contract == "v3c" and cards not in ["validation", "final"]):
+		push_error("Combinaison --contract/--cards invalide.")
+		get_tree().quit(2)
+		return
+	if contract in ["v3", "v3c"]:
 		_experiment_id = "t3_world_v3"
 		_fingerprint = FINGERPRINT_V3
 		_schema = "t3_q_table_v3"
@@ -37,9 +52,18 @@ func _run() -> void:
 		_initialization_base = 410001000
 		_random_base = 410002000
 		_competitors = true
+	if contract == "v3c":
+		_experiment_id = "t3_confirmation_v1"
+		_initialization_base = 410001100
+		_random_base = 410002100
+		_initialization_count = 5
+		_checkpoints = [200]
+		if cards == "final":
+			_card_first = 201
+			_card_last = 264
 	_output_path = args[1]
 	var initialization_seed := int(args[5])
-	if initialization_seed not in [_initialization_base + 1, _initialization_base + 2, _initialization_base + 3]:
+	if initialization_seed < _initialization_base + 1 or initialization_seed > _initialization_base + _initialization_count:
 		push_error("Seed d'initialisation T3 invalide.")
 		get_tree().quit(2)
 		return
@@ -65,7 +89,7 @@ func _evaluate_baselines(initialization_seed: int) -> void:
 	var initial_table = _new_table(initialization_seed)
 	var random_rng := RandomNumberGenerator.new()
 	random_rng.seed = _random_base + 1 + (initialization_seed - (_initialization_base + 1))
-	for card_seed in range(_seed_base + 101, _seed_base + 133):
+	for card_seed in range(_seed_base + _card_first, _seed_base + _card_last + 1):
 		_add_record("scripted_food", initialization_seed, card_seed, 0, await _run_scripted_episode(card_seed), "scripted")
 		var checksum: String = initial_table.checksum()
 		_add_record("initial_frozen", initialization_seed, card_seed, 0, await _run_table_episode(initial_table, card_seed, false, random_rng), checksum)
@@ -76,7 +100,7 @@ func _train_and_evaluate(initialization_seed: int, reset_each_episode: bool) -> 
 	var rng := RandomNumberGenerator.new()
 	rng.seed = initialization_seed
 	var completed := 0
-	for checkpoint in CHECKPOINTS:
+	for checkpoint in _checkpoints:
 		while completed < checkpoint:
 			if reset_each_episode:
 				table = _new_table(initialization_seed)
@@ -98,7 +122,7 @@ func _train_and_evaluate(initialization_seed: int, reset_each_episode: bool) -> 
 				get_tree().quit(1)
 				return
 		var arm := "reset_each_episode" if reset_each_episode else "trained"
-		for card_seed in range(_seed_base + 101, _seed_base + 133):
+		for card_seed in range(_seed_base + _card_first, _seed_base + _card_last + 1):
 			var checksum: String = evaluation_table.checksum()
 			var result := await _run_table_episode(evaluation_table, card_seed, false, rng)
 			if evaluation_table.checksum() != checksum:

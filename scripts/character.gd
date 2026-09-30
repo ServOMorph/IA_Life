@@ -39,6 +39,7 @@ const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 @export var fixed_policy_danger: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["fixed_policy_danger"])
 @export var danger_navigation_mode: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["danger_navigation_mode"])
 @export var danger_reaction_range: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["danger_reaction_range"])
+@export var model_checkpoint_path: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["model_checkpoint_path"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
 @export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
@@ -50,6 +51,7 @@ const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 @export var immortal: bool = false
 @export var rl_controlled: bool = false
 
+const T3AppliedControllerScript = preload("res://scripts/t3_applied_controller.gd")
 const MEMORY_MAX_STRENGTH := 10.0
 const POSITION_SAMPLE_INTERVAL_SECONDS := 1.0
 const VISITED_ZONE_SIZE := 10.0
@@ -97,6 +99,7 @@ var _manual_direction := Vector3.ZERO
 var _timer := 0.0
 var _memories: Array = []
 var _decider = null
+var _applied_controller = null
 var _last_position := Vector3.ZERO
 var _visited_zone_ids: Dictionary = {}
 var _current_zone_id: String = ""
@@ -151,10 +154,14 @@ func _build_decider():
 			var adaptive_v1 := AdaptiveDeciderV1.new()
 			adaptive_v1.configure(learning_rate, exploration_epsilon, adaptive_decision_interval_seconds, decider_seed + hash(display_name), display_name)
 			return adaptive_v1
-		"politique_fixe":
+		"politique_fixe", "politique_apprise":
 			var fixed := FixedPolicyDecider.new()
 			fixed.configure_fixed(fixed_policy_s1, fixed_policy_s2, fixed_policy_s3, fixed_policy_danger, adaptive_decision_interval_seconds, display_name, decider_seed + hash(display_name))
 			fixed.danger_navigation_mode = danger_navigation_mode
+			if decider_type == "politique_apprise":
+				_applied_controller = T3AppliedControllerScript.new()
+				_applied_controller.configure(self, model_checkpoint_path)
+				add_child(_applied_controller)
 			return fixed
 		_:
 			return BaselineDecider.new()
@@ -328,6 +335,10 @@ func _apply_decision(scaled_delta: float) -> void:
 	if rl_controlled:
 		_direction = _rl_direction
 		_set_goal("rl")
+		return
+	if _applied_controller != null and _applied_controller.is_driving() and not manual_control:
+		_direction = _rl_direction
+		_set_goal("modele")
 		return
 	var visible_ronce_direction := _direction_to_nearest_visible_ronce()
 	var danger_info := _visible_danger_info()
@@ -993,6 +1004,8 @@ func training_food_observation(previous_action: int, collided: bool, progress: f
 ## Dump de la table apprise, pour les agents en décideur adaptatif uniquement. Appelé à
 ## la mort de faim et en fin de simulation (main.gd) pour les survivants.
 func log_adaptive_table(reason: String) -> void:
+	if _applied_controller != null:
+		_applied_controller.log_summary(reason)
 	if _decider is AdaptiveDecider or _decider is AdaptiveDeciderV1:
 		_decider.log_table(reason)
 
