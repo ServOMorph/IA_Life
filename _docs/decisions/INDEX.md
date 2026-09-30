@@ -6,6 +6,13 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 
 | Date | Décision | Statut | Détail |
 |------|----------|--------|--------|
+| 2026-09-29 | T3 v3 : survie avec trois concurrents fixes, 71/96 contre 15/96 initial et 7/96 aléatoire | validé sur validation ; tests finaux fermés | [detail](2026-09-29_t3-v3-gate-concurrence-atteint.md) |
+| 2026-09-29 | T3 v2 : survie alimentaire mono-agent, 76/96 contre 6/96 initial et 9/96 aléatoire | validé sur validation ; tests finaux fermés | [detail](2026-09-29_t3-v2-gate-atteint.md) |
+| 2026-09-29 | T3 v2 : probes scripté et apprentissage franchis sur entraînement ; validation fermée | remplacé par le gate v2 | [detail](2026-09-29_t3-v2-probes-entrainement.md) |
+| 2026-09-29 | T3 v1 : contrôle scripté à 28/32 sur entraînement, sous le seuil de solvabilité | invalidé avant validation | [detail](2026-09-29_t3-v1-probe-non-solvable.md) |
+| 2026-09-29 | T2 v1 : choix fondé sur la dernière perception, 96/96 contre 12/96 sans mémoire | validé sur validation ; tests finaux fermés | [detail](2026-09-29_t2-v1-gate-atteint.md) |
+| 2026-09-28 | T1 v5 : choix unique appris et exécuté par maintien de cap, 96/96 consommations | validé sur validation ; tests finaux fermés | [detail](2026-09-28_t1-v5-gate-atteint.md) |
+| 2026-09-28 | T1 v4 : défaut post-premier choix isolé hors validation ; v5 sépare choix appris et maintien de cap | diagnostic validé ; v5 proposé | [detail](2026-09-28_t1-v4-diagnostic-navigation-v5.md) |
 | 2026-09-27 | T1 v4 : premier choix appris (96/96), consommation 70/96 sous le seuil ; Phase 4 ouverte | invalidé | [detail](2026-09-27_t1-v4-gate-non-atteint.md) |
 | 2026-09-27 | T1 v3 : consommation 82/96, premier choix 69/96 ; gate non atteint | invalidé | [detail](2026-09-27_phase4-t1-gate-non-atteint.md) |
 | 2026-09-27 | T1 v2 : consommation 74/96, premier choix 19/96 ; gate non atteint | invalidé | [detail](2026-09-27_t1-v2-gate-non-atteint.md) |

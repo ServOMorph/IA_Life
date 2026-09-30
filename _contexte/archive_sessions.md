@@ -538,3 +538,26 @@ Décider et verrouiller une correction T0 avant toute nouvelle campagne complèt
 
 ## Question bloquante pour la session suivante
 Aucune.
+
+---
+
+# Session du 2026-09-27
+
+## Décisions prises
+- T0 v4 et la Phase 3 franchissent leurs gates respectifs ; la Phase 4 reste ouverte, T1 v4 échouant au seuil de consommation.
+
+## Livrables produits ou modifiés
+- Contrats, code, campagnes et résultats T0 v4 et T1 v2–v4 : produits et évalués.
+- Bridge TCP/JSONL, adaptateurs Gymnasium et tests Phase 3 : produits et exécutés.
+- Roadmap, décisions, contexte, README et CHANGELOG : actualisés par `/close`.
+
+## Hypothèses validées / invalidées
+- VALIDE : T0 v4 apprend et conserve la politique des huit secteurs ; T1 v4 apprend le premier choix.
+- INVALIDE : ce premier choix suffit au gate T1 ; pivot vers le diagnostic de navigation après le premier pas.
+- EN ATTENTE : cause précise des échecs de navigation T1 v4.
+
+## Prochaine étape exacte
+Isoler les échecs de navigation T1 v4 hors validation, puis versionner une hypothèse et des réserves neuves avant toute nouvelle campagne.
+
+## Question bloquante pour la session suivante
+Aucune.

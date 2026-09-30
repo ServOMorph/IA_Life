@@ -8,29 +8,12 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 `gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
-Laboratoire headless reproductible ; T0 v4 franchit le gate de la première preuve alimentaire.
-La Phase 3 valide le bridge TCP/JSONL et les adaptateurs Gymnasium T0/monde.
-La roadmap est en Phase 4 : T1 v4 atteint 96/96 premiers choix corrects, mais 70/96 consommations,
-sous le seuil requis ; la navigation après le premier pas reste à diagnostiquer.
-Les tests finaux T0/T1 restent fermés ; T2/T3 ne sont pas engagés. L'axe danger reste en pause.
+Laboratoire headless reproductible ; la Phase 4 franchit son gate technique de T1 à T3.
+T1 v5 consomme 96/96 ; T2 v1 prouve l'apport causal de la mémoire ; T3 v2 puis T3 v3
+franchissent leurs seuils sans puis avec trois concurrents fixes. Les replays sont stables.
+Les graines finales restent fermées. La Phase 5 attend le checkpoint `/compact` ; l'axe danger reste en pause.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-09-10 : seconde itération de placement sur approche de roncier validée techniquement
-  (smoke, sweep 12 seeds, 1 728/1 728 placements) mais gate causal toujours en échec. Le probe
-  de portée 10/12/15 m invalide l'hypothèse d'une réaction trop tardive : une fuite rectiligne
-  perturbe la ressource sans fournir de contournement. Voir
-  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
-- 2026-09-10 : contournement stateful testé sur calibration — coût évité nul et 10/12 contre
-  `viser`, mais 5/12 seulement contre `aleatoire`, survie maximale 0,42. Échec du gate ; v3
-  propose une récupération de collision non mesurée. Voir
-  `_docs/decisions/2026-09-10_contournement-stateful.md`.
-- 2026-09-10 : réorientation adoptée — la roadmap alimentaire progressive devient le chemin
-  critique : persistance entre épisodes, micro-tâche, interface d'entraînement puis monde complet.
-  L'axe danger devient une extension conditionnelle ; les résultats et seeds historiques restent
-  isolés. Voir `_docs/decisions/2026-09-10_reorientation-apprentissage.md`.
-- 2026-09-12 : T0 v2 fixe une ronce à 2 m sans récompense de distance ; scénario physique,
-  table persistante, validation et exécution parallèle par lignées sont prêts. La campagne n'a pas
-  été lancée ; aucun gain n'est conclu. Voir `_docs/decisions/2026-09-12_t0-alimentaire-v2.md`.
 - 2026-09-18 : T0 v2 atteint son gate sur 1 248 résultats valides : `scripted` et les trois
   lignées `trained` réussissent 96/96 au checkpoint 1 000 ; les contrôles restent inférieurs.
 - 2026-09-19 : correction — le gate T0 v2 n'est pas atteint. Gain `trained`@1000 contre
@@ -49,3 +32,15 @@ Les tests finaux T0/T1 restent fermés ; T2/T3 ne sont pas engagés. L'axe dange
 - 2026-09-27 : T1 v2/v3/v4 échouent au gate. V4 apprend le premier choix (96/96), mais
   consomme dans 70/96 cas, sous le seuil de 0,80. Phase 4 ouverte ; diagnostic de navigation
   requis avant tout nouveau contrat. Voir `_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.
+- 2026-09-28 : T1 v5 franchit le gate : la direction tenue remplace les redécisions instables
+  et produit 96/96 consommations, avec trois checkpoints à 1 000 stables au replay. Voir
+  `_docs/decisions/2026-09-28_t1-v5-gate-atteint.md`.
+- 2026-09-29 : T2 v1 franchit le gate : la politique avec mémoire réussit 96/96, contre 12/96
+  pour l'état initial et le contrôle sans mémoire ; les replays sont stables. Voir
+  `_docs/decisions/2026-09-29_t2-v1-gate-atteint.md`.
+- 2026-09-29 : T3 v2 franchit le gate mono-agent : 76/96 pour la politique entraînée, contre
+  6/96 initiale et 9/96 aléatoire, avec intervalles corrigés positifs. Voir
+  `_docs/decisions/2026-09-29_t3-v2-gate-atteint.md`.
+- 2026-09-29 : T3 v3 franchit le gate avec trois concurrents fixes : 71/96 pour la politique
+  entraînée, contre 15/96 initiale et 7/96 aléatoire ; replay 96/96 stable. Voir
+  `_docs/decisions/2026-09-29_t3-v3-gate-concurrence-atteint.md`.

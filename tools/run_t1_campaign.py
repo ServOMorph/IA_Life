@@ -40,11 +40,11 @@ def main() -> int:
     parser.add_argument("--godot", default="godot")
     parser.add_argument("--jobs", type=int, default=3)
     parser.add_argument("--resume", action="store_true")
-    parser.add_argument("--contract", choices=("v2", "v3", "v4"), default="v2")
+    parser.add_argument("--contract", choices=("v2", "v3", "v4", "v5"), default="v2")
     args = parser.parse_args()
     if args.jobs < 1 or args.jobs > 9:
         parser.error("--jobs doit être compris entre 1 et 9")
-    seed_base = {"v2": 320001000, "v3": 350001000, "v4": 360001000}[args.contract]
+    seed_base = {"v2": 320001000, "v3": 350001000, "v4": 360001000, "v5": 370001000}[args.contract]
     seeds = tuple(seed_base + index for index in (1, 2, 3))
     workers = ROOT / "experiments" / f"t1_{args.contract}_workers"
     results = ROOT / "experiments" / f"t1_{args.contract}_results.jsonl"

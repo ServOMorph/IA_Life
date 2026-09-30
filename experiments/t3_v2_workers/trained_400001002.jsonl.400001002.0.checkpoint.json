@@ -1,0 +1,1 @@
+{"alpha":0.2,"config_fingerprint":"t3_world_v2|agents=1|ronces=24|berries=3|danger=0|hunger=50|depletion=4.0|vision=40|memory=5|actions=8|ticks=15|horizon=80|alpha=0.20|gamma=0.90|epsilon=0.20|progress=0.25|time_cost=0.01","episode_count":0,"gamma":0.9,"schema_version":"t3_q_table_v2","training_rng_state":"400001002","values_binary":"GwAAAAAAAAA="}

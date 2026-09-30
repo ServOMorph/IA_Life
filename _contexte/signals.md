@@ -1,13 +1,13 @@
-# Signals — ia_life (MAJ 2026-09-27)
+# Signals — ia_life (MAJ 2026-09-30)
 
 ## Actions ouvertes
 
-- [P1|ouvert] Isoler la cause des échecs de navigation T1 v4 après le premier choix, puis geler un nouveau contrat et de nouvelles réserves avant toute campagne.
-  fait quand: une hypothèse causale est testée sur diagnostic hors validation et le contrat suivant est versionné avant mesure comparative.
-  réf: `_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`, `experiments/apprentissage_t1_contrat_v4.md`, `roadmap_apprentissage_fonctionnel_proposition.md` (Phase 4).
+- [P1|ouvert] Préparer la confirmation indépendante et la livraison de la Phase 5 sans ouvrir les graines finales avant gel du plan.
+  fait quand: candidat et analyse sont gelés, lot final indépendant exécuté, intégration et démonstration réalisées.
+  réf: `roadmap_apprentissage_fonctionnel_proposition.md` (Phase 5), `_docs/decisions/2026-09-29_t3-v3-gate-concurrence-atteint.md`.
 - [P2|ouvert] Rétablir le contrôle d'intégrité du kit absent.
   fait quand: `python scripts/check_kit.py` s'exécute et ses écarts sont traités ou consignés.
-  réf: `.claude/commands/close.md` (étape 10) ; écart connu à corriger en Phase 4.
+  réf: `.claude/commands/close.md` (étape 10) ; écart connu à corriger en Phase 5.
 - [P3|ouvert] Finaliser ou écarter le candidat v3 de contournement avant toute nouvelle campagne de danger.
   fait quand: le mécanisme a des tests verts et une campagne versionnée, ou son abandon est documenté.
   réf: `scripts/danger_detour.gd`, `experiments/campaigns/danger_zone_detour_v3.json`, `_docs/decisions/2026-09-10_contournement-stateful.md`.
@@ -17,30 +17,31 @@
 
 ## Contexte chaud
 
-- T0 v4 franchit le gate sur 1 248 résultats ; Phase 3 franchit son gate technique via le bridge TCP/JSONL et les adaptateurs Gymnasium T0/monde.
-- T1 v4 : `trained` 96/96 premiers choix corrects, 70/96 consommations ; gate non atteint. Les trois checkpoints sont à 1 000 et leur replay est stable après recharge. Les tests finaux T0/T1 restent fermés ; T2/T3 non engagés.
+- Phase 4 terminée : T1 v5, T2 v1, T3 v2 et T3 v3 franchissent leurs gates ; les replays retenus sont stables après recharge.
+- T1 v5 consomme 96/96 ; T2 v1 obtient 96/96 avec mémoire contre 12/96 sans mémoire ; T3 v2 obtient 76/96 et T3 v3 71/96 en politique entraînée.
+- Les graines finales restent fermées. La Phase 5 n'est pas commencée ; `/compact` est requis au checkpoint.
 - Les modifications ROBERTO/com_telephone, `AGENTS.md`, `GEMINI.md`, `.claude/CLAUDE.md` et `.claude/commands/roberto.md` présentes dans le working tree ne font pas partie de cette clôture.
-- `scripts/check_kit.py` est absent : écart connu à corriger en Phase 4 ; le contrôle demandé par `/close` ne peut pas être exécuté.
+- `scripts/check_kit.py` est absent : écart connu à corriger en Phase 5 ; le contrôle demandé par `/close` ne peut pas être exécuté.
 
-## Dernière session (2026-09-27)
+## Dernière session (2026-09-30)
 
-# Session du 2026-09-27
+# Session du 2026-09-30
 
 ## Décisions prises
-- T0 v4 et la Phase 3 franchissent leurs gates respectifs ; la Phase 4 reste ouverte, T1 v4 échouant au seuil de consommation.
+- La Phase 4 franchit son gate avec les validations successives T1 v5, T2 v1, T3 v2 et T3 v3.
 
 ## Livrables produits ou modifiés
-- Contrats, code, campagnes et résultats T0 v4 et T1 v2–v4 : produits et évalués.
-- Bridge TCP/JSONL, adaptateurs Gymnasium et tests Phase 3 : produits et exécutés.
-- Roadmap, décisions, contexte, README et CHANGELOG : actualisés par `/close`.
+- Contrats, scénarios, campagnes, analyses et replays T1 v5, T2 v1 et T3 v1–v3 produits.
+- Tests de résultats, de scénarios et d'équivalence direct/bridge exécutés.
+- Roadmap, décisions, contexte, README et CHANGELOG actualisés par `/close`.
 
 ## Hypothèses validées / invalidées
-- VALIDE : T0 v4 apprend et conserve la politique des huit secteurs ; T1 v4 apprend le premier choix.
-- INVALIDE : ce premier choix suffit au gate T1 ; pivot vers le diagnostic de navigation après le premier pas.
-- EN ATTENTE : cause précise des échecs de navigation T1 v4.
+- VALIDE : la direction tenue résout T1 ; la mémoire explicite est causale sur T2 ; T3 passe sans puis avec concurrents.
+- INVALIDE : le contrat T3 v1 à vision 25 est suffisamment solvable ; T3 v2 porte la vision à 40.
+- RÉSERVE : ces résultats sont de validation ; les graines finales n'ont pas été ouvertes.
 
 ## Prochaine étape exacte
-Isoler les échecs de navigation T1 v4 hors validation, puis versionner une hypothèse et des réserves neuves avant toute nouvelle campagne.
+Faire `/compact`, puis engager la Phase 5 par le gel du candidat et du plan de confirmation indépendante.
 
 ## Question bloquante pour la session suivante
 Aucune.

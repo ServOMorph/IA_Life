@@ -1,0 +1,69 @@
+{
+  "corrected_97_5_percent_intervals": {
+    "initial_frozen": [
+      0.6041666666666666,
+      0.84375
+    ],
+    "random_valid": [
+      0.5520833333333334,
+      0.8333333333333334
+    ]
+  },
+  "gates": {
+    "food_non_regression": true,
+    "minimum_gains": true,
+    "persistence_ablation": true,
+    "positive_corrected_intervals": true,
+    "positive_lineage_gains": true,
+    "scripted_solvable": true,
+    "trained_survival": true
+  },
+  "selected_checkpoints": {
+    "reset_each_episode": {
+      "400001001": 10,
+      "400001002": 0,
+      "400001003": 0
+    },
+    "trained": {
+      "400001001": 200,
+      "400001002": 200,
+      "400001003": 200
+    }
+  },
+  "summaries": {
+    "initial_frozen": {
+      "berries_eaten": 18,
+      "episodes": 96,
+      "meal_episodes": 6,
+      "survived": 6
+    },
+    "random_valid": {
+      "berries_eaten": 29,
+      "episodes": 96,
+      "meal_episodes": 9,
+      "survived": 9
+    },
+    "reset_each_episode": {
+      "berries_eaten": 21,
+      "episodes": 96,
+      "meal_episodes": 7,
+      "survived": 7
+    },
+    "scripted_food": {
+      "berries_eaten": 378,
+      "episodes": 96,
+      "meal_episodes": 90,
+      "survived": 90
+    },
+    "trained": {
+      "berries_eaten": 288,
+      "episodes": 96,
+      "meal_episodes": 76,
+      "survived": 76
+    }
+  },
+  "survival_gains": {
+    "initial_frozen": 0.7291666666666666,
+    "random_valid": 0.6979166666666666
+  }
+}

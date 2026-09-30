@@ -58,8 +58,9 @@ l'aléatoire. La recharge des checkpoints reproduit les décisions sur les huit 
 La Phase 3 a validé un bridge TCP/JSONL local et deux adaptateurs Gymnasium, pour T0 et le monde
 alimentaire. Le gate technique est atteint ; il ne valide pas l'apprentissage dans le monde complet.
 
-La roadmap est en Phase 4. T1 v4 obtient 96/96 premiers choix corrects, mais seulement 70/96
-consommations : son gate reste non atteint. Les échecs après le premier pas demandent un diagnostic
-avant un nouveau contrat. Les tests finaux T0/T1 restent fermés ; T2/T3 ne sont pas engagés.
+La Phase 4 est terminée. T1 v5 atteint 96/96 consommations ; T2 v1 atteint 96/96 avec mémoire
+contre 12/96 sans mémoire ; T3 v2 puis T3 v3 franchissent leurs gates sans puis avec trois
+concurrents fixes. Les checkpoints retenus sont stables au replay et le chemin direct est équivalent
+au bridge. Les graines finales restent fermées ; la Phase 5 attend le checkpoint `/compact`.
 L'axe danger demeure en pause. Voir `roadmap_apprentissage_fonctionnel_proposition.md` et
-`_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.
+`_docs/decisions/2026-09-29_t3-v3-gate-concurrence-atteint.md`.

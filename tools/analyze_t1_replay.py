@@ -16,9 +16,9 @@ FIELDS = ("consumed", "first_selected_available", "actions", "berries_picked",
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--contract", choices=("v3", "v4"), default="v3")
+    parser.add_argument("--contract", choices=("v3", "v4", "v5"), default="v3")
     args = parser.parse_args()
-    initialization_base = 350001000 if args.contract == "v3" else 360001000
+    initialization_base = {"v3": 350001000, "v4": 360001000, "v5": 370001000}[args.contract]
     seeds = tuple(initialization_base + index for index in (1, 2, 3))
     results = load_jsonl(ROOT / "experiments" / f"t1_{args.contract}_results.jsonl")
     selected = {}

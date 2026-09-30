@@ -1,6 +1,6 @@
 # Roadmap — Apprentissage fonctionnel dans IA_Life
 
-Adoptée le 10 septembre 2026. Statut : **[EN COURS — Phase 4, T1 non validé]**.
+Adoptée le 10 septembre 2026. Statut : **[CHECKPOINT — Phase 4 terminée, `/compact` requis avant Phase 5]**.
 Analyse de référence : [diagnostic et recherche Web/GitHub](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md).
 
 Cette roadmap remplace le chemin critique « calibration du danger → reprise de l'apprentissage ». Elle conserve les résultats historiques, mais donne la priorité à une preuve d'apprentissage alimentaire entre épisodes. Les dangers deviennent une extension ; un agent LLM utilisant des compétences ou une mémoire d'expérience reste une destination explicite du projet.
@@ -149,9 +149,9 @@ Unifier les observations alimentaires structurées : faim, inventaire, cibles pe
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 4 — Apprendre une politique alimentaire dans un monde progressif [EN COURS — 2026-09-27, T1 non validé]
+## Phase 4 — Apprendre une politique alimentaire dans un monde progressif [FAIT — 2026-09-30]
 
-**État T1.** Trois contrats successifs ont été mesurés sur leurs validations propres. V2 échoue sur la consommation (74/96) et le premier choix (19/96). V3 atteint 82/96 consommations mais 69/96 premiers choix corrects. V4 atteint 96/96 premiers choix mais 70/96 consommations, sous le seuil de 0,80. Le replay v4 indique des échecs de navigation après le premier pas ; la cause précise reste à isoler. Les tests finaux restent fermés ; T2 et T3 ne sont pas engagés. Voir `_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.
+**Résultat.** T1 v5 atteint 96/96 consommations après remplacement des redécisions par une direction tenue. T2 v1 atteint 96/96 avec mémoire, contre 12/96 sans mémoire. T3 v2 atteint 76/96 en mono-agent ; T3 v3 atteint 71/96 avec trois concurrents fixes, avec contrôles inférieurs et intervalles corrigés positifs. Les checkpoints retenus sont stables au replay, les trajectoires directes et bridge sont équivalentes et les graines finales restent fermées. Voir les décisions T1 v5, T2 v1, T3 v2 et T3 v3 dans `_docs/decisions/`.
 
 **Recherche ciblée.** Distinguer limite de représentation, exploration et mémoire. La table persistante est le premier contrôle ; un petit réseau PPO/SB3 est le candidat si elle ne représente plus correctement les choix. Utiliser observations structurées et cadences communes, sans vision par pixels à ce stade.
 
@@ -227,4 +227,4 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 Les recherches initiales sont consignées dans l'analyse liée ; chaque phase complète uniquement la question nécessaire à sa réalisation. Insérer une phase de refactorisation dédiée seulement si une dette observée rend la suite difficile, et en expliciter le motif. Ne pas modifier les statuts pendant le développement : les preuves sont consignées, `/close` prononce la clôture.
 
-La Phase 4 est le chantier en cours. Les checkpoints s'appliquent entre phases ; la Phase 5 ne commence qu'après le gate et le checkpoint de la Phase 4, puis confirmation écrite de l'utilisateur.
+La Phase 4 est terminée. Le checkpoint est en attente ; la Phase 5 ne commence qu'après `/compact` et confirmation écrite de l'utilisateur.

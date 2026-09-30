@@ -1,6 +1,6 @@
 import unittest
 
-from t1_results import EXPERIMENT_ID, FINGERPRINT, FINGERPRINT_V3, FINGERPRINT_V4, expected_t1_keys, result_key, validate_records
+from t1_results import EXPERIMENT_ID, FINGERPRINT, FINGERPRINT_V3, FINGERPRINT_V4, FINGERPRINT_V5, expected_t1_keys, result_key, validate_records
 
 
 class T1ResultsTests(unittest.TestCase):
@@ -61,6 +61,14 @@ class T1ResultsTests(unittest.TestCase):
         self.assertEqual(len(expected_t1_keys("v4")), 1248)
         invalid = dict(record, card_seed=350000101)
         self.assertIn("seed hors réserve", " ".join(validate_records([invalid], {result_key(record)}, "v4")))
+
+    def test_v5_reserve_and_fingerprint(self):
+        record = dict(self.record, experiment_id="t1_choice_v5", config_fingerprint=FINGERPRINT_V5,
+                      card_seed=370000101, initialization_seed=370001001)
+        self.assertEqual(validate_records([record], {result_key(record)}, "v5"), [])
+        self.assertEqual(len(expected_t1_keys("v5")), 1248)
+        invalid = dict(record, card_seed=360000101)
+        self.assertIn("seed hors réserve", " ".join(validate_records([invalid], {result_key(record)}, "v5")))
 
 
 if __name__ == "__main__":

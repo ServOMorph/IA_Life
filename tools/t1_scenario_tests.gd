@@ -4,6 +4,7 @@ const T1Scenario = preload("res://scripts/t1_scenario.gd")
 const T1QTable = preload("res://scripts/t1_q_table.gd")
 const T1V3Table = preload("res://scripts/t1_v3_table.gd")
 const T1V4Table = preload("res://scripts/t1_v4_table.gd")
+const T1V5Table = preload("res://scripts/t1_v5_table.gd")
 
 var _failures: Array[String] = []
 
@@ -13,11 +14,13 @@ func _ready() -> void:
 func _run() -> void:
 	await _test_cards()
 	await _test_scripted_consumption()
+	await _test_held_action()
 	await _test_reproducibility()
 	await _test_empty_contact_and_reset()
 	_test_table_and_checkpoint()
 	_test_v3_first_choice()
 	_test_v4_balanced_first_choice()
+	_test_v5_single_choice()
 	if _failures.is_empty():
 		print("SUCCÈS : scénario T1 validé.")
 		get_tree().quit(0)
@@ -60,6 +63,16 @@ func _test_scripted_consumption() -> void:
 			if bool(slot["available"]):
 				remaining += 1
 		_expect(remaining == 0, "L'observation doit refléter la ronce vidée.")
+		await _free_scenario(scenario)
+
+func _test_held_action() -> void:
+	for seed_value in [370000001, 370000002, 370000003]:
+		var scenario = await _new_scenario(seed_value)
+		var action := _available_action(scenario)
+		var result: Dictionary = await scenario.execute_held_action(action)
+		_expect(bool(result.get("consumed", false)), "Le maintien du cap correct doit consommer réellement la mûre.")
+		_expect(int(result.get("selected_action", -1)) == action and int(result.get("policy_decisions", 0)) == 1, "L'exécutant v5 doit conserver un choix unique.")
+		_expect(float(result.get("first_distance_progress", 0.0)) > 0.0, "Le premier progrès v5 doit être mesuré.")
 		await _free_scenario(scenario)
 
 func _test_reproducibility() -> void:
@@ -170,6 +183,36 @@ func _test_v4_balanced_first_choice() -> void:
 	var loaded = T1V4Table.load_checkpoint(path, "t1_v4_test")
 	_expect(loaded != null and loaded.checksum() == checksum and loaded.select_epsilon_greedy("6:0:8", 0.0, rng) == 6, "La recharge v4 doit conserver valeurs et compteurs.")
 	_expect(T1V4Table.load_checkpoint(path, "autre") == null, "La recharge v4 doit rejeter une empreinte étrangère.")
+	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
+
+func _test_v5_single_choice() -> void:
+	var table := T1V5Table.new()
+	table.configure("t1_v5_test", 370001001)
+	var rng := RandomNumberGenerator.new()
+	rng.seed = 370001001
+	var targets := [{"resource_sector": 6, "distance_bin": 2, "available": true}, {"resource_sector": 1, "distance_bin": 1, "available": false}, {"resource_sector": 3, "distance_bin": 0, "available": false}]
+	var state: String = table.state_key(targets, 8)
+	_expect(state == "6" and table.state_key(targets, 6).is_empty(), "La table v5 ne doit accepter que l'observation initiale.")
+	for index in range(24):
+		table.begin_episode()
+		var action: int = table.select_epsilon_greedy(state, 0.20, rng)
+		_expect(action == index % 8, "L'exploration v5 doit équilibrer les huit choix par secteur.")
+		var reward := 1.0 if action == 6 else 0.0
+		_expect(table.apply_transition(0, state, action, reward, "", true, true), "Le choix v5 doit être crédité une fois.")
+		_expect(not table.apply_transition(0, state, action, reward, "", true, true), "Le choix v5 ne doit pas être crédité deux fois.")
+		_expect(not table.apply_transition(1, state, action, reward, "", true, true), "La table v5 doit refuser une décision postérieure au choix.")
+		table.finish_training_episode()
+	_expect(table.select_epsilon_greedy(state, 0.0, rng) == 6, "L'évaluation v5 doit exploiter le choix appris.")
+	var checksum := table.checksum()
+	table.begin_episode()
+	_expect(not table.apply_transition(0, state, 0, 1.0, "", true, false), "L'évaluation v5 doit être figée.")
+	_expect(table.checksum() == checksum, "L'évaluation v5 ne doit modifier ni valeurs ni compteurs.")
+	var path := "user://t1_v5_contract_checkpoint.json"
+	_expect(table.save_checkpoint(path) == OK, "Le checkpoint T1 v5 doit être écrit.")
+	var loaded = T1V5Table.load_checkpoint(path, "t1_v5_test")
+	_expect(loaded != null and loaded.checksum() == checksum, "Le checkpoint v5 doit conserver valeurs et compteurs.")
+	_expect(T1V5Table.load_checkpoint(path, "autre") == null, "La recharge v5 doit rejeter une empreinte étrangère.")
+	_expect(T1V4Table.load_checkpoint(path, "t1_v5_test") == null, "Le schéma v4 doit rejeter un checkpoint v5.")
 	DirAccess.remove_absolute(ProjectSettings.globalize_path(path))
 
 func _summary(seed_value: int) -> Dictionary:

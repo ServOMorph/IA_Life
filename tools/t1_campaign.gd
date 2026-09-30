@@ -3,10 +3,12 @@ extends Node
 const T1QTable = preload("res://scripts/t1_q_table.gd")
 const T1V3Table = preload("res://scripts/t1_v3_table.gd")
 const T1V4Table = preload("res://scripts/t1_v4_table.gd")
+const T1V5Table = preload("res://scripts/t1_v5_table.gd")
 const T1Scenario = preload("res://scripts/t1_scenario.gd")
 const FINGERPRINT := "t1_choice_v2|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|state=available_sector_distance_previous"
 const FINGERPRINT_V3 := "t1_choice_v3|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|first_bandit=sector|first_epsilon=0.50"
 const FINGERPRINT_V4 := "t1_choice_v4|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|first_explore=min_count|first_tie=lowest"
+const FINGERPRINT_V5 := "t1_choice_v5|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|progress=0.50|first_explore=min_count|first_tie=lowest|execution=hold_first"
 const CHECKPOINTS := [0, 10, 50, 200, 1000]
 
 var _output_path := ""
@@ -19,6 +21,7 @@ var _seed_base := 320000000
 var _initialization_base := 320001000
 var _random_base := 320002000
 var _table_script = T1QTable
+var _contract := "v2"
 
 func _ready() -> void:
 	call_deferred("_run")
@@ -26,6 +29,7 @@ func _ready() -> void:
 func _run() -> void:
 	var args := OS.get_cmdline_user_args()
 	var contract := args[args.size() - 1] if args.size() >= 2 and args[args.size() - 2] == "--contract" else "v2"
+	_contract = contract
 	if contract == "v3":
 		_fingerprint = FINGERPRINT_V3
 		_experiment_id = "t1_choice_v3"
@@ -40,6 +44,13 @@ func _run() -> void:
 		_initialization_base = 360001000
 		_random_base = 360002000
 		_table_script = T1V4Table
+	elif contract == "v5":
+		_fingerprint = FINGERPRINT_V5
+		_experiment_id = "t1_choice_v5"
+		_seed_base = 370000000
+		_initialization_base = 370001000
+		_random_base = 370002000
+		_table_script = T1V5Table
 	elif contract != "v2":
 		push_error("Contrat T1 inconnu")
 		get_tree().quit(2)
@@ -87,8 +98,11 @@ func _run_probe() -> void:
 	var scenario = await _new_scenario(_seed_base + 1)
 	var result: Dictionary = {}
 	var action := _available_action(scenario)
-	while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
-		result = await scenario.execute_action(action)
+	if _contract == "v5":
+		result = await scenario.execute_held_action(action)
+	else:
+		while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
+			result = await scenario.execute_action(action)
 	result["elapsed_seconds"] = float(Time.get_ticks_msec() - started_ms) / 1000.0
 	result["static_memory_bytes"] = OS.get_static_memory_usage()
 	print(JSON.stringify(result))
@@ -99,8 +113,11 @@ func _evaluate_scripted(initialization_seed: int) -> void:
 		var scenario = await _new_scenario(card_seed)
 		var result: Dictionary = {}
 		var action := _available_action(scenario)
-		while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
-			result = await scenario.execute_action(action)
+		if _contract == "v5":
+			result = await scenario.execute_held_action(action)
+		else:
+			while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
+				result = await scenario.execute_action(action)
 		_add_record("scripted_observed", initialization_seed, card_seed, 0, result, "scripted")
 		await _free_scenario(scenario)
 
@@ -161,6 +178,17 @@ func _run_episode(table, card_seed: int, training: bool, epsilon_enabled: bool) 
 	var step_index := 0
 	var rng := RandomNumberGenerator.new()
 	rng.state = table.training_rng_state
+	if _contract == "v5":
+		var observation: Dictionary = scenario.observation(previous_action)
+		var state: String = table.state_key(observation["targets"], observation["previous_action"])
+		var action: int = table.select_epsilon_greedy(state, 0.20 if epsilon_enabled else 0.0, rng)
+		result = await scenario.execute_held_action(action)
+		var training_reward := float(result["first_reward"]) + 0.50 * float(result["first_distance_progress"]) if training else float(result["first_reward"])
+		table.apply_transition(0, state, action, training_reward, "", true, training)
+		if training:
+			table.training_rng_state = rng.state
+		await _free_scenario(scenario)
+		return result
 	while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
 		var observation: Dictionary = scenario.observation(previous_action)
 		var state: String = table.state_key(observation["targets"], observation["previous_action"])
@@ -180,8 +208,11 @@ func _run_episode(table, card_seed: int, training: bool, epsilon_enabled: bool) 
 func _run_random_episode(card_seed: int, rng: RandomNumberGenerator) -> Dictionary:
 	var scenario = await _new_scenario(card_seed)
 	var result: Dictionary = {}
-	while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
-		result = await scenario.execute_action(rng.randi_range(0, 7))
+	if _contract == "v5":
+		result = await scenario.execute_held_action(rng.randi_range(0, 7))
+	else:
+		while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
+			result = await scenario.execute_action(rng.randi_range(0, 7))
 	await _free_scenario(scenario)
 	return result
 

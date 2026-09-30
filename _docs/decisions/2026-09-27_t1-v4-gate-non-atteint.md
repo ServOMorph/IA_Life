@@ -47,3 +47,12 @@ Reproduction : `python tools/run_t1_campaign.py --contract v4 --godot D:/Godot/g
 `tools/t1_replay.tscn` et `python tools/analyze_t1_replay.py --contract v4`.
 Les résultats et traces sont dans `experiments/t1_v4_results.jsonl` et
 `experiments/t1_v4_replay_*.jsonl`.
+
+## Addendum du 2026-09-28
+
+La cause a ensuite été isolée hors validation sur les 32 cartes d'entraînement. Les trois
+checkpoints retenus donnent 74/96 consommations avec leurs décisions postérieures au premier pas,
+contre 96/96 en maintenant le premier cap et 96/96 avec un recalcul privilégié vers la cible.
+Voir `_docs/decisions/2026-09-28_t1-v4-diagnostic-navigation-v5.md`. Un contrat v5 et de nouvelles
+réserves ont ensuite été gelés, puis la validation v5 a atteint son gate ; voir
+`_docs/decisions/2026-09-28_t1-v5-gate-atteint.md`.

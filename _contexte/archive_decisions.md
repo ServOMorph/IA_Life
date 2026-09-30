@@ -138,3 +138,22 @@
   `danger_zone_oracle_base_v2.json`, v1 conservé). Densité de zones testée jusqu'à 20 (tendance
   monotone, pas encore suffisant). Voir
   `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
+
+---
+
+- 2026-09-10 : seconde itération de placement sur approche de roncier validée techniquement
+  (smoke, sweep 12 seeds, 1 728/1 728 placements) mais gate causal toujours en échec. Le probe
+  de portée 10/12/15 m invalide l'hypothèse d'une réaction trop tardive : une fuite rectiligne
+  perturbe la ressource sans fournir de contournement. Voir
+  `_docs/decisions/2026-09-01_environnement-apprenable-v3-zones-dangereuses.md`.
+- 2026-09-10 : contournement stateful testé sur calibration — coût évité nul et 10/12 contre
+  `viser`, mais 5/12 seulement contre `aleatoire`, survie maximale 0,42. Échec du gate ; v3
+  propose une récupération de collision non mesurée. Voir
+  `_docs/decisions/2026-09-10_contournement-stateful.md`.
+- 2026-09-10 : réorientation adoptée — la roadmap alimentaire progressive devient le chemin
+  critique : persistance entre épisodes, micro-tâche, interface d'entraînement puis monde complet.
+  L'axe danger devient une extension conditionnelle ; les résultats et seeds historiques restent
+  isolés. Voir `_docs/decisions/2026-09-10_reorientation-apprentissage.md`.
+- 2026-09-12 : T0 v2 fixe une ronce à 2 m sans récompense de distance ; scénario physique,
+  table persistante, validation et exécution parallèle par lignées sont prêts. La campagne n'a pas
+  été lancée ; aucun gain n'est conclu. Voir `_docs/decisions/2026-09-12_t0-alimentaire-v2.md`.

@@ -22,6 +22,7 @@ EXPERIMENT_ID = "t1_choice_v2"
 FINGERPRINT = "t1_choice_v2|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|state=available_sector_distance_previous"
 FINGERPRINT_V3 = "t1_choice_v3|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|first_bandit=sector|first_epsilon=0.50"
 FINGERPRINT_V4 = "t1_choice_v4|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|first_explore=min_count|first_tie=lowest"
+FINGERPRINT_V5 = "t1_choice_v5|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|progress=0.50|first_explore=min_count|first_tie=lowest|execution=hold_first"
 
 
 def contract_values(contract: str):
@@ -31,6 +32,8 @@ def contract_values(contract: str):
         return "t1_choice_v3", FINGERPRINT_V3, set(range(350000101, 350000133)), {350001001, 350001002, 350001003}
     if contract == "v4":
         return "t1_choice_v4", FINGERPRINT_V4, set(range(360000101, 360000133)), {360001001, 360001002, 360001003}
+    if contract == "v5":
+        return "t1_choice_v5", FINGERPRINT_V5, set(range(370000101, 370000133)), {370001001, 370001002, 370001003}
     raise ValueError(f"contrat T1 inconnu : {contract}")
 
 
@@ -98,7 +101,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("results", type=Path)
     parser.add_argument("--expected", type=Path)
-    parser.add_argument("--contract", choices=("v2", "v3", "v4"), default="v2")
+    parser.add_argument("--contract", choices=("v2", "v3", "v4", "v5"), default="v2")
     args = parser.parse_args()
     try:
         expected = {result_key(item) for item in json.loads(args.expected.read_text(encoding="utf-8"))} if args.expected else expected_t1_keys(args.contract)

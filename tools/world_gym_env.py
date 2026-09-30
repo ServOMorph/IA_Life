@@ -5,9 +5,10 @@ from t0_gym_env import T0GymEnv
 
 
 class WorldGymEnv(T0GymEnv):
-    def __init__(self, godot="godot", port=None, timeout=20.0, diagnostics=False):
+    def __init__(self, godot="godot", port=None, timeout=20.0, diagnostics=False,
+                 scene="tools/world_gym_server.tscn"):
         super().__init__(godot=godot, port=port, timeout=timeout,
-                         scene="tools/world_gym_server.tscn", diagnostics=diagnostics)
+                         scene=scene, diagnostics=diagnostics)
         self.observation_space = spaces.Dict({
             "hunger": spaces.Box(0.0, 1.0, shape=(1,), dtype=np.float32),
             "inventory": spaces.Box(0.0, 1.0, shape=(1,), dtype=np.float32),

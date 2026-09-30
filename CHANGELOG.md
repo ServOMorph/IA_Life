@@ -1,3 +1,14 @@
+## v0.41 — 2026-09-30
+
+### Ajouté
+- T1 v5 : diagnostic de navigation, direction tenue, nouveau contrat, campagne et replays stables à 96/96 consommations.
+- T2 v1 : tâche à vision locale et mémoire explicite, campagne et contrôle sans mémoire ; politique entraînée à 96/96.
+- T3 v1–v3 : probe de solvabilité, campagnes mono-agent puis avec trois concurrents fixes, analyses corrigées et replays.
+
+### Modifié
+- Phase 4 close après les gates T1 v5, T2 v1, T3 v2 et T3 v3 ; Phase 5 laissée derrière le checkpoint `/compact`.
+- Roadmap, décisions, contexte et README alignés sur les résultats, sans ouverture des graines finales.
+
 ## v0.40 — 2026-09-27
 
 ### Ajouté

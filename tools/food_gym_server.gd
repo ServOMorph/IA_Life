@@ -1,6 +1,7 @@
 extends Node
 
 const T0Scenario = preload("res://scripts/t0_scenario.gd")
+const T3Scenario = preload("res://scripts/t3_scenario.gd")
 const RLBridgeScript = preload("res://scripts/rl_bridge.gd")
 const RLProtocolScript = preload("res://scripts/rl_protocol.gd")
 const WorldScene = preload("res://scenes/Main.tscn")
@@ -101,7 +102,10 @@ func _on_message(message: Dictionary) -> void:
 			if not _protocol.accept_step(int(message["episode_id"]), int(message["step_id"])):
 				_error("pas perime")
 				return
-			_step(int(message["action"]))
+			if _is_t3():
+				_step_t3(int(message["action"]))
+			else:
+				_step(int(message["action"]))
 		"close":
 			_bridge.send({"type": "closed"})
 			get_tree().quit()
@@ -113,7 +117,10 @@ func _reset(card_seed: int) -> void:
 	if _scenario != null:
 		_scenario.free()
 	var scenario
-	if level == "world":
+	if _is_t3():
+		scenario = T3Scenario.new()
+		scenario.configure(card_seed, level == "t3_v3", 40.0)
+	elif level == "world":
 		GameConfig.apply_overrides({
 			"max_berries_carried": VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["max_berries_carried"]),
 			"pickup_hunger_threshold": VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["pickup_hunger_threshold"]),
@@ -131,7 +138,7 @@ func _reset(card_seed: int) -> void:
 		scenario.configure(card_seed, 3.0)
 	add_child(scenario)
 	_scenario = scenario
-	_actor = scenario.training_character() if level == "world" else scenario.character
+	_actor = scenario.actor if _is_t3() else (scenario.training_character() if level == "world" else scenario.character)
 	if level == "world":
 		_actor.rl_controlled = true
 		_actor.set_t0_action(0)
@@ -142,10 +149,24 @@ func _reset(card_seed: int) -> void:
 	_collided = false
 	_progress = 0.0
 	await get_tree().physics_frame
-	_scenario.process_mode = Node.PROCESS_MODE_DISABLED
+	if not _is_t3():
+		_scenario.process_mode = Node.PROCESS_MODE_DISABLED
 	_protocol.reset()
 	_busy = false
 	_bridge.send({"type": "observation", "observation": _observation(), "reward": 0.0, "terminated": false, "truncated": false, "info": _info()})
+
+func _step_t3(action: int) -> void:
+	_busy = true
+	await get_tree().physics_frame
+	var result: Dictionary = await _scenario.execute_action(action)
+	var terminated: bool = bool(result.get("terminated", false))
+	var truncated: bool = bool(result.get("truncated", false))
+	_ended = terminated or truncated
+	if _ended:
+		_protocol.finish()
+	_busy = false
+	var reward := float(result.get("reward_event", 0.0)) + 0.25 * float(result.get("progress", 0.0)) - 0.01
+	_bridge.send({"type": "observation", "observation": _observation(), "reward": reward, "terminated": terminated, "truncated": truncated, "info": _info()})
 
 func _step(action: int) -> void:
 	_busy = true
@@ -200,17 +221,29 @@ func _physics_process(_delta: float) -> void:
 	_bridge.send({"type": "observation", "observation": _observation(), "reward": 1.0 if succeeded else (-1.0 if _actor.is_dead else 0.0), "terminated": terminated, "truncated": truncated, "info": _info()})
 
 func _observation() -> Dictionary:
+	if _is_t3():
+		return _scenario.observation()
 	if level == "world":
 		return _actor.training_food_observation(_previous_action, _collided, _progress)
 	return _scenario.observation(_previous_action)
 
 func _info() -> Dictionary:
 	var mask := [0, 0, 0, 0, 0, 0, 0, 0] if _ended else [1, 1, 1, 1, 1, 1, 1, 1]
+	if _is_t3():
+		return {"episode_id": _protocol.episode_id, "step_id": _protocol.next_step, "actions": _scenario.action_count, "berries_picked": _actor.berries_picked_total, "berries_eaten": _actor.berries_eaten_total, "survived": _ended and not _actor.is_dead, "simulated_seconds": float(_scenario.action_count * T3Scenario.ACTION_TICKS) / float(Engine.physics_ticks_per_second), "action_mask": mask}
 	if level == "world":
 		return {"episode_id": _protocol.episode_id, "step_id": _protocol.next_step, "actions": _protocol.next_step, "berries_picked": _actor.berries_picked_total, "berries_eaten": _actor.berries_eaten_total, "simulated_seconds": float(_elapsed_ticks) / float(Engine.physics_ticks_per_second), "action_mask": mask}
 	return {"episode_id": _protocol.episode_id, "step_id": _protocol.next_step, "actions": _scenario.action_count, "success": _scenario.picked, "berries_picked": _scenario.character.berries_picked_total, "ronce_berries": _scenario.ronce.berries, "simulated_seconds": float(_elapsed_ticks) / float(Engine.physics_ticks_per_second), "action_mask": mask}
 
 func _debug_snapshot() -> Dictionary:
+	if _is_t3():
+		var agents: Array = []
+		for agent in _scenario.world.training_agents():
+			agents.append([agent.display_name, agent.position.x, agent.position.y, agent.position.z, agent.hunger, agent.berries_carried, agent.is_dead])
+		var resources: Array = []
+		for ronce in _scenario.world.training_resources():
+			resources.append([ronce.position.x, ronce.position.y, ronce.position.z, ronce.berries])
+		return {"agents": agents, "resources": resources, "actions": _scenario.action_count}
 	if level == "world":
 		var agents: Array = []
 		for agent in _scenario.training_agents():
@@ -226,3 +259,6 @@ func _error(message: String) -> void:
 
 func _nonnegative_integer(value) -> bool:
 	return (typeof(value) == TYPE_INT or typeof(value) == TYPE_FLOAT) and float(value) >= 0.0 and float(value) == float(int(value))
+
+func _is_t3() -> bool:
+	return level == "t3" or level == "t3_v3"

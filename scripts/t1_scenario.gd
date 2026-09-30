@@ -97,6 +97,24 @@ func execute_action(action: int) -> Dictionary:
 		"first_selected_available": first_selected_available,
 	}
 
+func execute_held_action(action: int) -> Dictionary:
+	var result: Dictionary = {}
+	var first_reward := 0.0
+	var first_distance_progress := 0.0
+	var first_berries_picked := 0
+	while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
+		result = await execute_action(action)
+		if int(result.get("actions", 0)) == 1:
+			first_reward = float(result.get("reward", 0.0))
+			first_distance_progress = float(result.get("distance_progress", 0.0))
+			first_berries_picked = int(result.get("berries_picked", 0))
+	result["selected_action"] = action
+	result["policy_decisions"] = 1
+	result["first_reward"] = first_reward
+	result["first_distance_progress"] = first_distance_progress
+	result["first_berries_picked"] = first_berries_picked
+	return result
+
 func _available_ronce():
 	for index in range(targets.size()):
 		if bool(targets[index]["available"]):

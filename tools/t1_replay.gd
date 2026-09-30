@@ -3,8 +3,10 @@ extends Node
 const T1Scenario = preload("res://scripts/t1_scenario.gd")
 const T1V3Table = preload("res://scripts/t1_v3_table.gd")
 const T1V4Table = preload("res://scripts/t1_v4_table.gd")
+const T1V5Table = preload("res://scripts/t1_v5_table.gd")
 const FINGERPRINT_V3 := "t1_choice_v3|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|first_bandit=sector|first_epsilon=0.50"
 const FINGERPRINT_V4 := "t1_choice_v4|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|gamma=0.90|progress=0.50|first_explore=min_count|first_tie=lowest"
+const FINGERPRINT_V5 := "t1_choice_v5|targets=3|available=1|distances=3,6,9|actions=8|ticks=15|horizon=24|alpha=0.20|progress=0.50|first_explore=min_count|first_tie=lowest|execution=hold_first"
 
 func _ready() -> void:
 	call_deferred("_run")
@@ -24,14 +26,14 @@ func _run() -> void:
 			return
 		contract = String(args[7])
 		checkpoint_episodes = int(args[9])
-	if contract not in ["v3", "v4"] or checkpoint_episodes not in [0, 10, 50, 200, 1000]:
+	if contract not in ["v3", "v4", "v5"] or checkpoint_episodes not in [0, 10, 50, 200, 1000]:
 		push_error("Contrat ou checkpoint de replay invalide")
 		get_tree().quit(2)
 		return
-	var seed_base := 350000000 if contract == "v3" else 360000000
-	var initialization_base := 350001000 if contract == "v3" else 360001000
-	var table_script = T1V3Table if contract == "v3" else T1V4Table
-	var fingerprint := FINGERPRINT_V3 if contract == "v3" else FINGERPRINT_V4
+	var seed_base: int = {"v3": 350000000, "v4": 360000000, "v5": 370000000}[contract]
+	var initialization_base: int = {"v3": 350001000, "v4": 360001000, "v5": 370001000}[contract]
+	var table_script = {"v3": T1V3Table, "v4": T1V4Table, "v5": T1V5Table}[contract]
+	var fingerprint: String = {"v3": FINGERPRINT_V3, "v4": FINGERPRINT_V4, "v5": FINGERPRINT_V5}[contract]
 	var initialization_seed := int(args[5])
 	if initialization_seed not in [initialization_base + 1, initialization_base + 2, initialization_base + 3]:
 		push_error("Seed d'initialisation T1 invalide")
@@ -59,8 +61,8 @@ func _run() -> void:
 		get_tree().quit(1)
 		return
 	for card_seed in range(seed_base + 101, seed_base + 133):
-		var before: Dictionary = await _run_episode(original, card_seed)
-		var after: Dictionary = await _run_episode(reloaded, card_seed)
+		var before: Dictionary = await _run_episode(original, card_seed, contract)
+		var after: Dictionary = await _run_episode(reloaded, card_seed, contract)
 		if before != after or original.checksum() != reloaded.checksum():
 			push_error("Replay divergent pour la carte %d" % card_seed)
 			file.close()
@@ -74,7 +76,7 @@ func _run() -> void:
 	print("SUCCÈS : 32 replays T1 %s identiques avant et après recharge." % contract)
 	get_tree().quit(0)
 
-func _run_episode(table, card_seed: int) -> Dictionary:
+func _run_episode(table, card_seed: int, contract: String) -> Dictionary:
 	var scenario := T1Scenario.new()
 	scenario.configure(card_seed)
 	add_child(scenario)
@@ -97,6 +99,14 @@ func _run_episode(table, card_seed: int) -> Dictionary:
 		else:
 			empty_sectors.append(int(target["resource_sector"]))
 	var result: Dictionary = {}
+	if contract == "v5":
+		var observation: Dictionary = scenario.observation(previous_action)
+		var state: String = table.state_key(observation["targets"], observation["previous_action"])
+		var action: int = table.select_epsilon_greedy(state, 0.0, rng)
+		result = await scenario.execute_held_action(action)
+		actions.append(action)
+		first_progress = float(result["first_distance_progress"])
+		first_picked = int(result["first_berries_picked"])
 	while not bool(result.get("terminated", false)) and not bool(result.get("truncated", false)):
 		var observation: Dictionary = scenario.observation(previous_action)
 		var state: String = table.state_key(observation["targets"], observation["previous_action"])
