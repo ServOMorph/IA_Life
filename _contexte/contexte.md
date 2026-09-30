@@ -8,14 +8,13 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 `gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
-Laboratoire headless reproductible ; la Phase 4 franchit son gate technique de T1 à T3.
-T1 v5 consomme 96/96 ; T2 v1 prouve l'apport causal de la mémoire ; T3 v2 puis T3 v3
-franchissent leurs seuils sans puis avec trois concurrents fixes. Les replays sont stables.
-Les graines finales restent fermées. La Phase 5 attend le checkpoint `/compact` ; l'axe danger reste en pause.
+Laboratoire headless reproductible ; Phase 4 acquise, Phase 5 exécutée : le lot final de confirmation
+T3 v3 est en critère non atteint (7/8 ; solvabilité scriptée 0,875 sous 0,90), l'apprentissage étant
+positif dans les 5 lignées (`trained` 0,628, seuil 0,60 avec 0,028 de marge). Cartes finales consommées.
+Décideur `politique_apprise` livré en jeu (expérimental, non validé) ; démonstration fenêtrée en attente.
+Suite ouverte : contrat de confirmation v2 (nouvelles cartes/graines) ou arrêt ; l'axe danger reste en pause.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-09-18 : T0 v2 atteint son gate sur 1 248 résultats valides : `scripted` et les trois
-  lignées `trained` réussissent 96/96 au checkpoint 1 000 ; les contrôles restent inférieurs.
 - 2026-09-19 : correction — le gate T0 v2 n'est pas atteint. Gain `trained`@1000 contre
   `random_valid` = 0,271 agrégé (0,25-0,28 par lignée), sous le seuil de 0,30. Calibration
   complémentaire : `random_valid` seul tombe de 0,73 (2 m) à ~0,31-0,47 (3 m). Voir
@@ -44,3 +43,7 @@ Les graines finales restent fermées. La Phase 5 attend le checkpoint `/compact`
 - 2026-09-29 : T3 v3 franchit le gate avec trois concurrents fixes : 71/96 pour la politique
   entraînée, contre 15/96 initiale et 7/96 aléatoire ; replay 96/96 stable. Voir
   `_docs/decisions/2026-09-29_t3-v3-gate-concurrence-atteint.md`.
+- 2026-09-30 : confirmation T3 v3 (lot final indépendant, 5 × 64 cartes) : critère non atteint,
+  7 critères sur 8. `trained` 201/320 contre 40/320 (initial) et 31/320 (aléatoire) ; seule la
+  solvabilité scriptée échoue (0,875 < 0,90). Cartes finales consommées ; suite = contrat v2. Voir
+  `_docs/decisions/2026-09-30_t3-v3-confirmation-critere-non-atteint.md`.

@@ -1,0 +1,99 @@
+{
+  "cards": "final",
+  "checkpoint": 200,
+  "corrected_97_5_percent_intervals": {
+    "initial_frozen": [
+      0.434375,
+      0.571875
+    ],
+    "random_valid": [
+      0.4625,
+      0.6
+    ]
+  },
+  "gates": {
+    "food_non_regression": true,
+    "minimum_gains": true,
+    "persistence_ablation": true,
+    "positive_corrected_intervals": true,
+    "positive_lineage_gains": true,
+    "reload_replay": true,
+    "scripted_solvable": false,
+    "trained_survival": true
+  },
+  "lineage_gains": {
+    "initial_frozen": {
+      "410001101": 0.546875,
+      "410001102": 0.46875,
+      "410001103": 0.515625,
+      "410001104": 0.515625,
+      "410001105": 0.46875
+    },
+    "random_valid": {
+      "410001101": 0.5625,
+      "410001102": 0.484375,
+      "410001103": 0.5625,
+      "410001104": 0.53125,
+      "410001105": 0.515625
+    }
+  },
+  "replay": {
+    "errors": [],
+    "ok": true
+  },
+  "reset_diagnostic": {
+    "intervals": {
+      "initial_frozen": [
+        -0.03125,
+        0.0
+      ],
+      "random_valid": [
+        -0.025,
+        0.0625
+      ]
+    },
+    "meets_core": false
+  },
+  "summaries": {
+    "initial_frozen": {
+      "berries_eaten": 120,
+      "episodes": 320,
+      "meal_rate": 0.125,
+      "survival_rate": 0.125,
+      "survived": 40
+    },
+    "random_valid": {
+      "berries_eaten": 95,
+      "episodes": 320,
+      "meal_rate": 0.096875,
+      "survival_rate": 0.096875,
+      "survived": 31
+    },
+    "reset_each_episode": {
+      "berries_eaten": 111,
+      "episodes": 320,
+      "meal_rate": 0.115625,
+      "survival_rate": 0.115625,
+      "survived": 37
+    },
+    "scripted_food": {
+      "berries_eaten": 1190,
+      "episodes": 320,
+      "meal_rate": 0.875,
+      "survival_rate": 0.875,
+      "survived": 280
+    },
+    "trained": {
+      "berries_eaten": 807,
+      "episodes": 320,
+      "meal_rate": 0.628125,
+      "survival_rate": 0.628125,
+      "survived": 201
+    }
+  },
+  "survival_gains": {
+    "initial_frozen": 0.503125,
+    "random_valid": 0.53125
+  },
+  "verdict": "critere_non_atteint_ou_indetermine"
+}

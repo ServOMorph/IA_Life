@@ -157,3 +157,5 @@
 - 2026-09-12 : T0 v2 fixe une ronce à 2 m sans récompense de distance ; scénario physique,
   table persistante, validation et exécution parallèle par lignées sont prêts. La campagne n'a pas
   été lancée ; aucun gain n'est conclu. Voir `_docs/decisions/2026-09-12_t0-alimentaire-v2.md`.
+- 2026-09-18 : T0 v2 atteint son gate sur 1 248 résultats valides : `scripted` et les trois
+  lignées `trained` réussissent 96/96 au checkpoint 1 000 ; les contrôles restent inférieurs.

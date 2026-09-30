@@ -1,3 +1,13 @@
+## v0.42 — 2026-09-30
+
+### Ajouté
+- Contrat de confirmation T3 v3, outillage (lanceur, validateur, analyse, rejeu) et lot final indépendant de 1 600 résultats.
+- Décideur `politique_apprise` (table T3 figée, repli compté, télémétrie) avec tests de livraison et configuration de démonstration.
+
+### Modifié
+- Confirmation T3 v3 : critère non atteint (7 critères sur 8), solvabilité scriptée à 0,875 ; cartes finales consommées.
+- Roadmap, contexte, README et journal des décisions alignés sur ce résultat.
+
 ## v0.41 — 2026-09-30
 
 ### Ajouté

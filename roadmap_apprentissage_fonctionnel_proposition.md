@@ -1,6 +1,6 @@
 # Roadmap — Apprentissage fonctionnel dans IA_Life
 
-Adoptée le 10 septembre 2026. Statut : **[CHECKPOINT — Phase 4 terminée, `/compact` requis avant Phase 5]**.
+Adoptée le 10 septembre 2026. Statut : **[PHASE 5 EN COURS — lot final exécuté, critère non atteint ; contrat v2 ou arrêt à décider]**.
 Analyse de référence : [diagnostic et recherche Web/GitHub](D:/ServOMorph/IA_Life/_docs/2026-09-10_recherche_apprentissage.md).
 
 Cette roadmap remplace le chemin critique « calibration du danger → reprise de l'apprentissage ». Elle conserve les résultats historiques, mais donne la priorité à une preuve d'apprentissage alimentaire entre épisodes. Les dangers deviennent une extension ; un agent LLM utilisant des compétences ou une mémoire d'expérience reste une destination explicite du projet.
@@ -172,7 +172,9 @@ Si les premiers repas sont trop rares, activer une seule branche d'imitation : d
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-## Phase 5 — Confirmation indépendante et livraison dans le jeu [TODO]
+## Phase 5 — Confirmation indépendante et livraison dans le jeu [EN COURS — critère non atteint]
+
+**Résultat (2026-09-30).** Contrat de confirmation gelé (`experiments/apprentissage_t3_confirmation_contrat_v1.md`, commit `c31c0520`), puis lot final unique : 5 entraînements indépendants, 64 cartes nouvelles, 1 600 résultats conformes, rejeux identiques. Sept critères sur huit sont satisfaits : `trained` 201/320 (0,628) contre 40/320 (initial) et 31/320 (aléatoire), gains de 0,50 et 0,53, intervalles corrigés strictement positifs, gain positif dans les 5 lignées, ablation sans rattrapage. Le critère de solvabilité échoue : `scripted_food` 280/320 (0,875) sous 0,90. Verdict : **critère non atteint**, non requalifié ; les cartes finales sont consommées. Le décideur `politique_apprise` est livré et testé (équivalence d'actions, repli compté, mode figé, contrôle manuel prioritaire) mais non validé statistiquement ; la démonstration fenêtrée reste en attente dans `tests_manuels.md`. Voir `_docs/decisions/2026-09-30_t3-v3-confirmation-critere-non-atteint.md`. Une suite exige un contrat v2 avec de nouvelles cartes et graines.
 
 **Recherche restante.** Aucune nouvelle recherche d'algorithme après ouverture du test. Vérifier seulement que le plan statistique gelé correspond à la structure effective des données.
 
@@ -227,4 +229,4 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 Les recherches initiales sont consignées dans l'analyse liée ; chaque phase complète uniquement la question nécessaire à sa réalisation. Insérer une phase de refactorisation dédiée seulement si une dette observée rend la suite difficile, et en expliciter le motif. Ne pas modifier les statuts pendant le développement : les preuves sont consignées, `/close` prononce la clôture.
 
-La Phase 4 est terminée. Le checkpoint est en attente ; la Phase 5 ne commence qu'après `/compact` et confirmation écrite de l'utilisateur.
+La Phase 4 est terminée. La Phase 5 a produit son lot final (critère non atteint, 7 critères sur 8) ; toute suite passe par un contrat de confirmation v2 décidé explicitement, avec de nouvelles réserves. Le checkpoint `/compact` de fin de Phase 5 reste à faire avant toute reprise.

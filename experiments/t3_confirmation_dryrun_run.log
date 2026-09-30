@@ -1,0 +1,102 @@
+800 résultats de confirmation conformes : D:\ServOMorph\IA_Life\experiments\t3_confirmation_dryrun_results.jsonl
+replays écrits pour 5 lignées (dryrun).
+{
+  "cards": "validation",
+  "checkpoint": 200,
+  "corrected_97_5_percent_intervals": {
+    "initial_frozen": [
+      0.4625,
+      0.65625
+    ],
+    "random_valid": [
+      0.54375,
+      0.75625
+    ]
+  },
+  "gates": {
+    "food_non_regression": true,
+    "minimum_gains": true,
+    "persistence_ablation": true,
+    "positive_corrected_intervals": true,
+    "positive_lineage_gains": true,
+    "reload_replay": true,
+    "scripted_solvable": true,
+    "trained_survival": true
+  },
+  "lineage_gains": {
+    "initial_frozen": {
+      "410001101": 0.59375,
+      "410001102": 0.53125,
+      "410001103": 0.5,
+      "410001104": 0.59375,
+      "410001105": 0.59375
+    },
+    "random_valid": {
+      "410001101": 0.71875,
+      "410001102": 0.65625,
+      "410001103": 0.53125,
+      "410001104": 0.6875,
+      "410001105": 0.6875
+    }
+  },
+  "replay": {
+    "errors": [],
+    "ok": true
+  },
+  "reset_diagnostic": {
+    "intervals": {
+      "initial_frozen": [
+        -0.05625,
+        0.0
+      ],
+      "random_valid": [
+        0.0,
+        0.1375
+      ]
+    },
+    "meets_core": false
+  },
+  "summaries": {
+    "initial_frozen": {
+      "berries_eaten": 95,
+      "episodes": 160,
+      "meal_rate": 0.15625,
+      "survival_rate": 0.15625,
+      "survived": 25
+    },
+    "random_valid": {
+      "berries_eaten": 30,
+      "episodes": 160,
+      "meal_rate": 0.0625,
+      "survival_rate": 0.0625,
+      "survived": 10
+    },
+    "reset_each_episode": {
+      "berries_eaten": 83,
+      "episodes": 160,
+      "meal_rate": 0.13125,
+      "survival_rate": 0.13125,
+      "survived": 21
+    },
+    "scripted_food": {
+      "berries_eaten": 615,
+      "episodes": 160,
+      "meal_rate": 0.90625,
+      "survival_rate": 0.90625,
+      "survived": 145
+    },
+    "trained": {
+      "berries_eaten": 415,
+      "episodes": 160,
+      "meal_rate": 0.71875,
+      "survival_rate": 0.71875,
+      "survived": 115
+    }
+  },
+  "survival_gains": {
+    "initial_frozen": 0.5625,
+    "random_valid": 0.65625
+  },
+  "verdict": "critere_atteint"
+}
+exit=0

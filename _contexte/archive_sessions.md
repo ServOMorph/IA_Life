@@ -561,3 +561,26 @@ Isoler les échecs de navigation T1 v4 hors validation, puis versionner une hypo
 
 ## Question bloquante pour la session suivante
 Aucune.
+
+---
+
+# Session du 2026-09-30
+
+## Décisions prises
+- La Phase 4 franchit son gate avec les validations successives T1 v5, T2 v1, T3 v2 et T3 v3.
+
+## Livrables produits ou modifiés
+- Contrats, scénarios, campagnes, analyses et replays T1 v5, T2 v1 et T3 v1–v3 produits.
+- Tests de résultats, de scénarios et d'équivalence direct/bridge exécutés.
+- Roadmap, décisions, contexte, README et CHANGELOG actualisés par `/close`.
+
+## Hypothèses validées / invalidées
+- VALIDE : la direction tenue résout T1 ; la mémoire explicite est causale sur T2 ; T3 passe sans puis avec concurrents.
+- INVALIDE : le contrat T3 v1 à vision 25 est suffisamment solvable ; T3 v2 porte la vision à 40.
+- RÉSERVE : ces résultats sont de validation ; les graines finales n'ont pas été ouvertes.
+
+## Prochaine étape exacte
+Faire `/compact`, puis engager la Phase 5 par le gel du candidat et du plan de confirmation indépendante.
+
+## Question bloquante pour la session suivante
+Aucune.

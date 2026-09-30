@@ -61,6 +61,10 @@ alimentaire. Le gate technique est atteint ; il ne valide pas l'apprentissage da
 La Phase 4 est terminée. T1 v5 atteint 96/96 consommations ; T2 v1 atteint 96/96 avec mémoire
 contre 12/96 sans mémoire ; T3 v2 puis T3 v3 franchissent leurs gates sans puis avec trois
 concurrents fixes. Les checkpoints retenus sont stables au replay et le chemin direct est équivalent
-au bridge. Les graines finales restent fermées ; la Phase 5 attend le checkpoint `/compact`.
+au bridge. La Phase 5 a exécuté un lot final indépendant (5 entraînements, 64 cartes nouvelles) : critère
+non atteint, 7 critères sur 8. La politique entraînée survit à 201/320 contre 40/320 initial et
+31/320 aléatoire, mais la solvabilité de référence est à 0,875 sous le seuil de 0,90. Les cartes
+finales sont consommées ; une suite exige un contrat de confirmation v2. Un décideur
+`politique_apprise` (table figée, repli compté) est livré en jeu à titre expérimental.
 L'axe danger demeure en pause. Voir `roadmap_apprentissage_fonctionnel_proposition.md` et
-`_docs/decisions/2026-09-29_t3-v3-gate-concurrence-atteint.md`.
+`_docs/decisions/2026-09-30_t3-v3-confirmation-critere-non-atteint.md`.
