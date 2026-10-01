@@ -20,7 +20,7 @@ def main() -> int:
     env["IA_LIFE_DEV_MODE"] = "1"
     env["IA_LIFE_HEADLESS_CONFIG"] = str(CONFIG_PATH)
 
-    result = subprocess.run([str(GODOT_EXE), "--path", str(PROJECT_DIR)], env=env)
+    result = subprocess.run([str(GODOT_EXE), "--path", str(PROJECT_DIR), "--maximized"], env=env)
     return result.returncode
 
 

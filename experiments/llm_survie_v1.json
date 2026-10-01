@@ -1,0 +1,61 @@
+{
+  "format_version": 1,
+  "experiment_id": "llm-survie-v1",
+  "seed": 1337,
+  "environment": {
+    "game_config": {
+      "ronce_count": 24,
+      "berries_per_ronce": 3,
+      "danger_zone_count": 0
+    }
+  },
+  "agents": {
+    "individual": {
+      "Rouge": {
+        "decider_type": "llm_survie",
+        "llm_model": "gemma3:1b",
+        "llm_decision_interval_seconds": 10.0,
+        "llm_timeout_seconds": 20.0,
+        "memory_capacity": 100,
+        "memory_decay_rate": 0.0,
+        "vision_range": 25.0
+      },
+      "Bleu": {
+        "decider_type": "llm_survie",
+        "llm_model": "gemma3:1b",
+        "llm_decision_interval_seconds": 10.0,
+        "llm_timeout_seconds": 20.0,
+        "memory_capacity": 100,
+        "memory_decay_rate": 0.0,
+        "vision_range": 25.0
+      },
+      "Vert": {
+        "decider_type": "llm_survie",
+        "llm_model": "gemma3:1b",
+        "llm_decision_interval_seconds": 10.0,
+        "llm_timeout_seconds": 20.0,
+        "memory_capacity": 100,
+        "memory_decay_rate": 0.0,
+        "vision_range": 25.0
+      },
+      "Jaune": {
+        "decider_type": "llm_survie",
+        "llm_model": "gemma3:1b",
+        "llm_decision_interval_seconds": 10.0,
+        "llm_timeout_seconds": 20.0,
+        "memory_capacity": 100,
+        "memory_decay_rate": 0.0,
+        "vision_range": 25.0
+      }
+    }
+  },
+  "simulation": {
+    "game_speed": 1.0,
+    "max_simulation_seconds": 1200.0,
+    "quit_on_all_dead": true
+  },
+  "metadata": {
+    "roadmap": "roadmap_survie_llm.md",
+    "contrat": "experiments/llm_survie_contrat_v1.md"
+  }
+}

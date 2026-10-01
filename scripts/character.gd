@@ -98,6 +98,11 @@ var _direction := Vector3.ZERO
 var _manual_direction := Vector3.ZERO
 var _timer := 0.0
 var _memories: Array = []
+var _ronce_memory: RonceMemory = null
+var _survie: LLMSurieEngine = null
+var _survie_turns: LLMSurieTurns = null
+var _contact_ronce = null
+var _contact_frame: int = -1
 var _decider = null
 var _applied_controller = null
 var _last_position := Vector3.ZERO
@@ -127,7 +132,14 @@ var _current_anim: String = ""
 var _rl_direction := Vector3.ZERO
 
 func _ready() -> void:
+	if decider_type == "llm_survie":
+		_ronce_memory = RonceMemory.new()
+		_survie = LLMSurieEngine.new()
+		_survie.setup(self, _ronce_memory)
 	_decider = _build_decider()
+	if _survie != null:
+		_survie_turns = LLMSurieTurns.new()
+		_survie_turns.setup(self, _survie, _ronce_memory, _decider, llm_decision_interval_seconds)
 	_pick_new_direction(false)
 	_last_position = position
 	_set_goal("errance")
@@ -144,6 +156,11 @@ func _build_decider():
 			decider.configure(llm_model, llm_decision_interval_seconds, llm_timeout_seconds, decider_type == "llm_mock", display_name)
 			add_child(decider)
 			return decider
+		"llm_survie":
+			var backend := LLMSurieOllamaBackend.new()
+			backend.configure(llm_model, llm_timeout_seconds, decider_seed + hash(display_name), display_name)
+			add_child(backend)
+			return backend
 		"adaptatif":
 			var adaptive := AdaptiveDecider.new()
 			adaptive.configure(learning_rate, exploration_epsilon, adaptive_decision_interval_seconds, decider_seed + hash(display_name), display_name)
@@ -238,7 +255,8 @@ func _physics_process(delta: float) -> void:
 			_die()
 			return
 
-	_try_eat_berry()
+	if _survie == null:
+		_try_eat_berry()
 	_decay_memories(scaled_delta)
 	_update_social_perception(scaled_delta)
 	_update_vision_perception()
@@ -339,6 +357,9 @@ func _apply_decision(scaled_delta: float) -> void:
 	if _applied_controller != null and _applied_controller.is_driving() and not manual_control:
 		_direction = _rl_direction
 		_set_goal("modele")
+		return
+	if _survie != null and not manual_control:
+		_apply_survie_decision()
 		return
 	var visible_ronce_direction := _direction_to_nearest_visible_ronce()
 	var danger_info := _visible_danger_info()
@@ -612,6 +633,8 @@ func _perceive(range_value: float, angle_degrees: float, blocked_by_terrain: boo
 
 func _update_vision_perception() -> void:
 	_visible_entities = _perceive(vision_range, vision_angle_degrees, vision_blocked_by_terrain, "perceptible")
+	if _ronce_memory != null:
+		_observe_visible_ronces()
 	if _visible_entities.is_empty():
 		_active_vision_contacts.clear()
 		return
@@ -894,6 +917,9 @@ func _social_direction() -> Vector3:
 	return direction.normalized() if _social_goal == "suivi_social" else -direction.normalized()
 
 func _on_ronce_contact(ronce) -> void:
+	if _survie != null:
+		_register_survie_contact(ronce)
+		return
 	try_pick_berry_from_ronce(ronce)
 
 func try_pick_berry_from_ronce(ronce, ignore_hunger_threshold: bool = false) -> bool:
@@ -901,13 +927,20 @@ func try_pick_berry_from_ronce(ronce, ignore_hunger_threshold: bool = false) -> 
 		return false
 	_record_first_contact(ronce)
 	_remember_ronce(ronce)
+	if _ronce_memory != null:
+		_observe_ronce(ronce, ronce.get_perception_state())
 	if berries_carried >= GameConfig.max_berries_carried:
 		return false
 	if not ignore_hunger_threshold and hunger > GameConfig.pickup_hunger_threshold:
 		return false
+	return _harvest_from(ronce)
+
+func _harvest_from(ronce) -> bool:
 	if ronce.harvest_one():
 		berries_carried += 1
 		berries_picked_total += 1
+		if _ronce_memory != null:
+			_ronce_memory.note_own_pick(ronce.ronce_id)
 		GameLogger.log_event_data("objectif", "%s : cueillette" % display_name, {"agent": display_name, "goal": "cueillette"})
 		GameLogger.log_event_data("cueillette", "%s ramasse une mûre (faim: %.0f, portées: %d/%d)" % [display_name, hunger, berries_carried, GameConfig.max_berries_carried], {
 			"agent": display_name,
@@ -960,6 +993,67 @@ func _decay_memories(scaled_delta: float) -> void:
 
 func memorized_ronces_count() -> int:
 	return _memories.size()
+
+func ronce_memory() -> RonceMemory:
+	return _ronce_memory
+
+func survie_engine() -> LLMSurieEngine:
+	return _survie
+
+func survie_turns() -> LLMSurieTurns:
+	return _survie_turns
+
+func set_survie_backend(backend) -> void:
+	_decider = backend
+	_survie_turns.backend = backend
+
+func survie_summary() -> Dictionary:
+	return _survie_turns.summary() if _survie_turns != null else {}
+
+func contact_ronce():
+	if _contact_ronce == null or not is_instance_valid(_contact_ronce):
+		return null
+	if Engine.get_physics_frames() - _contact_frame > 1:
+		return null
+	return _contact_ronce
+
+func survie_harvest(ronce) -> bool:
+	if is_dead or ronce == null:
+		return false
+	return _harvest_from(ronce)
+
+func survie_eat() -> bool:
+	if is_dead or berries_carried <= 0:
+		return false
+	_eat_one_berry()
+	return true
+
+func _register_survie_contact(ronce) -> void:
+	_contact_ronce = ronce
+	_contact_frame = Engine.get_physics_frames()
+	if is_dead:
+		return
+	_record_first_contact(ronce)
+	_remember_ronce(ronce)
+	_observe_ronce(ronce, ronce.get_perception_state())
+
+func _apply_survie_decision() -> void:
+	survie_step(get_physics_process_delta_time() * GameSpeed.time_scale)
+
+func survie_step(delta: float) -> void:
+	_survie_turns.step(delta)
+	_direction = _survie.tick(delta)
+	_set_goal("llm_survie_%s" % _survie.current_action if _survie.current_action != "" else "llm_survie_arret")
+
+func _observe_ronce(ronce, state: Dictionary) -> void:
+	if ronce.ronce_id == "":
+		return
+	_ronce_memory.observe(ronce.ronce_id, ronce.position, int(state.get("berries", 0)), _now_elapsed_seconds())
+
+func _observe_visible_ronces() -> void:
+	for entry in _visible_entities:
+		if entry["type"] == "roncier":
+			_observe_ronce(entry["node"], entry["state"])
 
 func training_food_observation(previous_action: int, collided: bool, progress: float) -> Dictionary:
 	var visible: Array = []
@@ -1071,6 +1165,9 @@ func _try_eat_berry() -> void:
 		return
 	if hunger > GameConfig.eat_hunger_threshold:
 		return
+	_eat_one_berry()
+
+func _eat_one_berry() -> void:
 	berries_carried -= 1
 	berries_eaten_total += 1
 	GameLogger.log_event_data("objectif", "%s : consommation" % display_name, {"agent": display_name, "goal": "consommation"})

@@ -47,6 +47,7 @@ var _screenshot_delay: float = 0.0
 var _screenshot_clock: float = 0.0
 var _dev_mode: bool = false
 var _ronces: Array = []
+var _ronce_serial: int = 0
 var _danger_zones: Array = []
 var _dev_frozen_scale: float = -1.0
 var _dev_step_frames: int = 0
@@ -121,7 +122,7 @@ func _ready() -> void:
 		_characters.append(_test_character)
 		_ui.set_test_character(_test_character)
 		_spawn_dev_spawn_ronces()
-		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), G: forcer faim haute (déclenche cueillette), E: ramasser une mûre proche, K: tuer le personnage de test (teste l'animation Death), F1-F4: téléporter le personnage au centre de la map (caméra suit), Shift+F1-F4: téléporter le personnage au contact de la ronce la plus proche (caméra suit), F5: activer/désactiver le contrôle du personnage de test, T: checklist de tests")
+		GameLogger.log_event("dev", "Mode dev activé (IA_LIFE_DEV_MODE) — Espace: geler/reprendre, N: avancer d'une frame, H: forcer faim basse (déclenche repas), G: forcer faim haute (déclenche cueillette), E: ramasser une mûre proche, K: tuer le personnage de test (teste l'animation Death), F1-F4: suivre un personnage avec la caméra, Shift+F1-F4: téléporter le personnage au contact de la ronce la plus proche (caméra suit), F5: activer/désactiver le contrôle du personnage de test, F6: plier/déplier la fenêtre mode dev, T: checklist de tests")
 
 func _physics_process(_delta: float) -> void:
 	if _headless_run and not _run_finished:
@@ -245,6 +246,8 @@ func _unhandled_key_input(event: InputEvent) -> void:
 			_ui.toggle_dev_checklist()
 		KEY_F5:
 			_dev_toggle_test_control()
+		KEY_F6:
+			_ui.toggle_dev_panel()
 
 func _dev_toggle_freeze() -> void:
 	if _dev_frozen_scale < 0.0:
@@ -281,9 +284,8 @@ func _dev_teleport_to_ronce(index: int) -> void:
 	var character = _characters[index]
 	if character.is_dead:
 		return
-	character.position = Vector3(0.0, _terrain_height(0.0, 0.0), 0.0)
 	_camera.follow(character)
-	GameLogger.log_event("dev", "%s téléporté au centre de la map (caméra en suivi)" % character.display_name)
+	GameLogger.log_event("dev", "Caméra en suivi de %s" % character.display_name)
 
 func _dev_teleport_to_nearest_ronce(index: int) -> void:
 	if index >= _characters.size():
@@ -526,6 +528,7 @@ func _finish_headless_run(reason: String) -> void:
 				"llm_total_latency_ms": character.llm_total_latency_ms,
 				"lifetime_seconds": lifetime,
 			})
+			agents[agents.size() - 1].merge(character.survie_summary())
 		GameLogger.write_summary({
 			"status": "completed",
 			"reason": reason,
@@ -901,6 +904,7 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 		_setup_rigged_visual(character, color)
 	else:
 		_setup_box_visual(character, color)
+	_add_locator_marker(character, color, char_name)
 
 	return {
 		"node": character,
@@ -908,6 +912,27 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 		"color": color,
 		"corner": corner,
 	}
+
+## Repère au-dessus du personnage (nom + flèche), toujours face caméra, visible à travers le
+## décor et de taille constante à l'écran pour retrouver chaque agent de loin.
+func _add_locator_marker(character: CharacterBody3D, color: Color, char_name: String) -> void:
+	var marker := Label3D.new()
+	marker.name = "LocatorMarker"
+	marker.text = "%s\n▼" % char_name
+	marker.position = Vector3(0, 2.4, 0)
+	marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	marker.no_depth_test = true
+	marker.fixed_size = true
+	marker.pixel_size = 0.0012
+	marker.font_size = 40
+	marker.outline_size = 10
+	marker.modulate = Color(color.r, color.g, color.b, 1.0)
+	marker.outline_modulate = Color.WHITE if color.get_luminance() < 0.3 else Color.BLACK
+	marker.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	marker.vertical_alignment = VERTICAL_ALIGNMENT_BOTTOM
+	marker.render_priority = 10
+	marker.outline_render_priority = 9
+	character.add_child(marker)
 
 func _setup_box_visual(character: CharacterBody3D, color: Color) -> void:
 	var body_mesh := MeshInstance3D.new()
@@ -1136,6 +1161,8 @@ func _spawn_ronce(pos: Vector3) -> void:
 	ronce.name = "Ronce"
 	ronce.set_script(load("res://scripts/ronce.gd"))
 	ronce.berries = GameConfig.berries_per_ronce
+	ronce.ronce_id = "R%02d" % (_ronce_serial + 1)
+	_ronce_serial += 1
 	ronce.position = pos
 
 	var mesh_instance := MeshInstance3D.new()

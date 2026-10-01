@@ -78,9 +78,6 @@ L'axe apprentissage par renforcement (T0-T3) est en pause pendant cette roadmap.
 **Gate** : contrat écrit dans `experiments/llm_survie_contrat_v1.md` ; config validée par
 `VariableRegistry` ; runs `automate` existants inchangés.
 
-**⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
-Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
-
 ### Phase 1 — Mémoire par coordonnées et estimation des mûres [TODO]
 
 - Mémoire indexée par identifiant stable de roncier : coordonnées, mûres estimées, date de dernière
@@ -91,9 +88,6 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **Gate** : tests verts — mémorisation à la vue, au contact, décompte après cueillette propre,
 estimation périmée puis corrigée à la vue suivante, aucun oubli sur un run long.
 
-**⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
-Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
-
 ### Phase 2 — Actions explicites et navigation vers cible [TODO]
 
 - Actions `aller_vers`, `explorer`, `ramasser`, `manger`, `attendre` exécutées par le moteur.
@@ -103,9 +97,6 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 
 **Gate** : tests verts avec le mock — séquence complète aller/ramasser/manger, refus de manger
 au-dessus du seuil, refus de ramasser à 3 mûres ou hors contact ; `automate` inchangé.
-
-**⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
-Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
 ### Phase 3 — Décision asynchrone et déclenchement [TODO]
 
@@ -119,9 +110,6 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 l'attente, aucune décision manquée ni doublée, télémétrie d'attente cohérente ; deux runs mock
 sans latence au même seed identiques.
 
-**⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
-Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
-
 ### Phase 4 — Prompt et intégration `gemma3:1b` [TODO]
 
 - Prompt : faim, mûres portées, seuil de repas, ronciers connus (id, distance, direction, mûres
@@ -132,9 +120,6 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **Gate** : run réel headless complet sans blocage, taux d'erreur mesuré, aucune réponse figée ;
 démonstration fenêtrée ajoutée à `tests_manuels.md`.
 
-**⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
-Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
-
 ### Phase 5 — Mesure de survie [TODO]
 
 - Critère de succès à définir avec l'utilisateur et à écrire avant toute mesure.
@@ -142,6 +127,3 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 - Rapport : survie, durée de vie, mûres mangées, faim perdue en attente, latence moyenne, matériel.
 
 **Gate** : à définir en ouverture de phase.
-
-**⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
-Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.

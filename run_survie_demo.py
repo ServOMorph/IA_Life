@@ -5,7 +5,7 @@ from pathlib import Path
 
 GODOT_EXE = Path("D:/Godot/godot.exe")
 PROJECT_DIR = Path(__file__).resolve().parent
-CONFIG_PATH = PROJECT_DIR / "experiments" / "t3_applied_demo_v1.json"
+CONFIG_PATH = PROJECT_DIR / "experiments" / "llm_survie_v1.json"
 
 
 def main() -> int:

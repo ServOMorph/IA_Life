@@ -15,7 +15,7 @@ def main() -> int:
     env = os.environ.copy()
     env["IA_LIFE_DEV_MODE"] = "1"
 
-    result = subprocess.run([str(GODOT_EXE), "--path", str(PROJECT_DIR)], env=env)
+    result = subprocess.run([str(GODOT_EXE), "--path", str(PROJECT_DIR), "--maximized"], env=env)
     return result.returncode
 
 

@@ -10,7 +10,7 @@ def main() -> int:
         print(f"Godot introuvable : {GODOT_EXE}")
         return 1
 
-    result = subprocess.run([str(GODOT_EXE), "--path", str(PROJECT_DIR)])
+    result = subprocess.run([str(GODOT_EXE), "--path", str(PROJECT_DIR), "--maximized"])
     return result.returncode
 
 if __name__ == "__main__":

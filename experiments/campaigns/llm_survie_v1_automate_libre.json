@@ -1,0 +1,28 @@
+{
+  "base_config": "../llm_survie_v1.json",
+  "parameter_grid": {},
+  "seeds": [
+    26093001,
+    26093002,
+    26093003,
+    26093004,
+    26093005,
+    26093006
+  ],
+  "repetitions": 1,
+  "campaign_id": "llm-survie-v1-automate-cueillette-libre",
+  "arms": [
+    {
+      "name": "automate_cueillette_libre",
+      "overrides": {
+        "agents.individual.Rouge.decider_type": "automate",
+        "agents.individual.Bleu.decider_type": "automate",
+        "agents.individual.Vert.decider_type": "automate",
+        "agents.individual.Jaune.decider_type": "automate",
+        "environment.game_config.pickup_hunger_threshold": 100.0
+      }
+    }
+  ],
+  "python_timeout_seconds": 1500,
+  "output_dir": "../../results/_llm_survie_v1_automate_libre"
+}

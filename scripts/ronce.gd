@@ -1,6 +1,7 @@
 extends Area3D
 
 var berries: int = 3
+var ronce_id: String = ""
 var solid_body: StaticBody3D = null
 
 var _berry_meshes: Array = []
@@ -47,7 +48,7 @@ func get_perception_type() -> String:
 	return "roncier"
 
 func get_perception_state() -> Dictionary:
-	return {"has_berries": berries > 0}
+	return {"has_berries": berries > 0, "berries": berries}
 
 func get_occlusion_exclude_rids() -> Array:
 	return [solid_body.get_rid()] if solid_body != null else []

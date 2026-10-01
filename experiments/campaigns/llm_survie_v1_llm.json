@@ -1,0 +1,22 @@
+{
+  "base_config": "../llm_survie_v1.json",
+  "parameter_grid": {},
+  "seeds": [
+    26093001,
+    26093002,
+    26093003,
+    26093004,
+    26093005,
+    26093006
+  ],
+  "repetitions": 1,
+  "campaign_id": "llm-survie-v1-llm",
+  "arms": [
+    {
+      "name": "llm_survie",
+      "overrides": {}
+    }
+  ],
+  "python_timeout_seconds": 1500,
+  "output_dir": "../../results/_llm_survie_v1_llm"
+}

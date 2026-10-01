@@ -90,6 +90,24 @@ func _run() -> void:
 	_test_continuous_harvest_while_in_contact()
 	_test_baseline_ignores_full_inventory()
 	_test_adaptive_ignores_full_inventory()
+	_test_llm_survie_config()
+	_test_ronce_memory_on_sight()
+	_test_ronce_memory_on_contact()
+	_test_ronce_memory_own_pick_countdown()
+	_test_ronce_memory_stale_then_corrected()
+	_test_ronce_memory_never_forgets()
+	_test_ronce_memory_absent_for_other_deciders()
+	_test_survie_no_automatic_pickup_or_meal()
+	_test_survie_full_sequence()
+	_test_survie_refusals()
+	_test_survie_arrival_block_and_empty_target()
+	_test_survie_mock_backend_integration()
+	_test_survie_turn_cadence_and_wait()
+	_test_survie_events_queued_during_wait()
+	_test_survie_fallback_backoff()
+	_test_survie_safety_interval()
+	_test_survie_zero_latency_determinism()
+	_test_survie_ollama_prompt_schema_and_parsing()
 	if _failures.is_empty():
 		print("SUCCÈS : tests manuels 6, 8, 9, 10 et 11, ExperimentConfig, vision (Phase 8), décideur adaptatif (Phases 1 et 2) et perception/politique du danger (Phase 2 v3) validés automatiquement.")
 		get_tree().quit(0)
@@ -1322,3 +1340,435 @@ func _test_adaptive_ignores_full_inventory() -> void:
 	var action: Dictionary = decider.decide(full_inventory)
 	_expect(action["goal"] == AdaptiveDecider.ACTION_ERRANCE, "Adaptatif inventaire plein : un roncier ne doit plus être ciblé quand la cueillette y est impossible.")
 	_expect(decider.engaged_action() == "", "Adaptatif inventaire plein : aucun engagement ne doit être pris hors situation de faim exploitable.")
+
+func _test_llm_survie_config() -> void:
+	var file := FileAccess.open("res://experiments/llm_survie_v1.json", FileAccess.READ)
+	_expect(file != null, "Config llm_survie : experiments/llm_survie_v1.json est illisible.")
+	if file == null:
+		return
+	var raw = JSON.parse_string(file.get_as_text())
+	_expect(raw is Dictionary, "Config llm_survie : JSON invalide.")
+	if not (raw is Dictionary):
+		return
+	var config := ExperimentConfig.from_raw(raw)
+	_expect(config.is_valid(), "Config llm_survie : rejetée par VariableRegistry : %s" % ", ".join(config.errors))
+	var agents: Dictionary = config.normalized["agents"]["individual"]
+	_expect(agents.size() == 4 and not agents.has("Test"), "Config llm_survie : seuls Rouge, Bleu, Vert et Jaune doivent être configurés.")
+	for agent_name in ["Rouge", "Bleu", "Vert", "Jaune"]:
+		var values: Dictionary = agents.get(agent_name, {})
+		_expect(values.get("decider_type", "") == "llm_survie", "Config llm_survie : %s doit utiliser llm_survie." % agent_name)
+		_expect(values.get("llm_model", "") == "gemma3:1b", "Config llm_survie : %s doit utiliser gemma3:1b." % agent_name)
+		_expect(int(values.get("memory_capacity", 0)) >= int(config.normalized["environment"]["game_config"]["ronce_count"]), "Config llm_survie : la mémoire de %s doit couvrir tous les ronciers." % agent_name)
+		_expect(is_zero_approx(float(values.get("memory_decay_rate", 1.0))), "Config llm_survie : %s ne doit rien oublier." % agent_name)
+	_expect(int(config.normalized["environment"]["game_config"].get("danger_zone_count", -1)) == 0, "Config llm_survie : le danger doit être désactivé.")
+	_expect(is_equal_approx(config.normalized["simulation"]["game_speed"], 1.0), "Config llm_survie : game_speed doit valoir 1.0.")
+	var invalid := ExperimentConfig.from_raw({"agents": {"defaults": {"decider_type": "llm_survie_inconnu"}}})
+	_expect(not invalid.is_valid(), "Config llm_survie : un decider_type inconnu doit rester rejeté.")
+	_expect(VariableRegistry.CHARACTER["decider_type"]["options"].has("automate"), "Config llm_survie : l'option automate doit rester disponible.")
+
+func _make_survie_character(vision: float) -> CharacterBody3D:
+	var character := CharacterScript.new()
+	character.decider_type = "llm_survie"
+	character.vision_range = vision
+	character.vision_angle_degrees = 360.0
+	get_tree().root.add_child(character)
+	return character
+
+func _make_identified_ronce(id: String, local_position: Vector3, berries: int) -> Area3D:
+	var ronce := _make_ronce(local_position)
+	ronce.ronce_id = id
+	ronce.berries = berries
+	return ronce
+
+func _test_ronce_memory_on_sight() -> void:
+	var character := _make_survie_character(20.0)
+	var near := _make_identified_ronce("R01", Vector3(0.0, 0.0, -5.0), 3)
+	var far := _make_identified_ronce("R02", Vector3(0.0, 0.0, -60.0), 3)
+	character._update_vision_perception()
+	var memory: RonceMemory = character.ronce_memory()
+	_expect(memory != null and memory.is_known("R01"), "Mémoire llm_survie : un roncier vu doit être mémorisé.")
+	_expect(memory.position_of("R01").is_equal_approx(near.position), "Mémoire llm_survie : les coordonnées du roncier vu sont incorrectes.")
+	_expect(memory.estimated_berries("R01") == 3, "Mémoire llm_survie : les mûres visibles doivent alimenter l'estimation.")
+	_expect(not memory.is_known("R02"), "Mémoire llm_survie : un roncier hors de vue ne doit pas être connu.")
+	character.free()
+	near.free()
+	far.free()
+
+func _test_ronce_memory_on_contact() -> void:
+	var character := _make_survie_character(0.0)
+	var ronce := _make_identified_ronce("R07", Vector3(1.0, 0.0, 0.0), 2)
+	character._update_vision_perception()
+	var memory: RonceMemory = character.ronce_memory()
+	_expect(not memory.is_known("R07"), "Mémoire llm_survie contact : sans vision, le roncier reste inconnu avant contact.")
+	character.try_pick_berry_from_ronce(ronce, true)
+	_expect(memory.is_known("R07"), "Mémoire llm_survie contact : le contact doit mémoriser le roncier.")
+	character.free()
+	ronce.free()
+
+func _test_ronce_memory_own_pick_countdown() -> void:
+	var character := _make_survie_character(0.0)
+	var ronce := _make_identified_ronce("R03", Vector3(1.0, 0.0, 0.0), 3)
+	var memory: RonceMemory = character.ronce_memory()
+	character.try_pick_berry_from_ronce(ronce, true)
+	_expect(memory.estimated_berries("R03") == 2 and ronce.berries == 2, "Mémoire llm_survie décompte : après une cueillette propre l'estimation doit valoir 2.")
+	character.try_pick_berry_from_ronce(ronce, true)
+	character.try_pick_berry_from_ronce(ronce, true)
+	_expect(memory.estimated_berries("R03") == 0 and memory.own_picks("R03") == 3, "Mémoire llm_survie décompte : trois cueillettes propres doivent vider l'estimation.")
+	character.try_pick_berry_from_ronce(ronce, true)
+	_expect(memory.estimated_berries("R03") == 0, "Mémoire llm_survie décompte : l'estimation ne doit pas devenir négative.")
+	character.free()
+	ronce.free()
+
+func _test_ronce_memory_stale_then_corrected() -> void:
+	var character := _make_survie_character(20.0)
+	var ronce := _make_identified_ronce("R04", Vector3(0.0, 0.0, -5.0), 3)
+	var memory: RonceMemory = character.ronce_memory()
+	character._update_vision_perception()
+	_expect(memory.estimated_berries("R04") == 3, "Mémoire llm_survie périmée : estimation initiale incorrecte.")
+	character.vision_range = 0.0
+	ronce.harvest_one()
+	ronce.harvest_one()
+	character._update_vision_perception()
+	_expect(memory.estimated_berries("R04") == 3 and ronce.berries == 1, "Mémoire llm_survie périmée : hors de vue, l'estimation doit rester périmée.")
+	character.vision_range = 20.0
+	character._update_vision_perception()
+	_expect(memory.estimated_berries("R04") == 1, "Mémoire llm_survie périmée : la vue suivante doit corriger l'estimation.")
+	character.free()
+	ronce.free()
+
+func _test_ronce_memory_never_forgets() -> void:
+	var character := _make_survie_character(200.0)
+	character.memory_capacity = 100
+	character.memory_decay_rate = 0.0
+	var ronces: Array = []
+	for i in 30:
+		ronces.append(_make_identified_ronce("R%02d" % (i + 1), Vector3(float(i) * 3.0 - 45.0, 0.0, -10.0), 3))
+	character._update_vision_perception()
+	character.vision_range = 0.0
+	for i in 3000:
+		character._decay_memories(1.0)
+		character._update_vision_perception()
+	var memory: RonceMemory = character.ronce_memory()
+	_expect(memory.count() == 30, "Mémoire llm_survie long run : un roncier connu a été oublié (%d/30)." % memory.count())
+	_expect(memory.known_ids().size() == 30 and memory.known_ids()[0] == "R01", "Mémoire llm_survie long run : liste d'identifiants incohérente.")
+	character.free()
+	for r in ronces:
+		r.free()
+
+func _test_ronce_memory_absent_for_other_deciders() -> void:
+	var character := _make_character()
+	var ronce := _make_identified_ronce("R05", Vector3(0.0, 0.0, -5.0), 3)
+	character.vision_range = 20.0
+	character.vision_angle_degrees = 360.0
+	character._update_vision_perception()
+	_expect(character.ronce_memory() == null, "Mémoire llm_survie : les autres décideurs ne doivent pas créer cette mémoire.")
+	character.free()
+	ronce.free()
+
+func _survie_setup(ronce_position: Vector3, berries: int) -> Array:
+	var character := _make_survie_character(0.0)
+	character.position = Vector3.ZERO
+	var ronce := _make_identified_ronce("R01", ronce_position, berries)
+	character.ronce_memory().observe("R01", ronce.position, berries, 0.0)
+	return [character, ronce, character.survie_engine()]
+
+func _survie_touch(character, ronce) -> void:
+	character.position = ronce.position - Vector3(2.0, 0.0, 0.0)
+	character._on_ronce_contact(ronce)
+
+func _test_survie_no_automatic_pickup_or_meal() -> void:
+	var setup := _survie_setup(Vector3(1.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	character._on_ronce_contact(ronce)
+	_expect(character.berries_carried == 0 and ronce.berries == 3, "llm_survie : la cueillette ne doit plus être automatique.")
+	character.berries_carried = 2
+	character.hunger = 10.0
+	character._physics_process(0.016)
+	_expect(character.berries_carried == 2, "llm_survie : le repas ne doit plus être automatique.")
+	var control := _make_character()
+	control.berries_carried = 2
+	control.hunger = 10.0
+	control._physics_process(0.016)
+	_expect(control.berries_carried == 1, "llm_survie : l'automate doit garder son repas automatique.")
+	var control_ronce := _make_identified_ronce("R09", Vector3(1.0, 0.0, 0.0), 3)
+	control._on_ronce_contact(control_ronce)
+	_expect(control.berries_carried == 2 and control_ronce.berries == 2, "llm_survie : l'automate doit garder sa cueillette automatique.")
+	control.free()
+	control_ronce.free()
+	character.free()
+	ronce.free()
+
+func _test_survie_full_sequence() -> void:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var engine: LLMSurieEngine = setup[2]
+	var maximum: int = GameConfig.max_berries_carried
+	_expect(engine.submit({"action": "aller_vers", "roncier_id": "R01"})["accepted"], "llm_survie séquence : aller_vers doit être accepté.")
+	for step in 300:
+		var direction := engine.tick(0.1)
+		if direction == Vector3.ZERO:
+			break
+		character.position += direction * 0.25
+		if character.position.distance_to(ronce.position) <= 2.0:
+			character._on_ronce_contact(ronce)
+	_expect(engine.current_action == "" and character.position.distance_to(ronce.position) <= 2.1, "llm_survie séquence : l'agent doit arriver et s'arrêter.")
+	var event_types: Array = engine.take_events().map(func(event): return event["type"])
+	_expect(event_types.has("cible_atteinte"), "llm_survie séquence : l'arrivée doit émettre cible_atteinte.")
+	for picked in range(mini(maximum, 3)):
+		_expect(engine.submit({"action": "ramasser"})["accepted"], "llm_survie séquence : ramasser #%d doit être accepté." % (picked + 1))
+	_expect(character.berries_carried == mini(maximum, 3) and ronce.berries == 3 - mini(maximum, 3), "llm_survie séquence : les mûres ramassées sont incorrectes.")
+	_expect(character.ronce_memory().estimated_berries("R01") == ronce.berries, "llm_survie séquence : l'estimation doit suivre les cueillettes propres.")
+	character.hunger = 40.0
+	var hunger_before: float = character.hunger
+	var carried_before: int = character.berries_carried
+	_expect(engine.submit({"action": "manger"})["accepted"], "llm_survie séquence : manger sous le seuil doit être accepté.")
+	_expect(character.berries_carried == carried_before - 1 and character.hunger > hunger_before and character.berries_eaten_total == 1, "llm_survie séquence : le repas doit consommer une mûre et restaurer la faim.")
+	character.free()
+	ronce.free()
+
+func _test_survie_refusals() -> void:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var engine: LLMSurieEngine = setup[2]
+	var maximum: int = GameConfig.max_berries_carried
+	var threshold: float = GameConfig.eat_hunger_threshold
+	_expect(engine.submit({"action": "ramasser"})["code"] == "hors_contact", "llm_survie refus : ramasser hors contact.")
+	_expect(engine.submit({"action": "manger"})["code"] == "aucune_mure", "llm_survie refus : manger sans mûre.")
+	_expect(engine.submit({"action": "aller_vers", "roncier_id": "R99"})["code"] == "cible_inconnue", "llm_survie refus : cible inconnue.")
+	_expect(engine.submit({"action": "aller_vers", "roncier_id": "aucun"})["code"] == "cible_inconnue", "llm_survie refus : cible aucun.")
+	_expect(engine.submit({"action": "explorer", "direction": "aucune"})["code"] == "direction_invalide", "llm_survie refus : direction invalide.")
+	_expect(engine.submit({"action": "danser"})["code"] == "action_inconnue", "llm_survie refus : action inconnue.")
+	_survie_touch(character, ronce)
+	character.berries_carried = maximum
+	_expect(engine.submit({"action": "ramasser"})["code"] == "inventaire_plein", "llm_survie refus : inventaire plein.")
+	character.hunger = threshold + 10.0
+	_expect(engine.submit({"action": "manger"})["code"] == "trop_rassasie", "llm_survie refus : trop rassasié.")
+	_expect(character.berries_carried == maximum and character.berries_eaten_total == 0, "llm_survie refus : un refus ne doit avoir aucun effet.")
+	character.berries_carried = 0
+	ronce.berries = 0
+	_expect(engine.submit({"action": "ramasser"})["code"] == "roncier_vide", "llm_survie refus : roncier vide.")
+	character.ronce_memory().observe("R01", ronce.position, 0, 0.0)
+	_expect(engine.submit({"action": "aller_vers", "roncier_id": "R01"})["code"] == "cible_epuisee", "llm_survie refus : cible épuisée.")
+	_expect(engine.refusals_total == 10 and int(engine.refusals_by_code.get("hors_contact", 0)) == 1, "llm_survie refus : compteurs de refus incorrects (%d)." % engine.refusals_total)
+	_expect(engine.submit({"action": "attendre"})["accepted"] and engine.current_action == "attendre", "llm_survie : attendre doit toujours être accepté.")
+	character.free()
+	ronce.free()
+
+func _test_survie_arrival_block_and_empty_target() -> void:
+	var setup := _survie_setup(Vector3(20.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var engine: LLMSurieEngine = setup[2]
+	engine.submit({"action": "explorer", "direction": "N"})
+	_expect(engine.tick(0.1).is_equal_approx(Vector3(0.0, 0.0, -1.0)), "llm_survie : explorer N doit viser (0, 0, -1).")
+	var blocked := false
+	for step in 40:
+		engine.tick(0.1)
+		if engine.current_action == "":
+			blocked = true
+			break
+	_expect(blocked and engine.take_events().any(func(event): return event["type"] == "blocage"), "llm_survie : un agent immobile en explorer doit être détecté bloqué.")
+	engine.submit({"action": "aller_vers", "roncier_id": "R01"})
+	engine.tick(0.1)
+	character.ronce_memory().observe("R01", ronce.position, 0, 1.0)
+	engine.tick(0.1)
+	_expect(engine.current_action == "" and engine.take_events().any(func(event): return event["type"] == "cible_invalide"), "llm_survie : une cible vidée doit émettre cible_invalide.")
+	character.ronce_memory().observe("R01", ronce.position, 3, 2.0)
+	engine.submit({"action": "aller_vers", "roncier_id": "R01"})
+	character.position = ronce.position - Vector3(1.0, 0.0, 0.0)
+	engine.tick(0.1)
+	_expect(engine.current_action == "" and character.ronce_memory().estimated_berries("R01") == 0, "llm_survie : arriver sans contact doit invalider la cible absente.")
+	character.free()
+	ronce.free()
+func _survie_advance(character, steps: int, delta: float, hunger_step: float = 0.0) -> void:
+	var engine: LLMSurieEngine = character.survie_engine()
+	for step in steps:
+		character.hunger -= hunger_step
+		character.survie_step(delta)
+		character.position += engine.direction * 0.25
+
+func _test_survie_mock_backend_integration() -> void:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var backend := LLMSurieMockBackend.new()
+	character.set_survie_backend(backend)
+	character.survie_step(0.1)
+	_expect(backend.requests_total == 1 and character._direction == Vector3.ZERO, "llm_survie backend : le premier tick demande une décision et n'agit pas encore.")
+	character.survie_step(0.1)
+	_expect(character.survie_turns().turns_total == 1 and character.survie_engine().current_action == "attendre", "llm_survie backend : la réponse par défaut (attendre) doit être appliquée au tick suivant.")
+	backend.enqueue({"action": "aller_vers", "roncier_id": "R01", "direction": "aucune"})
+	character.survie_engine().events.append({"type": "blocage", "id": ""})
+	character.survie_step(0.1)
+	character.survie_step(0.1)
+	_expect(character.survie_engine().current_action == "aller_vers" and character._direction.is_equal_approx(Vector3.RIGHT), "llm_survie backend : l'action reçue doit orienter l'agent vers la cible.")
+	character.free()
+	ronce.free()
+
+func _test_survie_turn_cadence_and_wait() -> void:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var engine: LLMSurieEngine = setup[2]
+	var backend := LLMSurieMockBackend.new()
+	backend.latency_seconds = 1.0
+	character.set_survie_backend(backend)
+	engine.submit({"action": "explorer", "direction": "E", "roncier_id": "aucun"})
+	var still_moving := true
+	for step in 8:
+		character.hunger -= 0.06
+		character.survie_step(0.1)
+		character.position += engine.direction * 0.25
+		still_moving = still_moving and engine.current_action == "explorer" and engine.direction.is_equal_approx(Vector3.RIGHT)
+	_expect(still_moving and character.survie_turns().in_flight, "llm_survie attente : l'action en cours doit continuer pendant la requête.")
+	_survie_advance(character, 12, 0.1, 0.06)
+	var turns: LLMSurieTurns = character.survie_turns()
+	_expect(turns.turns_total >= 1 and backend.overlaps_total == 0, "llm_survie attente : une seule requête en vol à la fois.")
+	_expect(absf(turns.wait_total_seconds / float(turns.turns_total) - 1.0) < 0.15, "llm_survie attente : l'attente simulée moyenne doit valoir la latence (%.2f)." % (turns.wait_total_seconds / float(maxi(turns.turns_total, 1))))
+	_expect(absf(turns.hunger_lost_total / float(turns.turns_total) - 0.6) < 0.13, "llm_survie attente : la faim perdue en attente doit valoir ~0,6 (%.2f)." % (turns.hunger_lost_total / float(maxi(turns.turns_total, 1))))
+	_expect(is_equal_approx(turns.summary()["llm_survie_latence_moyenne_ms"], 1000.0), "llm_survie attente : latence moyenne du résumé incorrecte.")
+	character.free()
+	ronce.free()
+
+func _test_survie_events_queued_during_wait() -> void:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var engine: LLMSurieEngine = setup[2]
+	var backend := LLMSurieMockBackend.new()
+	backend.latency_seconds = 0.95
+	character.set_survie_backend(backend)
+	character.survie_step(0.1)
+	_expect(backend.requests_total == 1, "llm_survie file : le démarrage doit déclencher un tour.")
+	engine.events.append({"type": "blocage", "id": ""})
+	engine.events.append({"type": "blocage", "id": ""})
+	engine.events.append({"type": "cible_atteinte", "id": "R01"})
+	for step in 9:
+		character.survie_step(0.1)
+	_expect(backend.requests_total == 1 and character.survie_turns().pending_triggers().size() == 2, "llm_survie file : deux événements distincts doivent attendre, dédoublonnés (%s)." % [character.survie_turns().pending_triggers()])
+	character.survie_step(0.1)
+	_expect(character.survie_turns().turns_total == 1 and backend.requests_total == 1, "llm_survie file : la réponse est appliquée avant toute nouvelle requête.")
+	character.survie_step(0.1)
+	_expect(backend.requests_total == 2 and character.survie_turns().pending_triggers().is_empty(), "llm_survie file : les événements en file doivent déclencher une seule nouvelle requête.")
+	character.free()
+	ronce.free()
+
+func _test_survie_fallback_backoff() -> void:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var engine: LLMSurieEngine = setup[2]
+	var backend := LLMSurieMockBackend.new()
+	backend.enqueue_failure("timeout", "test")
+	character.set_survie_backend(backend)
+	engine.submit({"action": "explorer", "direction": "E", "roncier_id": "aucun"})
+	character.survie_step(0.1)
+	character.survie_step(0.1)
+	var turns: LLMSurieTurns = character.survie_turns()
+	_expect(turns.replis_total == 1 and engine.current_action == "explorer", "llm_survie repli : un échec doit être compté et l'action en cours poursuivie.")
+	engine.events.append({"type": "blocage", "id": ""})
+	var interval_steps := int(character.llm_decision_interval_seconds / 0.1)
+	for step in interval_steps - 15:
+		character.survie_step(0.1)
+		character.position += engine.direction * 0.25
+	_expect(backend.requests_total == 1, "llm_survie repli : aucune requête avant l'échéance de l'intervalle maximal (%d)." % backend.requests_total)
+	for step in 30:
+		character.survie_step(0.1)
+		character.position += engine.direction * 0.25
+	_expect(backend.requests_total >= 2, "llm_survie repli : la requête doit repartir après l'intervalle maximal.")
+	character.free()
+	ronce.free()
+
+func _test_survie_safety_interval() -> void:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var backend := LLMSurieMockBackend.new()
+	character.set_survie_backend(backend)
+	_survie_advance(character, 350, 0.1)
+	var expected := 1 + int(35.0 / character.llm_decision_interval_seconds)
+	_expect(absi(backend.requests_total - expected) <= 1, "llm_survie intervalle : %d requêtes attendues (+/-1), %d observées." % [expected, backend.requests_total])
+	character.free()
+	ronce.free()
+
+func _survie_run_trace(steps: int) -> Array:
+	var setup := _survie_setup(Vector3(10.0, 0.0, 0.0), 3)
+	var character = setup[0]
+	var ronce = setup[1]
+	var backend := LLMSurieMockBackend.new()
+	var directions := ["E", "N", "O", "S"]
+	var counter := [0]
+	backend.policy = func(_view: Dictionary) -> Dictionary:
+		counter[0] += 1
+		return {"action": "explorer", "roncier_id": "aucun", "direction": directions[counter[0] % directions.size()]}
+	character.set_survie_backend(backend)
+	var trace: Array = []
+	for step in steps:
+		character.hunger -= 0.05
+		character.survie_step(0.1)
+		character.position += character.survie_engine().direction * 0.25
+		trace.append([character.survie_engine().current_action, character.survie_engine().direction, backend.requests_total])
+	trace.append(character.survie_summary())
+	character.free()
+	ronce.free()
+	return trace
+
+func _test_survie_zero_latency_determinism() -> void:
+	var first := _survie_run_trace(300)
+	var second := _survie_run_trace(300)
+	_expect(first == second and first.size() == 301, "llm_survie déterminisme : deux runs mock sans latence doivent être identiques.")
+	_expect(int(first[300]["llm_survie_tours"]) > 0, "llm_survie déterminisme : le run doit avoir décidé au moins une fois.")
+
+func _test_survie_ollama_prompt_schema_and_parsing() -> void:
+	var backend := LLMSurieOllamaBackend.new()
+	backend.configure("gemma3:1b", 20.0, 42, "Rouge")
+	var view := {
+		"hunger": 42.4,
+		"berries_carried": 1,
+		"max_berries_carried": 3,
+		"eat_hunger_threshold": 50.0,
+		"contact_ronce_id": "",
+		"current_action": "aller_vers",
+		"target_id": "R07",
+		"last_result": {"action": "manger", "accepted": false, "code": "trop_rassasie"},
+		"known": [
+			{"id": "R07", "distance": 12.2, "direction": Vector3(1, 0, -1).normalized(), "estimated_berries": 3},
+			{"id": "R02", "distance": 30.0, "direction": Vector3(0, 0, 1), "estimated_berries": 0},
+			{"id": "R11", "distance": 5.0, "direction": Vector3(-1, 0, 0), "estimated_berries": 2},
+		],
+	}
+	var prompt := backend.build_prompt(view)
+	_expect(prompt.contains("Faim : 42/100") and prompt.contains("1 sur 3"), "Prompt llm_survie : faim, inventaire et seuil de repas attendus.")
+	_expect(prompt.contains("R07 : 12 m, direction NE, environ 3") and prompt.contains("R11 : 5 m, direction O"), "Prompt llm_survie : ronciers connus avec distance, direction et mûres attendus.")
+	_expect(prompt.find("- R11") < prompt.find("- R07"), "Prompt llm_survie : ronciers triés par distance croissante attendus.")
+	_expect(not prompt.contains("R02 :"), "Prompt llm_survie : un roncier estimé vide ne doit pas être listé.")
+	_expect(prompt.contains("Déplacement en cours : aller_vers R07") and prompt.contains("manger -> refusé (trop_rassasie)"), "Prompt llm_survie : action en cours et dernier résultat attendus.")
+	_expect(prompt.contains("ACTIONS POSSIBLES MAINTENANT : manger, aller_vers") and not prompt.contains("ramasser (") and not prompt.contains(": ramasser"), "Prompt llm_survie : seules les actions légales doivent être proposées (manger et aller_vers sans contact).")
+	var contact_view: Dictionary = view.duplicate(true)
+	contact_view["contact_ronce_id"] = "R11"
+	contact_view["berries_carried"] = 0
+	_expect(backend.build_prompt(contact_view).contains("ACTIONS POSSIBLES MAINTENANT : ramasser, aller_vers"), "Prompt llm_survie : ramasser doit être proposé au contact d'un roncier avec des mûres.")
+	contact_view["berries_carried"] = 3
+	contact_view["hunger"] = 80.0
+	_expect(backend.build_prompt(contact_view).contains("ACTIONS POSSIBLES MAINTENANT : aller_vers"), "Prompt llm_survie : ni ramasser (sac plein) ni manger (faim au-dessus du seuil) ne doivent être proposés.")
+	var schema := backend.build_schema(["R07", "R11"])
+	var branches: Array = schema["anyOf"]
+	_expect(branches.size() == 5 and branches[0]["properties"]["action"]["enum"] == ["aller_vers"] and branches[0]["properties"]["roncier_id"]["enum"] == ["R07", "R11"], "Schéma llm_survie : aller_vers doit être limité aux ronciers avec des mûres.")
+	_expect(branches[1]["properties"]["direction"]["enum"].size() == 8 and not branches[1]["properties"]["direction"]["enum"].has("aucune"), "Schéma llm_survie : explorer doit imposer une vraie direction.")
+	_expect(branches[2]["properties"]["direction"]["enum"] == ["aucune"] and branches[4]["properties"]["action"]["enum"] == ["attendre"], "Schéma llm_survie : les actions sans argument doivent fixer roncier_id et direction.")
+	_expect(backend.build_schema([])["anyOf"].size() == 4, "Schéma llm_survie : sans roncier avec des mûres, aller_vers ne doit pas être proposé.")
+	_expect(LLMSurieOllamaBackend.compass_of(Vector3(0, 0, -1)) == "N" and LLMSurieOllamaBackend.compass_of(Vector3(1, 0, 0)) == "E" and LLMSurieOllamaBackend.compass_of(Vector3(0, 0, 1)) == "S" and LLMSurieOllamaBackend.compass_of(Vector3(-1, 0, 1)) == "SO" and LLMSurieOllamaBackend.compass_of(Vector3(-1, 0, -1)) == "NO", "Boussole llm_survie : conversion vecteur vers direction incorrecte.")
+	backend.prepare({"known": [{"id": "R07", "distance": 1.0, "direction": Vector3.RIGHT, "estimated_berries": 1}]})
+	var good := backend.parse_body(HTTPRequest.RESULT_SUCCESS, 200, JSON.stringify({"response": JSON.stringify({"action": "aller_vers", "roncier_id": "R07", "direction": "aucune"})}))
+	_expect(good["ok"] and good["action"]["roncier_id"] == "R07", "Parse llm_survie : une réponse valide doit être acceptée.")
+	var unknown_id := backend.parse_body(HTTPRequest.RESULT_SUCCESS, 200, JSON.stringify({"response": JSON.stringify({"action": "aller_vers", "roncier_id": "R99", "direction": "aucune"})}))
+	_expect(not unknown_id["ok"] and unknown_id["reason"] == "hors_enumeration", "Parse llm_survie : un identifiant hors mémoire doit être un repli hors_enumeration.")
+	var bad_json := backend.parse_body(HTTPRequest.RESULT_SUCCESS, 200, JSON.stringify({"response": "pas du json"}))
+	_expect(not bad_json["ok"] and bad_json["reason"] == "json_invalide", "Parse llm_survie : un JSON illisible doit être un repli json_invalide.")
+	_expect(backend.parse_body(HTTPRequest.RESULT_SUCCESS, 500, "erreur")["reason"] == "http_500", "Parse llm_survie : un code HTTP 500 doit être un repli http_500.")
+	_expect(backend.parse_body(HTTPRequest.RESULT_CANT_CONNECT, 0, "")["reason"] == "reseau", "Parse llm_survie : un échec réseau doit être un repli reseau.")
+	_expect(backend.parse_body(HTTPRequest.RESULT_SUCCESS, 200, "{}")["reason"] == "reponse_invalide", "Parse llm_survie : un corps sans champ response doit être un repli reponse_invalide.")
+	backend.free()

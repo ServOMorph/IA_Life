@@ -28,6 +28,9 @@ var _camera: Camera3D
 var _light: DirectionalLight3D
 var _game_data_panel: PanelContainer = null
 var _dev_panel: PanelContainer = null
+var _dev_title: Label = null
+var _dev_body: Array = []
+var _dev_collapsed: bool = false
 var _dev_status_label: Label = null
 var _checklist_panel: PanelContainer = null
 var _checklist_state: Dictionary = {}
@@ -114,10 +117,11 @@ const DEV_SHORTCUTS := [
 	["E", "ramasser une mûre proche"],
 	["K", "tuer le personnage de test (animation de mort)"],
 	["Caméra / téléport", ""],
-	["F1-F4", "téléporter un agent au centre de la map (caméra en suivi)"],
+	["F1-F4", "suivre un agent avec la caméra"],
 	["Shift+F1-F4", "téléporter un agent au contact de la ronce la plus proche"],
 	["Outils", ""],
 	["T", "ouvrir / fermer la checklist de tests"],
+	["F6", "plier / déplier cette fenêtre (replié : contrôle souris libre)"],
 ]
 
 func _build_dev_panel() -> void:
@@ -142,9 +146,12 @@ func _build_dev_panel() -> void:
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	title.add_theme_color_override("font_color", Color(1.0, 0.6, 0.1))
 	vbox.add_child(title)
+	_dev_title = title
 
-	vbox.add_child(_build_shortcuts_grid())
-	vbox.add_child(HSeparator.new())
+	var shortcuts := _build_shortcuts_grid()
+	vbox.add_child(shortcuts)
+	var separator := HSeparator.new()
+	vbox.add_child(separator)
 
 	var config_title := Label.new()
 	config_title.text = "Relance de scène"
@@ -158,8 +165,27 @@ func _build_dev_panel() -> void:
 	_dev_status_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.1))
 	vbox.add_child(_dev_status_label)
 
+	_dev_body = []
+	for child in vbox.get_children():
+		if child != title:
+			_dev_body.append(child)
 	_dev_panel.add_child(vbox)
 	_root.add_child(_dev_panel)
+	_apply_dev_collapsed()
+
+func toggle_dev_panel() -> void:
+	if _dev_panel == null:
+		return
+	_dev_collapsed = not _dev_collapsed
+	_apply_dev_collapsed()
+
+func _apply_dev_collapsed() -> void:
+	for control in _dev_body:
+		control.visible = not _dev_collapsed
+	_dev_title.text = "MODE DEV (replié, F6 pour déplier)" if _dev_collapsed else "MODE DEV (F6 pour replier)"
+	_dev_panel.custom_minimum_size = Vector2(0, 0) if _dev_collapsed else Vector2(880, 0)
+	_dev_panel.mouse_filter = Control.MOUSE_FILTER_IGNORE if _dev_collapsed else Control.MOUSE_FILTER_STOP
+	_dev_panel.reset_size()
 
 func _build_shortcuts_grid() -> GridContainer:
 	var grid := GridContainer.new()
