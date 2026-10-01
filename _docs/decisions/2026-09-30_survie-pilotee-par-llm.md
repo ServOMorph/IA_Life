@@ -1,7 +1,7 @@
 # Survie pilotée par LLM (Rouge, Bleu, Vert, Jaune)
 
 **Date :** 2026-09-30
-**Statut :** proposé
+**Statut :** validé (périmètre) ; critère Phase 5 à valider
 
 ## Décision
 Les quatre personnages autonomes sont pilotés chacun par un LLM local (`gemma3:1b`, Ollama). Le
@@ -33,3 +33,7 @@ renforcement (T0-T3) est mis en pause, y compris la suite de la confirmation T3 
 ## Commentaire
 2026-09-30 : décision de périmètre, aucune implémentation. Ollama ne répondait pas sur
 `127.0.0.1:11434` en fin de session ; à rétablir avant la Phase 4.
+
+2026-10-01 : implémenté (Phases 0 à 5). Mesure sur 6 cartes à x1 : `llm_survie` 542 s, automate 292 s,
+automate cueillette libre 345 s ; 3 704 tours, 0 repli, 0 refus. Le prompt décrit la stratégie et
+le critère n'a pas été co-défini : gain à confirmer. Voir `experiments/llm_survie_rapport_v1.md`.

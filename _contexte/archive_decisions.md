@@ -163,3 +163,6 @@
   `random_valid` = 0,271 agrégé (0,25-0,28 par lignée), sous le seuil de 0,30. Calibration
   complémentaire : `random_valid` seul tombe de 0,73 (2 m) à ~0,31-0,47 (3 m). Voir
   `_docs/decisions/2026-09-19_gate-t0-non-atteint.md`.
+- 2026-09-24 : T0 v3 (ronce à 3 m) est invalidé : 1 248 résultats conformes, mais `trained`
+  atteint 0,458 contre 0,604 pour `random_valid` et échoue au seuil absolu. T1 reste gelé ; voir
+  `_docs/decisions/2026-09-24_t0-v3-gate-non-atteint.md`.

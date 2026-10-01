@@ -1,16 +1,16 @@
-# Signals — ia_life (MAJ 2026-09-30)
+# Signals — ia_life (MAJ 2026-10-01)
 
 ## Actions ouvertes
 
-- [P1|ouvert] Exécuter la Phase 0 de `roadmap_survie_llm.md` (contrat des actions, validation moteur, repli, déclencheurs, config `experiments/llm_survie_v1.json`).
-  fait quand: `experiments/llm_survie_contrat_v1.md` est écrit, la config est validée par `VariableRegistry` et les runs `automate` existants sont inchangés.
-  réf: `roadmap_survie_llm.md`, `_docs/decisions/2026-09-30_survie-pilotee-par-llm.md`, `scripts/llm_decider.gd`.
-- [P2|ouvert] Rétablir Ollama avant la Phase 4 : le serveur ne répond pas sur `127.0.0.1:11434` (connexion refusée, `ollama list` en timeout).
-  fait quand: `ollama list` répond et `gemma3:1b` est disponible.
-  réf: `_docs/decisions/2026-08-26_decideurs-interchangeables-llm.md`.
+- [P1|ouvert] Valider ou remplacer le critère de succès de la Phase 5 (proposé par l'assistant, non co-défini) avant d'exploiter le résultat.
+  fait quand: l'utilisateur a validé ou remplacé `experiments/llm_survie_critere_v1.md` et le rapport est relu en conséquence.
+  réf: `experiments/llm_survie_critere_v1.md`, `experiments/llm_survie_rapport_v1.md`, `tools/analyze_llm_survie.py`.
+- [P2|ouvert] Démonstration fenêtrée de la survie pilotée par LLM (Phase 4) sur le bureau virtuel IA_Life.
+  fait quand: les 5 contrôles de la section Phase 4 de `tests_manuels.md` sont validés et la section supprimée.
+  réf: `tests_manuels.md`, `run_survie_demo.py`, `experiments/llm_survie_v1.json`.
 - [P3|ouvert] Rétablir le contrôle d'intégrité du kit absent.
   fait quand: `python scripts/check_kit.py` s'exécute et ses écarts sont traités ou consignés.
-  réf: `.claude/commands/close.md` (étape 10) ; `scripts/check_kit.py` absent, écart connu consigné à la clôture du 2026-09-30.
+  réf: `.claude/commands/close.md` (étape 10) ; `scripts/check_kit.py` absent, écart connu consigné aux clôtures du 2026-09-30 et du 2026-10-01.
 - [P4|dormant] Axe apprentissage T3 en pause : décider d'un contrat de confirmation v2 ou de l'arrêt.
   fait quand: un contrat v2 est gelé (nouvelles cartes et graines, solvabilité sur échantillon dédié, seuil 0,60 tranché) ou l'arrêt est consigné.
   réf: `_docs/decisions/2026-09-30_t3-v3-confirmation-critere-non-atteint.md`, `experiments/apprentissage_t3_confirmation_contrat_v1.md`.
@@ -23,32 +23,35 @@
 
 ## Contexte chaud
 
-- Nouvelle orientation : LLM (`gemma3:1b`) sur Rouge/Bleu/Vert/Jaune ; « Test » inchangé. Roadmap `roadmap_survie_llm.md` créée, Phase 0 [EN COURS], aucun code écrit.
-- Points arbitrés : cible = identifiant de roncier ; ramasser/manger explicites (repas refusé au-dessus de `eat_hunger_threshold` 50, 3 mûres max) ; mémoire illimitée par coordonnées ; pas de repousse ; danger à 0 ; décision asynchrone sans pause ; mesure à x1, `--jobs 1`.
-- Chiffres de carte (registre, non re-vérifiés en jeu) : 24 ronciers × 3 mûres, 6 mûres pour une vie complète, faim à 0,6/s par défaut. Latence LLM de 1,4 s mesurée en août, à remesurer.
-- Vitesse de faim : à ajuster éventuellement en Phase 4, sur la faim réellement perdue en attente.
-- Communication entre agents : reportée après cette roadmap.
-- T3 v3 : confirmation en critère non atteint (7/8, `trained` 0,628, scripté 0,875 < 0,90) ; cartes finales `410000201..264` consommées ; axe en pause.
-- Les modifications ROBERTO/com_telephone, `AGENTS.md`, `GEMINI.md`, `.claude/CLAUDE.md` et `.claude/commands/roberto.md` du working tree ne font pas partie de cette clôture.
+- Roadmap `roadmap_survie_llm.md` exécutée en entier (Phases 0 à 5), commit `7b3873b6`. Prochaine session : reprise directe de la suite (critère Phase 5, puis évolutions du décideur).
+- Résultat Phase 5 (6 cartes, x1, `--jobs 1`, `gemma3:1b`) : vie moyenne automate 292 s, automate cueillette libre 345 s, `llm_survie` 542 s ; `llm_survie` devant l'automate sur 6 cartes sur 6 ; 3 704 tours, 0 repli, 0 refus.
+- Réserves : le prompt décrit la stratégie ; la cueillette est libre à tout niveau de faim pour le LLM ; critère non validé ; un seul modèle et une version de prompt ; résultats dépendants du matériel.
+- Confort mode dev ajouté : panneau repliable (F6), F1-F4 suivent l'agent à la caméra, marqueurs au-dessus des 5 personnages, lanceurs en fenêtre maximisée.
+- Ollama doit être lancé (`ollama serve`) pour la démonstration et les campagnes `llm_survie`.
+- Changements du working tree hors session, non commités : `.claude/CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.claude/commands/roberto.md` supprimé, `ROBERTO/com_telephone/*`, logs `experiments/t0_v3_results.jsonl.workers/`, `scripts/danger_detour.gd.uid`.
+- T3 v3 : confirmation en critère non atteint (7/8) ; cartes finales `410000201..264` consommées ; axe en pause.
 
-## Dernière session (2026-09-30)
+## Dernière session (2026-10-01)
 
-# Session du 2026-09-30
+# Session du 2026-10-01
 
 ## Décisions prises
-- Axe apprentissage T0-T3 mis en pause ; nouvelle orientation : quatre agents pilotés par LLM local.
-- Décision asynchrone sans pause (l'agent poursuit son action pendant l'attente) ; mesure à x1, `--jobs 1`, dépendante du matériel.
+- Roadmap exécutée sans checkpoints `/compact` ; décideur `llm_survie` livré (cible roncier, actions explicites, tours asynchrones, schéma Ollama `anyOf`).
+- Lanceurs fenêtrés en `--maximized` (pas de plein écran réel) ; mode dev : F6 replie le panneau, F1-F4 suivent l'agent à la caméra sans téléportation.
 
 ## Livrables produits ou modifiés
-- `roadmap_survie_llm.md` : créée (Phases 0-5, Phase 0 en cours).
-- `_docs/decisions/2026-09-30_survie-pilotee-par-llm.md` et `INDEX.md` : décision consignée (proposé).
+- `scripts/llm_survie_*.gd`, `scripts/ronce_memory.gd`, `scripts/character.gd`, `scripts/ronce.gd` : livrés, tests manuels du harnais verts.
+- `scripts/main.gd`, `scripts/ui_manager.gd` : F6, F1-F4, marqueurs de localisation ; validés par l'utilisateur en jeu.
+- `experiments/llm_survie_*` (contrat, critère, rapport, config, 3 campagnes), `tools/analyze_llm_survie.py` : livrés.
+- `roadmap_survie_llm.md` : Phases 0 à 5 [FAIT].
 
 ## Hypothèses validées / invalidées
-- EN ATTENTE : `gemma3:1b` sait choisir une cible parmi des ronciers nommés ; coût de latence sur la survie ; niveau de faim adapté.
-- EN ATTENTE : reproductibilité du LLM réel (non attendue) ; tests rejouables avec mock uniquement.
+- VALIDE : `gemma3:1b` pilote 4 agents sans repli ni refus, avec un prompt strict ; vie moyenne 542 s contre 292 s (automate), 6/6 cartes.
+- INVALIDE : prompt libre (réponse figée sur `manger`, puis `explorer` seul) -> pivot vers actions légales listées, schéma `anyOf`, directions et cibles bloquées exclues.
+- EN ATTENTE : critère de succès Phase 5 non validé par l'utilisateur ; gain attribuable en partie à la cueillette libre et au prompt directif.
 
 ## Prochaine étape exacte
-Phase 0 : écrire le contrat (schéma d'actions, validation moteur, repli, déclencheurs) et la config `llm_survie_v1.json`.
+Valider ou remplacer le critère de la Phase 5, puis décider de la suite (autre modèle, prompt moins directif, communication entre agents).
 
 ## Question bloquante pour la session suivante
-Aucune (le critère de succès de la Phase 5 sera défini à son ouverture).
+Le critère de succès de la Phase 5 (`experiments/llm_survie_critere_v1.md`) est-il validé tel quel ?

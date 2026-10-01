@@ -1,7 +1,7 @@
 # Roadmap — Survie pilotée par LLM
 
 Créée le : 2026-09-30
-Statut : **[EN COURS — Phase 0]**
+Statut : **[FAIT — Phases 0 à 5]**
 
 ## Objectif
 
@@ -67,7 +67,7 @@ L'axe apprentissage par renforcement (T0-T3) est en pause pendant cette roadmap.
 
 ## Phases
 
-### Phase 0 — Contrat [EN COURS]
+### Phase 0 — Contrat [FAIT]
 
 - Spécifier le schéma d'action, les règles de validation moteur, le repli, les événements de
   déclenchement et l'intervalle maximal.
@@ -78,7 +78,7 @@ L'axe apprentissage par renforcement (T0-T3) est en pause pendant cette roadmap.
 **Gate** : contrat écrit dans `experiments/llm_survie_contrat_v1.md` ; config validée par
 `VariableRegistry` ; runs `automate` existants inchangés.
 
-### Phase 1 — Mémoire par coordonnées et estimation des mûres [TODO]
+### Phase 1 — Mémoire par coordonnées et estimation des mûres [FAIT]
 
 - Mémoire indexée par identifiant stable de roncier : coordonnées, mûres estimées, date de dernière
   observation. Alimentée par la vision et par le contact.
@@ -88,7 +88,7 @@ L'axe apprentissage par renforcement (T0-T3) est en pause pendant cette roadmap.
 **Gate** : tests verts — mémorisation à la vue, au contact, décompte après cueillette propre,
 estimation périmée puis corrigée à la vue suivante, aucun oubli sur un run long.
 
-### Phase 2 — Actions explicites et navigation vers cible [TODO]
+### Phase 2 — Actions explicites et navigation vers cible [FAIT]
 
 - Actions `aller_vers`, `explorer`, `ramasser`, `manger`, `attendre` exécutées par le moteur.
 - Désactivation de la cueillette et du repas automatiques pour ce décideur uniquement.
@@ -98,7 +98,7 @@ estimation périmée puis corrigée à la vue suivante, aucun oubli sur un run l
 **Gate** : tests verts avec le mock — séquence complète aller/ramasser/manger, refus de manger
 au-dessus du seuil, refus de ramasser à 3 mûres ou hors contact ; `automate` inchangé.
 
-### Phase 3 — Décision asynchrone et déclenchement [TODO]
+### Phase 3 — Décision asynchrone et déclenchement [FAIT]
 
 - Une requête en vol par agent ; poursuite de l'action en cours pendant l'attente.
 - Déclenchement des décisions sur événement et intervalle maximal ; événement survenu pendant une
@@ -110,7 +110,7 @@ au-dessus du seuil, refus de ramasser à 3 mûres ou hors contact ; `automate` i
 l'attente, aucune décision manquée ni doublée, télémétrie d'attente cohérente ; deux runs mock
 sans latence au même seed identiques.
 
-### Phase 4 — Prompt et intégration `gemma3:1b` [TODO]
+### Phase 4 — Prompt et intégration `gemma3:1b` [FAIT]
 
 - Prompt : faim, mûres portées, seuil de repas, ronciers connus (id, distance, direction, mûres
   estimées), ronciers visibles, dernière action et son résultat.
@@ -120,7 +120,7 @@ sans latence au même seed identiques.
 **Gate** : run réel headless complet sans blocage, taux d'erreur mesuré, aucune réponse figée ;
 démonstration fenêtrée ajoutée à `tests_manuels.md`.
 
-### Phase 5 — Mesure de survie [TODO]
+### Phase 5 — Mesure de survie [FAIT]
 
 - Critère de succès à définir avec l'utilisateur et à écrire avant toute mesure.
 - Comparaison appariée à l'automate sur les mêmes cartes, à `game_speed = 1.0` et `--jobs 1`.

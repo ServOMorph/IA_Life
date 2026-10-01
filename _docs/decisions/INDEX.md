@@ -6,7 +6,7 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 
 | Date | Décision | Statut | Détail |
 |------|----------|--------|--------|
-| 2026-09-30 | Survie pilotée par LLM (`gemma3:1b`, 4 agents) : cible + actions explicites, mémoire par coordonnées, décision asynchrone sans pause ; axe apprentissage en pause | proposé | [detail](2026-09-30_survie-pilotee-par-llm.md) |
+| 2026-09-30 | Survie pilotée par LLM (`gemma3:1b`, 4 agents) : cible + actions explicites, mémoire par coordonnées, décision asynchrone sans pause ; axe apprentissage en pause | validé (périmètre), critère Phase 5 à valider | [detail](2026-09-30_survie-pilotee-par-llm.md) |
 | 2026-09-30 | Confirmation T3 v3 (Phase 5), lot final indépendant : 7 critères sur 8 ; `trained` 201/320 contre 40/320 initial et 31/320 aléatoire, mais solvabilité scriptée 0,875 sous le seuil de 0,90 | invalidé (critère non atteint) ; cartes finales consommées | [detail](2026-09-30_t3-v3-confirmation-critere-non-atteint.md) |
 | 2026-09-29 | T3 v3 : survie avec trois concurrents fixes, 71/96 contre 15/96 initial et 7/96 aléatoire | validé sur validation ; tests finaux fermés | [detail](2026-09-29_t3-v3-gate-concurrence-atteint.md) |
 | 2026-09-29 | T3 v2 : survie alimentaire mono-agent, 76/96 contre 6/96 initial et 9/96 aléatoire | validé sur validation ; tests finaux fermés | [detail](2026-09-29_t3-v2-gate-atteint.md) |

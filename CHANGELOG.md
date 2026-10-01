@@ -1,3 +1,14 @@
+## v0.44 — 2026-10-01
+
+### Ajouté
+- Décideur `llm_survie` (`gemma3:1b`) : mémoire des ronciers, moteur d'actions validées, tours asynchrones, backends Ollama et mock.
+- Campagnes, contrat, critère proposé et rapport de la Phase 5 ; `tools/analyze_llm_survie.py`, `run_survie_demo.py`.
+- Mode dev : panneau repliable (F6), F1-F4 suivent un agent, marqueurs au-dessus des personnages.
+
+### Modifié
+- `roadmap_survie_llm.md` : Phases 0 à 5 [FAIT], checkpoints retirés ; décision de survie LLM validée sur le périmètre.
+- Lanceurs `run*.py` en fenêtre maximisée.
+
 ## v0.43 — 2026-09-30
 
 ### Ajouté

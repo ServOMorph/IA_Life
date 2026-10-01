@@ -69,8 +69,10 @@ finales sont consommées ; une suite exige un contrat de confirmation v2. Un dé
 L'axe danger demeure en pause. Voir `roadmap_apprentissage_fonctionnel_proposition.md` et
 `_docs/decisions/2026-09-30_t3-v3-confirmation-critere-non-atteint.md`.
 
-L'axe apprentissage est désormais en pause. Nouvelle orientation : les quatre personnages autonomes
-seront pilotés par un LLM local (`gemma3:1b`) qui choisit cibles et actions (ramasser, manger), avec
-mémoire des coordonnées de ronciers et décision asynchrone sans pause. Roadmap
-`roadmap_survie_llm.md` (Phase 0 en cours, aucun code écrit) ; décision dans
+L'axe apprentissage est en pause. La survie pilotée par LLM est livrée : les quatre personnages
+autonomes (`gemma3:1b`) choisissent cibles et actions (ramasser, manger) avec mémoire des ronciers et
+décision asynchrone sans pause. Sur 6 cartes à x1, vie moyenne 542 s contre 292 s pour l'automate,
+sans repli ; critère non validé et prompt directif. Mode dev : F6 replie le panneau, F1-F4 suivent
+un agent, marqueurs au-dessus des personnages ; lancement fenêtré maximisé. Roadmap
+`roadmap_survie_llm.md` (Phases 0 à 5 faites) ; décision dans
 `_docs/decisions/2026-09-30_survie-pilotee-par-llm.md`.

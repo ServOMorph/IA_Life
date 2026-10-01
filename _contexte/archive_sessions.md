@@ -584,3 +584,23 @@ Faire `/compact`, puis engager la Phase 5 par le gel du candidat et du plan de c
 
 ## Question bloquante pour la session suivante
 Aucune.
+---
+# Session du 2026-09-30
+
+## Décisions prises
+- Axe apprentissage T0-T3 mis en pause ; nouvelle orientation : quatre agents pilotés par LLM local.
+- Décision asynchrone sans pause (l'agent poursuit son action pendant l'attente) ; mesure à x1, `--jobs 1`, dépendante du matériel.
+
+## Livrables produits ou modifiés
+- `roadmap_survie_llm.md` : créée (Phases 0-5, Phase 0 en cours).
+- `_docs/decisions/2026-09-30_survie-pilotee-par-llm.md` et `INDEX.md` : décision consignée (proposé).
+
+## Hypothèses validées / invalidées
+- EN ATTENTE : `gemma3:1b` sait choisir une cible parmi des ronciers nommés ; coût de latence sur la survie ; niveau de faim adapté.
+- EN ATTENTE : reproductibilité du LLM réel (non attendue) ; tests rejouables avec mock uniquement.
+
+## Prochaine étape exacte
+Phase 0 : écrire le contrat (schéma d'actions, validation moteur, repli, déclencheurs) et la config `llm_survie_v1.json`.
+
+## Question bloquante pour la session suivante
+Aucune (le critère de succès de la Phase 5 sera défini à son ouverture).
