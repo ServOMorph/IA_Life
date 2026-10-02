@@ -50,6 +50,10 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM local via Oll
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
+Survie pilotée par LLM (`llm_survie`, `gemma3:1b`) livrée avec mémoire des ronciers et mémoire
+cartographique (bords, zones parcourues) ; l'usage de la carte par le LLM est partiel et son effet sur la
+survie n'est pas mesuré. Chat LLM consultable par personnage en mode jeu.
+
 Le prototype est un laboratoire headless reproductible avec configurations versionnées,
 campagnes et résultats JSONL. L'apprentissage alimentaire a franchi la première preuve T0 v4 :
 la politique entraînée réussit 96/96 validations, contre 12/96 avant entraînement et 57/96 pour

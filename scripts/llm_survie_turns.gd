@@ -15,6 +15,10 @@ var latency_total_ms: float = 0.0
 var action_distribution: Dictionary = {}
 var in_flight: bool = false
 var backend = null
+var chat_log: Array = []
+var chat_version: int = 0
+
+const CHAT_LOG_MAX := 40
 
 var _agent = null
 var _engine: LLMSurieEngine = null
@@ -57,7 +61,7 @@ func pending_triggers() -> Array:
 	return _pending.keys()
 
 func summary() -> Dictionary:
-	return {
+	var result := {
 		"llm_survie_tours": turns_total,
 		"llm_survie_refus": _engine.refusals_total,
 		"llm_survie_replis": replis_total,
@@ -66,6 +70,10 @@ func summary() -> Dictionary:
 		"llm_survie_faim_perdue_attente": hunger_lost_total,
 		"llm_survie_distribution_actions": action_distribution.duplicate(),
 	}
+	if _engine.map_memory != null:
+		result["llm_survie_cases_visitees"] = _engine.map_memory.visited_count()
+		result["llm_survie_bords_decouverts"] = _engine.map_memory.known_edges().keys()
+	return result
 
 func _collect_triggers() -> void:
 	var hunger: float = _agent.hunger
@@ -114,6 +122,24 @@ func _start_turn() -> void:
 		"action_en_cours": _engine.current_action,
 	})
 
+func _record_chat(response: Dictionary, wait: float) -> void:
+	var ok := bool(response.get("ok", false))
+	var answer := String(response.get("raw_response", ""))
+	if not ok:
+		answer = "(échec : %s) %s" % [String(response.get("reason", "inconnue")), answer if answer != "" else String(response.get("detail", ""))]
+	chat_log.append({
+		"turn": _turn_id,
+		"triggers": _request_triggers.duplicate(),
+		"prompt": String(response.get("prompt", "")),
+		"response": answer,
+		"ok": ok,
+		"latency_ms": float(response.get("latency_ms", 0.0)),
+		"wait_sim_s": wait,
+	})
+	if chat_log.size() > CHAT_LOG_MAX:
+		chat_log.pop_front()
+	chat_version += 1
+
 func _finish_turn(response: Dictionary) -> void:
 	in_flight = false
 	_skip_start = true
@@ -122,6 +148,7 @@ func _finish_turn(response: Dictionary) -> void:
 	wait_total_seconds += wait
 	hunger_lost_total += _wait_hunger_lost
 	latency_total_ms += float(response.get("latency_ms", 0.0))
+	_record_chat(response, wait)
 	GameLogger.log_event_data("llm_survie_attente_fin", "%s : réponse LLM #%d reçue après %.2f s simulées" % [_agent.display_name, _turn_id, wait], {
 		"agent": _agent.display_name,
 		"tour_id": _turn_id,

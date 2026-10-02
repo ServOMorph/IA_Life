@@ -10,6 +10,7 @@ const OLLAMA_URL := "http://127.0.0.1:11434/api/generate"
 const ACTIONS := ["aller_vers", "explorer", "ramasser", "manger", "attendre"]
 const MAX_LISTED_RONCIERS := 10
 const NUM_PREDICT := 64
+const SECTOR_LABELS := {"exploree": "explorée", "partielle": "partiellement explorée", "inexploree": "inexplorée", "bord": "bord de carte"}
 
 var requests_total: int = 0
 
@@ -111,7 +112,7 @@ func build_prompt(view: Dictionary) -> String:
 		actions.append("manger")
 	if not with_berries.is_empty():
 		actions.append("aller_vers (un roncier de la liste)")
-	actions.append("explorer (une direction)")
+	actions.append(explore_hint(view.get("map", {})))
 	actions.append("attendre")
 	var last: Dictionary = view.get("last_result", {})
 	var last_text := "aucune"
@@ -135,13 +136,49 @@ func build_prompt(view: Dictionary) -> String:
 		"Résultat de ta dernière action : %s." % last_text,
 		"Directions déjà bloquées à cet endroit : %s." % (", ".join(view.get("blocked_directions", [])) if not view.get("blocked_directions", []).is_empty() else "aucune"),
 		"Bord de la carte tout proche (aucune terre au-delà) : %s." % (", ".join(edges) if not edges.is_empty() else "aucun"),
+	]
+	if view.has("map"):
+		parts[1] += " Pour explorer, choisis de préférence une direction inexplorée et jamais une direction marquée bord de carte."
+		parts.append_array(map_lines(view["map"]))
+	parts.append_array([
 		"RONCIERS AVEC DES MÛRES",
 		listing,
 		"ACTIONS POSSIBLES MAINTENANT : %s." % ", ".join(actions),
 		"Choisis l'action la plus utile pour survivre. Réponds uniquement par un objet JSON avec les clés action, roncier_id (ou \"aucun\") et direction (ou \"aucune\").",
-	]
+	])
 	return "
 ".join(parts)
+
+static func explore_hint(map: Dictionary) -> String:
+	var sectors: Dictionary = map.get("sectors", {})
+	var unexplored: Array = LLMDecider.COMPASS_DIRECTIONS.filter(func(name): return sectors.get(name, "") == "inexploree")
+	var avoid: Array = LLMDecider.COMPASS_DIRECTIONS.filter(func(name): return sectors.get(name, "") == "bord")
+	if unexplored.is_empty() and avoid.is_empty():
+		return "explorer (une direction)"
+	var notes: Array = []
+	if not unexplored.is_empty():
+		notes.append("directions conseillées, inexplorées : %s" % ", ".join(unexplored))
+	if not avoid.is_empty():
+		notes.append("directions interdites, bord de carte : %s" % ", ".join(avoid))
+	return "explorer (une direction ; %s)" % " ; ".join(notes)
+
+static func map_lines(map: Dictionary) -> Array:
+	var edges: Dictionary = map.get("edges", {})
+	var edge_texts: Array = []
+	for side in ["N", "E", "S", "O"]:
+		if edges.has(side):
+			edge_texts.append("%s à %d m" % [side, int(round(float(edges[side])))])
+	var sectors: Dictionary = map.get("sectors", {})
+	var sector_texts: Array = []
+	for name in LLMDecider.COMPASS_DIRECTIONS:
+		if sectors.has(name):
+			sector_texts.append("%s %s" % [name, SECTOR_LABELS.get(String(sectors[name]), String(sectors[name]))])
+	return [
+		"CARTE MÉMORISÉE (ce que tu as découvert toi-même)",
+		"Zones parcourues : %d case(s) de 10 m." % int(map.get("visited_cells", 0)),
+		"Bords de carte découverts : %s." % (", ".join(edge_texts) if not edge_texts.is_empty() else "aucun"),
+		"Exploration par direction (jusqu'à 30 m) : %s." % (", ".join(sector_texts) if not sector_texts.is_empty() else "inconnue"),
+	]
 
 static func compass_of(direction: Vector3) -> String:
 	if direction.length_squared() < 0.0001:

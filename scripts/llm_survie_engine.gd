@@ -22,6 +22,7 @@ var accepted_by_action: Dictionary = {}
 var last_result: Dictionary = {}
 var last_issue: String = ""
 var events: Array = []
+var map_memory: SurvieMapMemory = null
 
 var _agent = null
 var _memory: RonceMemory = null
@@ -61,6 +62,7 @@ func submit(action: Dictionary) -> Dictionary:
 	return result
 
 func tick(delta: float) -> Vector3:
+	_record_map()
 	match current_action:
 		"aller_vers":
 			return _tick_go_to(delta)
@@ -72,6 +74,7 @@ func tick(delta: float) -> Vector3:
 	return Vector3.ZERO
 
 func view() -> Dictionary:
+	_record_map()
 	var known: Array = []
 	for id in _memory.known_ids():
 		var offset: Vector3 = _memory.position_of(id) - _agent.position
@@ -84,7 +87,7 @@ func view() -> Dictionary:
 			"last_observed_seconds": _memory.last_observed_seconds(id),
 		})
 	var contact = _agent.contact_ronce()
-	return {
+	var result := {
 		"hunger": _agent.hunger,
 		"berries_carried": _agent.berries_carried,
 		"max_berries_carried": GameConfig.max_berries_carried,
@@ -99,6 +102,22 @@ func view() -> Dictionary:
 		"blocked_targets": blocked_targets(),
 		"edges": _near_edges(),
 	}
+	if map_memory != null:
+		result["map"] = map_memory.view(_agent.position)
+	return result
+
+func _record_map() -> void:
+	if map_memory == null:
+		return
+	for side in map_memory.record_position(_agent.position, _agent.map_half_x, _agent.map_half_z):
+		events.append({"type": "bord_decouvert", "id": side})
+		GameLogger.log_event_data("llm_survie_carte", "%s : bord %s découvert" % [_agent.display_name, side], {
+			"agent": _agent.display_name,
+			"tour_id": turn_id,
+			"bord": side,
+			"position": [_agent.position.x, _agent.position.z],
+			"cases_visitees": map_memory.visited_count(),
+		})
 
 func blocked_directions() -> Array:
 	var blocked: Array = []

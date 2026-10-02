@@ -8,11 +8,11 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 `gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
-Laboratoire headless reproductible. Survie pilotée par LLM livrée (`roadmap_survie_llm.md`, Phases 0 à 5) :
-`llm_survie` (`gemma3:1b`) vit 542 s en moyenne contre 292 s pour l'automate sur 6 cartes, 0 repli ;
-critère de succès non validé par l'utilisateur, prompt directif. Mode dev : F6, F1-F4, marqueurs.
-Axes apprentissage (T3 v3, critère non atteint 7/8) et danger en pause. Démonstration fenêtrée à valider.
-Décideur `politique_apprise` livré en jeu (expérimental, non validé).
+Laboratoire headless reproductible. Survie pilotée par LLM livrée (Phases 0 à 5) : `llm_survie` (`gemma3:1b`)
+542 s de vie moyenne contre 292 s (automate), critère non validé. Mémoire cartographique ajoutée (bords,
+zones parcourues, active par défaut) : usage par le LLM partiel (gate d'usage non atteint), effet sur la
+survie non mesuré. Mode dev : F6, F1-F4, marqueurs, chat LLM par personnage. Axes apprentissage et danger
+en pause ; démonstrations fenêtrées à valider.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-09-26 : T0 v4 franchit le gate sur 1 248 résultats : `trained` 96/96, initial 12/96,
@@ -43,6 +43,9 @@ Décideur `politique_apprise` livré en jeu (expérimental, non validé).
 - 2026-09-30 : orientation survie pilotée par LLM (4 agents, `gemma3:1b`), axe apprentissage en
   pause. Cible = roncier, ramasser/manger explicites, mémoire illimitée, décision asynchrone sans
   pause, mesure à x1 et `--jobs 1`. Voir `_docs/decisions/2026-09-30_survie-pilotee-par-llm.md`.
+- 2026-10-02 : mémoire cartographique `llm_survie` livrée (cases, bords, état par direction) ; gate d'usage
+  non atteint (5/8 et 3/4), effet survie non mesuré, runs non comparables à la Phase 5 sans désactivation.
+  Voir `_docs/decisions/2026-10-02_memoire-cartographique-llm-survie.md`.
 - 2026-10-01 : survie pilotée par LLM livrée (Phases 0 à 5) : `llm_survie` 542 s de vie moyenne
   contre 292 s (automate), 6/6 cartes, 0 repli ; prompt directif et cueillette libre, critère non
   validé. Voir `_docs/decisions/2026-09-30_survie-pilotee-par-llm.md`.

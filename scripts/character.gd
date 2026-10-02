@@ -41,6 +41,7 @@ const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 @export var danger_reaction_range: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["danger_reaction_range"])
 @export var model_checkpoint_path: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["model_checkpoint_path"])
 @export var llm_model: String = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_model"])
+@export var llm_survie_map_memory: bool = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_survie_map_memory"])
 @export var llm_decision_interval_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_decision_interval_seconds"])
 @export var llm_timeout_seconds: float = VariableRegistry.default_value(VariableRegistry.CHARACTER["llm_timeout_seconds"])
 @export var display_name: String = ""
@@ -136,6 +137,8 @@ func _ready() -> void:
 		_ronce_memory = RonceMemory.new()
 		_survie = LLMSurieEngine.new()
 		_survie.setup(self, _ronce_memory)
+		if llm_survie_map_memory:
+			_survie.map_memory = SurvieMapMemory.new()
 	_decider = _build_decider()
 	if _survie != null:
 		_survie_turns = LLMSurieTurns.new()
@@ -999,6 +1002,9 @@ func ronce_memory() -> RonceMemory:
 
 func survie_engine() -> LLMSurieEngine:
 	return _survie
+
+func survie_map_memory() -> SurvieMapMemory:
+	return _survie.map_memory if _survie != null else null
 
 func survie_turns() -> LLMSurieTurns:
 	return _survie_turns

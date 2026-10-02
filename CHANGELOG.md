@@ -1,3 +1,16 @@
+## v0.45 — 2026-10-02
+
+### Ajouté
+- Mémoire cartographique `llm_survie` (`scripts/survie_map_memory.gd`) : cases de 10 m parcourues, bords touchés, état par direction, tour déclenché par `bord_decouvert`, section « CARTE MÉMORISÉE » du prompt, variable `llm_survie_map_memory`.
+- 6 tests automatiques de la carte (`tools/run_manual_checks.gd`) et banc d'usage Ollama `tools/check_llm_survie_map_usage.gd` (gate non atteint : 5/8 et 3/4).
+- Chat LLM par personnage (section repliable : prompt et réponse complets, défilement stable).
+
+### Corrigé
+- Panneaux personnage : le cadre se rétrécit au repli d'une section.
+
+### Modifié
+- Décision `2026-10-02_memoire-cartographique-llm-survie.md` (proposé) ajoutée à l'index.
+
 ## v0.44 — 2026-10-01
 
 ### Ajouté

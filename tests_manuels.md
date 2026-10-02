@@ -1,5 +1,21 @@
 # Tests manuels en attente
 
+## DESIGN — Observatoire, phase 1 : lisibilité visuelle
+
+1. Depuis le bureau virtuel Windows « IA_Life », lancer le jeu en mode dev et vérifier la lisibilité des quatre agents, de leurs couleurs et de leurs repères géométriques à distance.
+2. Ouvrir les quatre panneaux : contrôler IBM Plex, le fond bleu nuit, les titres associés à chaque agent, le contraste des commandes et la lisibilité de la jauge « RÉSERVE » lorsque la valeur baisse.
+3. Vérifier qu'un agent mort affiche « MORT » en gris et que sa jauge ne reste pas visible.
+4. Avec au moins une zone dangereuse activée, vérifier le libellé « ZONE DANGEREUSE » pendant l'exposition et son retrait à la sortie, sans masquer le nom ni la couleur de l'agent.
+5. Contrôler les panneaux du mode dev et la lecture des valeurs dans l'inspecteur à la résolution de jeu utilisée habituellement.
+
+## Chat LLM et mémoire cartographique de llm_survie
+
+Prérequis : serveur Ollama actif (`gemma3:1b` disponible).
+
+1. Lancer `python run_survie_demo.py` (bureau virtuel « IA_Life »), déplier « Chat LLM » sur un personnage : les échanges (prompt complet, réponse) apparaissent, chaque personnage se plie et se déplie indépendamment.
+2. Remonter dans le fil : un nouveau message ne doit pas déplacer la lecture ; replié, le cadre du panneau retrouve sa taille réduite.
+3. Dans un prompt, vérifier la section « CARTE MÉMORISÉE » (zones parcourues, bords découverts, exploration par direction) ; après avoir touché un bord, il doit apparaître avec sa distance.
+
 ## Phase 5 — démonstration fenêtrée du modèle T3 v3 appliqué
 
 Prérequis : lot final de confirmation exécuté (le checkpoint `experiments/t3_confirmation_final_workers/trained_410001101.jsonl.410001101.200.checkpoint.json` doit exister).
