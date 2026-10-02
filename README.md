@@ -59,8 +59,8 @@ comparabilité directe avec les parcours enregistrés sur l'ancien terrain. La p
 (personnages et états 3D) n'est pas commencée.
 
 Survie pilotée par LLM (`llm_survie`, `gemma3:1b`) livrée avec mémoire des ronciers et mémoire
-cartographique (bords, zones parcourues) ; l'usage de la carte par le LLM est partiel et son effet sur la
-survie n'est pas mesuré. Chat LLM consultable par personnage en mode jeu.
+cartographique (bords, zones parcourues) ; la carte n'est pas dans le prompt et ne sert qu'à retirer du
+choix du LLM les directions menant à un bord connu. Chat LLM consultable par personnage en mode jeu.
 
 Le prototype est un laboratoire headless reproductible avec configurations versionnées,
 campagnes et résultats JSONL. L'apprentissage alimentaire a franchi la première preuve T0 v4 :

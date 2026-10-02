@@ -49,7 +49,7 @@ func request(view: Dictionary, _turn_id: int) -> void:
 	var payload := {
 		"model": _model,
 		"prompt": _last_prompt,
-		"format": build_schema(_last_known_ids, view.get("blocked_directions", [])),
+		"format": build_schema(_last_known_ids, excluded_directions(view)),
 		"stream": false,
 		"keep_alive": "30m",
 		"options": {"temperature": 0, "seed": _seed, "num_predict": NUM_PREDICT},
@@ -67,6 +67,15 @@ func poll() -> Dictionary:
 	var ready := _response
 	_response = {}
 	return ready
+
+## Directions retirées du choix d'explorer : bloquées à cet endroit, ou marquées bord par la carte.
+static func excluded_directions(view: Dictionary) -> Array:
+	var excluded: Array = view.get("blocked_directions", []).duplicate()
+	var sectors: Dictionary = view.get("map", {}).get("sectors", {})
+	for name in LLMDecider.COMPASS_DIRECTIONS:
+		if sectors.get(name, "") == "bord" and not excluded.has(name):
+			excluded.append(name)
+	return excluded
 
 func build_schema(target_ids: Array, blocked_directions: Array = []) -> Dictionary:
 	var branches: Array = []
@@ -112,7 +121,7 @@ func build_prompt(view: Dictionary) -> String:
 		actions.append("manger")
 	if not with_berries.is_empty():
 		actions.append("aller_vers (un roncier de la liste)")
-	actions.append(explore_hint(view.get("map", {})))
+	actions.append("explorer (une direction)")
 	actions.append("attendre")
 	var last: Dictionary = view.get("last_result", {})
 	var last_text := "aucune"
@@ -137,9 +146,6 @@ func build_prompt(view: Dictionary) -> String:
 		"Directions déjà bloquées à cet endroit : %s." % (", ".join(view.get("blocked_directions", [])) if not view.get("blocked_directions", []).is_empty() else "aucune"),
 		"Bord de la carte tout proche (aucune terre au-delà) : %s." % (", ".join(edges) if not edges.is_empty() else "aucun"),
 	]
-	if view.has("map"):
-		parts[1] += " Pour explorer, choisis de préférence une direction inexplorée et jamais une direction marquée bord de carte."
-		parts.append_array(map_lines(view["map"]))
 	parts.append_array([
 		"RONCIERS AVEC DES MÛRES",
 		listing,
@@ -149,19 +155,8 @@ func build_prompt(view: Dictionary) -> String:
 	return "
 ".join(parts)
 
-static func explore_hint(map: Dictionary) -> String:
-	var sectors: Dictionary = map.get("sectors", {})
-	var unexplored: Array = LLMDecider.COMPASS_DIRECTIONS.filter(func(name): return sectors.get(name, "") == "inexploree")
-	var avoid: Array = LLMDecider.COMPASS_DIRECTIONS.filter(func(name): return sectors.get(name, "") == "bord")
-	if unexplored.is_empty() and avoid.is_empty():
-		return "explorer (une direction)"
-	var notes: Array = []
-	if not unexplored.is_empty():
-		notes.append("directions conseillées, inexplorées : %s" % ", ".join(unexplored))
-	if not avoid.is_empty():
-		notes.append("directions interdites, bord de carte : %s" % ", ".join(avoid))
-	return "explorer (une direction ; %s)" % " ; ".join(notes)
-
+## Résumé textuel de la carte mémorisée. Non injecté dans le prompt : la carte ne sert qu'à exclure
+## les directions bord (excluded_directions), réservé à un usage stratégique ultérieur.
 static func map_lines(map: Dictionary) -> Array:
 	var edges: Dictionary = map.get("edges", {})
 	var edge_texts: Array = []

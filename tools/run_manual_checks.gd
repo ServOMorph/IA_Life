@@ -1766,6 +1766,15 @@ func _test_survie_ollama_prompt_schema_and_parsing() -> void:
 	_expect(branches[1]["properties"]["direction"]["enum"].size() == 8 and not branches[1]["properties"]["direction"]["enum"].has("aucune"), "Schéma llm_survie : explorer doit imposer une vraie direction.")
 	_expect(branches[2]["properties"]["direction"]["enum"] == ["aucune"] and branches[4]["properties"]["action"]["enum"] == ["attendre"], "Schéma llm_survie : les actions sans argument doivent fixer roncier_id et direction.")
 	_expect(backend.build_schema([])["anyOf"].size() == 4, "Schéma llm_survie : sans roncier avec des mûres, aller_vers ne doit pas être proposé.")
+	var edge_view := {"blocked_directions": ["S"], "map": {"sectors": {"N": "bord", "NE": "bord", "E": "inexploree", "S": "exploree"}}}
+	var excluded := LLMSurieOllamaBackend.excluded_directions(edge_view)
+	var edge_directions: Array = backend.build_schema([], excluded)["anyOf"][0]["properties"]["direction"]["enum"]
+	_expect(excluded.size() == 3 and edge_directions.size() == 5 and not edge_directions.has("N") and not edge_directions.has("NE") and not edge_directions.has("S") and edge_directions.has("E"), "Schéma llm_survie : les directions bord et bloquées doivent être retirées d'explorer (%s)." % [edge_directions])
+	var all_edges := {"map": {"sectors": {}}}
+	for name in LLMDecider.COMPASS_DIRECTIONS:
+		all_edges["map"]["sectors"][name] = "bord"
+	_expect(backend.build_schema([], LLMSurieOllamaBackend.excluded_directions(all_edges))["anyOf"][0]["properties"]["direction"]["enum"].size() == 8, "Schéma llm_survie : si toutes les directions sont exclues, explorer doit retomber sur les 8 directions.")
+	_expect(LLMSurieOllamaBackend.excluded_directions({}).is_empty(), "Schéma llm_survie : sans carte ni blocage, aucune direction ne doit être exclue.")
 	_expect(LLMSurieOllamaBackend.compass_of(Vector3(0, 0, -1)) == "N" and LLMSurieOllamaBackend.compass_of(Vector3(1, 0, 0)) == "E" and LLMSurieOllamaBackend.compass_of(Vector3(0, 0, 1)) == "S" and LLMSurieOllamaBackend.compass_of(Vector3(-1, 0, 1)) == "SO" and LLMSurieOllamaBackend.compass_of(Vector3(-1, 0, -1)) == "NO", "Boussole llm_survie : conversion vecteur vers direction incorrecte.")
 	backend.prepare({"known": [{"id": "R07", "distance": 1.0, "direction": Vector3.RIGHT, "estimated_berries": 1}]})
 	var good := backend.parse_body(HTTPRequest.RESULT_SUCCESS, 200, JSON.stringify({"response": JSON.stringify({"action": "aller_vers", "roncier_id": "R07", "direction": "aucune"})}))
@@ -1824,7 +1833,7 @@ func _test_survie_map_engine_integration() -> void:
 	character.position = Vector3(character.map_half_x - 0.5, 0.0, 2.0)
 	engine.tick(0.1)
 	var events := engine.take_events()
-	_expect(events.any(func(event): return event["type"] == "bord_decouvert" and event["id"] == "E"), "Carte llm_survie moteur : toucher un bord doit émettre bord_decouvert:E (%s)." % [events])
+	_expect(events.is_empty() and map.known_edges().has("E"), "Carte llm_survie moteur : toucher un bord doit le mémoriser sans émettre d'événement (%s)." % [events])
 	character.position = Vector3(0.0, 0.0, 2.0)
 	var view := engine.view()
 	_expect(view.has("map") and is_equal_approx(float(view["map"]["edges"]["E"]), character.map_half_x) and int(view["map"]["visited_cells"]) == 2, "Carte llm_survie moteur : la vue doit porter le bord découvert et les cases parcourues (%s)." % [view.get("map", {})])
@@ -1864,10 +1873,9 @@ func _test_survie_map_triggers_turn_with_map_view() -> void:
 	character.position = Vector3(0.0, 0.0, -character.map_half_z + 0.5)
 	character.survie_step(0.1)
 	character.survie_step(0.1)
-	_expect(backend.requests_total == 2, "Carte llm_survie tours : la découverte d'un bord doit déclencher un tour (%d)." % backend.requests_total)
-	var last: Dictionary = views[views.size() - 1] if not views.is_empty() else {}
-	_expect(last.get("declencheurs", []).has("bord_decouvert:N"), "Carte llm_survie tours : le déclencheur bord_decouvert:N est attendu (%s)." % [last.get("declencheurs", [])])
-	_expect(last.has("map") and last["map"]["edges"].has("N") and last["map"]["sectors"]["N"] == "bord", "Carte llm_survie tours : la vue envoyée au LLM doit contenir le bord N (%s)." % [last.get("map", {})])
+	_expect(backend.requests_total == 1, "Carte llm_survie tours : la découverte d'un bord ne doit pas déclencher de tour (%d)." % backend.requests_total)
+	var map_view: Dictionary = character.survie_engine().view()
+	_expect(map_view.has("map") and map_view["map"]["edges"].has("N") and LLMSurieOllamaBackend.excluded_directions(map_view).has("N"), "Carte llm_survie tours : le bord N doit rester mémorisé et exclu du choix (%s)." % [map_view.get("map", {})])
 	character.free()
 
 func _test_survie_map_prompt() -> void:
@@ -1885,13 +1893,10 @@ func _test_survie_map_prompt() -> void:
 			"sectors": {"N": "bord", "NE": "inexploree", "E": "exploree", "SE": "partielle", "S": "exploree", "SO": "exploree", "O": "bord", "NO": "bord"},
 		},
 	}
-	var prompt := backend.build_prompt(view)
-	_expect(prompt.contains("CARTE MÉMORISÉE") and prompt.contains("Zones parcourues : 7 case(s) de 10 m."), "Prompt carte llm_survie : section et cases parcourues attendues.")
-	_expect(prompt.contains("Bords de carte découverts : N à 12 m, O à 3 m."), "Prompt carte llm_survie : bords découverts avec distance attendus.")
-	_expect(prompt.contains("N bord de carte, NE inexplorée, E explorée, SE partiellement explorée"), "Prompt carte llm_survie : exploration par direction attendue.")
-	_expect(prompt.contains("choisis de préférence une direction inexplorée"), "Prompt carte llm_survie : consigne d'usage de la carte attendue.")
-	_expect(prompt.find("CARTE MÉMORISÉE") < prompt.find("RONCIERS AVEC DES MÛRES") and prompt.ends_with("direction (ou \"aucune\")."), "Prompt carte llm_survie : la carte doit précéder la liste des ronciers, la consigne JSON rester en fin.")
-	var empty_map: Dictionary = view.duplicate(true)
-	empty_map["map"] = {"visited_cells": 1, "edges": {}, "sectors": {}}
-	_expect(backend.build_prompt(empty_map).contains("Bords de carte découverts : aucun."), "Prompt carte llm_survie : sans bord découvert, « aucun » est attendu.")
+	var no_map: Dictionary = view.duplicate(true)
+	no_map.erase("map")
+	_expect(backend.build_prompt(view) == backend.build_prompt(no_map), "Prompt carte llm_survie : la carte ne doit pas modifier le prompt.")
+	var lines := "\n".join(LLMSurieOllamaBackend.map_lines(view["map"]))
+	_expect(lines.contains("Zones parcourues : 7 case(s) de 10 m.") and lines.contains("Bords de carte découverts : N à 12 m, O à 3 m.") and lines.contains("N bord de carte, NE inexplorée, E explorée, SE partiellement explorée"), "Résumé carte llm_survie : cases, bords et exploration par direction attendus.")
+	_expect(LLMSurieOllamaBackend.map_lines({"visited_cells": 1, "edges": {}, "sectors": {}})[2] == "Bords de carte découverts : aucun.", "Résumé carte llm_survie : sans bord découvert, « aucun » est attendu.")
 	backend.free()

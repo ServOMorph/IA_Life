@@ -110,7 +110,6 @@ func _record_map() -> void:
 	if map_memory == null:
 		return
 	for side in map_memory.record_position(_agent.position, _agent.map_half_x, _agent.map_half_z):
-		events.append({"type": "bord_decouvert", "id": side})
 		GameLogger.log_event_data("llm_survie_carte", "%s : bord %s découvert" % [_agent.display_name, side], {
 			"agent": _agent.display_name,
 			"tour_id": turn_id,

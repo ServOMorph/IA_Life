@@ -23,7 +23,7 @@ Prérequis : serveur Ollama actif (`gemma3:1b` disponible).
 
 1. Lancer `python run_survie_demo.py` (bureau virtuel « IA_Life »), déplier « Chat LLM » sur un personnage : les échanges (prompt complet, réponse) apparaissent, chaque personnage se plie et se déplie indépendamment.
 2. Remonter dans le fil : un nouveau message ne doit pas déplacer la lecture ; replié, le cadre du panneau retrouve sa taille réduite.
-3. Dans un prompt, vérifier la section « CARTE MÉMORISÉE » (zones parcourues, bords découverts, exploration par direction) ; après avoir touché un bord, il doit apparaître avec sa distance.
+3. Après qu'un personnage a touché un bord (événement `llm_survie_carte` dans `logs/`), vérifier que le prompt ne contient aucune section de carte et que le personnage ne choisit plus d'explorer vers ce bord.
 
 ## Phase 5 — démonstration fenêtrée du modèle T3 v3 appliqué
 

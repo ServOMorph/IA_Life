@@ -1,6 +1,6 @@
 # Mémoire cartographique de llm_survie (2026-10-02)
 
-Statut : proposé (livré, gate d'usage non atteint, effet sur la survie non mesuré).
+Statut : validé (périmètre), révisé le même jour — mémoire seule, utilisée uniquement pour exclure les directions « bord » (voir Révision).
 
 ## Décision
 
@@ -23,7 +23,28 @@ passer l'exploration de 1/8 à 5/8.
 - Aucune campagne de survie rejouée : l'effet sur la durée de vie est inconnu.
 - Les runs avec carte ne sont plus comparables à la Phase 5 (mettre `llm_survie_map_memory: false`).
 
-## Suite
+## Décision complémentaire (2026-10-02, validée par l'utilisateur)
 
-Retirer du choix les directions « bord » (contrainte moteur, comme les directions bloquées), réviser
-le prompt, ou accepter l'état informatif.
+- Contrainte moteur : les directions marquées « bord » par la carte sont retirées de l'énumération
+  `direction` d'`explorer` dans le schéma Ollama, comme les directions bloquées
+  (`LLMSurieOllamaBackend.excluded_directions`). Si les 8 directions sont exclues, le schéma retombe
+  sur les 8. Test ajouté dans `tools/run_manual_checks.gd`.
+- Banc rejoué après la contrainte : inexplorée 5/8 contre 1/8 ; bord 4/4 contre 3/4 (gate formel
+  toujours non atteint, code inchangé). La famille « bord » est désormais garantie par construction :
+  elle ne mesure plus l'usage par le LLM, seulement le bon fonctionnement de la contrainte. Elle
+  n'était déjà pas discriminante (le témoin répond N dans les 12 situations).
+
+## Révision (2026-10-02, demande de l'utilisateur) : carte sans influence stratégique
+
+La carte ne doit pas orienter la stratégie de survie ; elle sert uniquement à empêcher le LLM de
+demander une direction hors de la carte. Un usage stratégique viendra plus tard.
+
+- Le prompt n'intègre plus la carte (section « CARTE MÉMORISÉE » et consignes d'exploration retirées) :
+  il est identique à la v1, carte active ou non. `map_lines` est conservé, non injecté.
+- La découverte d'un bord ne déclenche plus de tour de décision (journalisée seulement).
+- Seul effet restant : l'exclusion des directions bord dans le schéma.
+- Le banc `tools/check_llm_survie_map_usage.gd` mesurait l'usage de la carte dans le prompt : il est
+  sans objet pour cette version (seule la famille bord, garantie par construction, diffère du témoin).
+- Config de référence : la carte reste active par défaut. Son seul effet sur le comportement est
+  l'exclusion des directions bord, qui n'existe pas dans les runs de la Phase 5 : une comparaison
+  stricte avec la Phase 5 exige toujours `llm_survie_map_memory: false`.

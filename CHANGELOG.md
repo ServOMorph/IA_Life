@@ -1,3 +1,13 @@
+## v0.47 — 2026-10-02
+
+### Modifié
+- Mémoire cartographique `llm_survie` : la carte n'est plus injectée dans le prompt (identique à la v1) et la découverte d'un bord ne déclenche plus de tour ; seul effet conservé, les directions « bord » sont retirées de l'énumération `explorer` du schéma Ollama (`excluded_directions`).
+- `map_lines` conservé, non utilisé, pour un usage stratégique ultérieur ; description de `llm_survie_map_memory` mise à jour.
+- Décision `2026-10-02_memoire-cartographique-llm-survie.md` révisée (validée) ; banc `check_llm_survie_map_usage.gd` sans objet.
+
+### Ajouté
+- Tests de `excluded_directions` et du prompt identique avec ou sans carte (`tools/run_manual_checks.gd`).
+
 ## v0.46 — 2026-10-02
 
 ### Ajouté
