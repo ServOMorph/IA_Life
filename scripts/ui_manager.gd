@@ -1,5 +1,7 @@
 extends CanvasLayer
 
+const ObservatoryStyle = preload("res://scripts/observatory_style.gd")
+
 const MENU_HEIGHT := 56.0
 const MARGIN := 10.0
 const ZONE_MIN := 5.0
@@ -73,6 +75,7 @@ func _build_root() -> void:
 	_root = Control.new()
 	_root.set_anchors_preset(Control.PRESET_FULL_RECT)
 	_root.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_root.theme = ObservatoryStyle.make_theme()
 	add_child(_root)
 
 func _build_menu_bar() -> void:
@@ -129,7 +132,7 @@ func _build_dev_panel() -> void:
 	_dev_panel.custom_minimum_size = Vector2(880, 0)
 
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.1, 0.93)
+	style.bg_color = Color(ObservatoryStyle.PANEL.r, ObservatoryStyle.PANEL.g, ObservatoryStyle.PANEL.b, 0.94)
 	style.content_margin_left = 18
 	style.content_margin_right = 18
 	style.content_margin_top = 12
@@ -144,7 +147,7 @@ func _build_dev_panel() -> void:
 	var title := Label.new()
 	title.text = "MODE DEV"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_color_override("font_color", Color(1.0, 0.6, 0.1))
+	title.add_theme_color_override("font_color", ObservatoryStyle.ACCENT)
 	vbox.add_child(title)
 	_dev_title = title
 
@@ -155,14 +158,14 @@ func _build_dev_panel() -> void:
 
 	var config_title := Label.new()
 	config_title.text = "Relance de scène"
-	config_title.add_theme_color_override("font_color", Color(0.6, 0.75, 1.0))
+	config_title.add_theme_color_override("font_color", ObservatoryStyle.ACCENT)
 	vbox.add_child(config_title)
 	vbox.add_child(_build_seed_row())
 	vbox.add_child(_build_danger_row())
 
 	_dev_status_label = Label.new()
 	_dev_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_dev_status_label.add_theme_color_override("font_color", Color(1.0, 0.6, 0.1))
+	_dev_status_label.add_theme_color_override("font_color", ObservatoryStyle.ACCENT)
 	vbox.add_child(_dev_status_label)
 
 	_dev_body = []
@@ -196,7 +199,7 @@ func _build_shortcuts_grid() -> GridContainer:
 		if pair[1] == "":
 			var header := Label.new()
 			header.text = pair[0]
-			header.add_theme_color_override("font_color", Color(0.6, 0.75, 1.0))
+			header.add_theme_color_override("font_color", ObservatoryStyle.ACCENT)
 			grid.add_child(header)
 			grid.add_child(Label.new())
 			continue
@@ -204,7 +207,7 @@ func _build_shortcuts_grid() -> GridContainer:
 		key.text = pair[0]
 		key.custom_minimum_size = Vector2(120, 0)
 		key.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-		key.add_theme_color_override("font_color", Color(0.95, 0.9, 0.55))
+		key.add_theme_color_override("font_color", ObservatoryStyle.HUNGER)
 		grid.add_child(key)
 		var desc := Label.new()
 		desc.text = pair[1]
@@ -305,7 +308,7 @@ func set_test_character(node: Node) -> void:
 func _build_test_stats_panel() -> void:
 	_test_stats_panel = PanelContainer.new()
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	style.bg_color = ObservatoryStyle.PANEL
 	style.content_margin_left = 10
 	style.content_margin_right = 10
 	style.content_margin_top = 8
@@ -448,7 +451,7 @@ func _open_test_detail(test: Dictionary) -> void:
 	_test_detail_panel = PanelContainer.new()
 	_test_detail_panel.custom_minimum_size = Vector2(360, 0)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	style.bg_color = ObservatoryStyle.PANEL
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 10
@@ -531,7 +534,7 @@ func _build_checklist_panel() -> void:
 	_checklist_panel = PanelContainer.new()
 	_checklist_panel.custom_minimum_size = Vector2(640, 500)
 	var style := StyleBoxFlat.new()
-	style.bg_color = Color(0.08, 0.08, 0.1, 1.0)
+	style.bg_color = ObservatoryStyle.PANEL
 	style.content_margin_left = 12
 	style.content_margin_right = 12
 	style.content_margin_top = 10
@@ -762,13 +765,13 @@ func _build_variable_field(definition: Dictionary, value, on_change: Callable) -
 	var tag := Label.new()
 	if dynamic:
 		tag.text = "dynamique"
-		tag.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		tag.add_theme_color_override("font_color", ObservatoryStyle.SECONDARY)
 	elif live_editable:
 		tag.text = "live"
-		tag.add_theme_color_override("font_color", Color(0.3, 0.85, 0.3))
+		tag.add_theme_color_override("font_color", ObservatoryStyle.GREEN)
 	else:
 		tag.text = "nécessite Relancer"
-		tag.add_theme_color_override("font_color", Color(0.95, 0.6, 0.1))
+		tag.add_theme_color_override("font_color", ObservatoryStyle.HUNGER)
 	row.add_child(tag)
 
 	return {"row": row, "value_label": value_label}
@@ -903,10 +906,9 @@ func _build_game_speed_control() -> HBoxContainer:
 
 func _add_menu_button(entry: Dictionary) -> void:
 	var button := Button.new()
-	button.text = entry.name
+	button.text = "%s %s" % [ObservatoryStyle.agent_symbol(entry.name), entry.name]
 	button.add_theme_color_override("font_color", entry.color)
 	button.add_theme_color_override("font_hover_color", entry.color)
-	button.add_theme_color_override("font_pressed_color", entry.color)
 	button.pressed.connect(_on_character_button_pressed.bind(entry))
 	_menu_bar.add_child(button)
 
@@ -935,6 +937,11 @@ func _build_collapsible_section(title_text: String, content: Control, expanded: 
 	header.pressed.connect(func() -> void:
 		content.visible = not content.visible
 		header.text = ("▼ " if content.visible else "▶ ") + title_text
+		var host: Node = section.get_parent()
+		while host != null and not (host is PanelContainer):
+			host = host.get_parent()
+		if host != null:
+			(host as Control).reset_size.call_deferred()
 	)
 
 	return section
@@ -947,13 +954,13 @@ func _build_character_panel(entry: Dictionary) -> PanelContainer:
 	panel.add_child(outer_vbox)
 
 	var title := Label.new()
-	title.text = entry.name
+	title.text = "%s %s" % [ObservatoryStyle.agent_symbol(entry.name), entry.name]
 	title.add_theme_color_override("font_color", entry.color)
 	outer_vbox.add_child(title)
 
 	var dead_label := Label.new()
-	dead_label.text = "DEAD"
-	dead_label.add_theme_color_override("font_color", Color(1, 0.15, 0.15))
+	dead_label.text = "× MORT"
+	dead_label.add_theme_color_override("font_color", ObservatoryStyle.DEATH)
 	dead_label.add_theme_font_size_override("font_size", 28)
 	dead_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	dead_label.visible = false
@@ -975,6 +982,8 @@ func _build_character_panel(entry: Dictionary) -> PanelContainer:
 
 	var berries_label := Label.new()
 	etat_content.add_child(berries_label)
+	for metric in [pos_label, speed_label, zone_label, berries_label]:
+		metric.add_theme_font_override("font", ObservatoryStyle.MONO)
 
 	etat_content.visible = false
 	live_vbox.add_child(etat_content)
@@ -1011,23 +1020,49 @@ func _build_character_panel(entry: Dictionary) -> PanelContainer:
 
 	var memories_label := Label.new()
 	historique_content.add_child(memories_label)
+	for metric in [berries_picked_label, berries_eaten_label, memories_label]:
+		metric.add_theme_font_override("font", ObservatoryStyle.MONO)
 
 	outer_vbox.add_child(_build_collapsible_section("Historique", historique_content, true))
+
+	var chat_scroll := ScrollContainer.new()
+	chat_scroll.custom_minimum_size = Vector2(420, 260)
+	chat_scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	var chat_label := Label.new()
+	chat_label.add_theme_font_override("font", ObservatoryStyle.MONO)
+	chat_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	chat_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	chat_label.text = "(aucun échange LLM pour ce personnage)"
+	chat_scroll.add_child(chat_label)
+	outer_vbox.add_child(_build_collapsible_section("Chat LLM", chat_scroll, false))
+
+	var hunger_label := Label.new()
+	hunger_label.add_theme_color_override("font_color", ObservatoryStyle.HUNGER)
+	hunger_label.add_theme_font_override("font", ObservatoryStyle.MONO)
+	outer_vbox.add_child(hunger_label)
+
+	var danger_label := Label.new()
+	danger_label.text = "! ZONE DANGEREUSE"
+	danger_label.add_theme_color_override("font_color", ObservatoryStyle.DANGER)
+	danger_label.visible = false
+	outer_vbox.add_child(danger_label)
 
 	var hunger_bar := ProgressBar.new()
 	hunger_bar.min_value = 0.0
 	hunger_bar.max_value = 100.0
 	hunger_bar.show_percentage = false
-	hunger_bar.custom_minimum_size = Vector2(0, 4)
+	hunger_bar.custom_minimum_size = Vector2(0, 8)
 	hunger_bar.value = entry.node.get("hunger")
 	var fill_style := StyleBoxFlat.new()
-	fill_style.bg_color = Color(0.85, 0.1, 0.1)
+	fill_style.bg_color = ObservatoryStyle.HUNGER
 	hunger_bar.add_theme_stylebox_override("fill", fill_style)
 	outer_vbox.add_child(hunger_bar)
 
 	entry["vbox"] = live_vbox
 	entry["dead_label"] = dead_label
 	entry["hunger_bar"] = hunger_bar
+	entry["hunger_label"] = hunger_label
+	entry["danger_label"] = danger_label
 	entry["pos_label"] = pos_label
 	entry["speed_label"] = speed_label
 	entry["zone_label"] = zone_label
@@ -1035,6 +1070,10 @@ func _build_character_panel(entry: Dictionary) -> PanelContainer:
 	entry["berries_picked_label"] = berries_picked_label
 	entry["berries_eaten_label"] = berries_eaten_label
 	entry["memories_label"] = memories_label
+	entry["chat_scroll"] = chat_scroll
+	entry["chat_label"] = chat_label
+	entry["chat_turns"] = null
+	entry["chat_version"] = -1
 
 	return panel
 
@@ -1069,12 +1108,62 @@ func _process(_delta: float) -> void:
 			viewport_size.y - MENU_HEIGHT - _test_stats_panel.size.y - MARGIN
 		)
 
+func _update_chat(entry: Dictionary) -> void:
+	var scroll: ScrollContainer = entry.chat_scroll
+	if not scroll.visible:
+		return
+	var node = entry.node
+	var turns = node.survie_turns() if node.has_method("survie_turns") else null
+	if turns == null:
+		return
+	if entry.chat_turns != turns:
+		entry.chat_turns = turns
+		entry.chat_version = -1
+	if entry.chat_version == turns.chat_version:
+		return
+	entry.chat_version = turns.chat_version
+	var blocks: Array = []
+	for item in turns.chat_log:
+		blocks.append("===== Tour #%d | déclencheurs : %s | latence %.0f ms =====\n--- PROMPT ---\n%s\n--- RÉPONSE ---\n%s" % [
+			item["turn"], ", ".join(item["triggers"]), item["latency_ms"], item["prompt"], item["response"],
+		])
+	var bar := scroll.get_v_scroll_bar()
+	var follow: bool = float(scroll.scroll_vertical) >= bar.max_value - bar.page - 8.0
+	var previous_scroll: int = scroll.scroll_vertical
+	entry.chat_label.text = "\n\n".join(blocks) if not blocks.is_empty() else "(aucun échange LLM pour ce personnage)"
+	if follow:
+		_scroll_to_bottom.call_deferred(scroll)
+	else:
+		_restore_scroll.call_deferred(scroll, previous_scroll)
+
+func _restore_scroll(scroll: ScrollContainer, value: int) -> void:
+	if is_instance_valid(scroll):
+		scroll.scroll_vertical = value
+
+func _scroll_to_bottom(scroll: ScrollContainer) -> void:
+	await get_tree().process_frame
+	await get_tree().process_frame
+	if is_instance_valid(scroll):
+		scroll.scroll_vertical = int(scroll.get_v_scroll_bar().max_value)
+
 func _update_panel_texts(entry: Dictionary) -> void:
+	_update_chat(entry)
 	var node = entry.node
 	var dead: bool = node.get("is_dead")
 	entry.dead_label.visible = dead
 	entry.vbox.visible = not dead
-	entry.hunger_bar.value = node.get("hunger")
+	entry.hunger_label.visible = not dead
+	entry.hunger_bar.visible = not dead
+	var hunger: float = node.get("hunger")
+	entry.hunger_bar.value = hunger
+	entry.hunger_label.text = "RÉSERVE  %3.0f / 100" % hunger
+	var exposed := false
+	if not dead:
+		for zone in get_tree().get_nodes_in_group("danger_zone"):
+			if zone.is_character_exposed(node.global_position):
+				exposed = true
+				break
+	entry.danger_label.visible = exposed
 	entry.berries_picked_label.text = "Mûres ramassées (total) : %d" % node.get("berries_picked_total")
 	entry.berries_eaten_label.text = "Mûres mangées (total) : %d" % node.get("berries_eaten_total")
 	entry.memories_label.text = "Ronciers mémorisés : %d/%d" % [node.memorized_ronces_count(), node.get("memory_capacity")]

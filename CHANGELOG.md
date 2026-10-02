@@ -1,3 +1,16 @@
+## v0.46 — 2026-10-02
+
+### Ajouté
+- Direction visuelle Observatoire : charte, moodboards, palette centralisée, polices IBM Plex et repères des quatre agents.
+- Décor low-poly Kenney Nature Kit (CC0), 108 arbres et tests ciblés de l'interface, du décor et du relief.
+
+### Modifié
+- Relief du sol multi-échelle avec zones localement accidentées, départs et bordures adoucis ; collisions des arbres désactivées à la demande de l'utilisateur.
+- Nouvelle roadmap Observatoire ; ancienne roadmap graphisme archivée. Contrôles visuels des phases 1-2 encore ouverts.
+
+### Corrigé
+- Mûres replacées sur la surface des ronciers.
+
 ## v0.45 — 2026-10-02
 
 ### Ajouté

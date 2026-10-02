@@ -6,6 +6,7 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 
 | Date | Décision | Statut | Détail |
 |------|----------|--------|--------|
+| 2026-10-02 | Direction Observatoire ; décor Kenney CC0, 108 arbres sans collision active et relief multi-échelle | validé pour direction/densité ; visuel des phases 1-2 en attente | [detail](2026-10-02_direction-observatoire.md) |
 | 2026-10-02 | Mémoire cartographique `llm_survie` (cases parcourues, bords touchés, état par direction dans le prompt) ; usage par `gemma3:1b` partiel : 5/8 et 3/4 contre 1/8 et 3/4 sans carte | proposé (gate d'usage non atteint, effet survie non mesuré) | [detail](2026-10-02_memoire-cartographique-llm-survie.md) |
 | 2026-09-30 | Survie pilotée par LLM (`gemma3:1b`, 4 agents) : cible + actions explicites, mémoire par coordonnées, décision asynchrone sans pause ; axe apprentissage en pause | validé (périmètre), critère Phase 5 à valider | [detail](2026-09-30_survie-pilotee-par-llm.md) |
 | 2026-09-30 | Confirmation T3 v3 (Phase 5), lot final indépendant : 7 critères sur 8 ; `trained` 201/320 contre 40/320 initial et 31/320 aléatoire, mais solvabilité scriptée 0,875 sous le seuil de 0,90 | invalidé (critère non atteint) ; cartes finales consommées | [detail](2026-09-30_t3-v3-confirmation-critere-non-atteint.md) |

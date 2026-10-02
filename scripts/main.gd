@@ -3,7 +3,11 @@ extends Node3D
 const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 const DangerZoneScript = preload("res://scripts/danger_zone.gd")
 const DangerZonePlacement = preload("res://scripts/danger_zone_placement.gd")
+const ObservatoryStyle = preload("res://scripts/observatory_style.gd")
 const RLProtocol = preload("res://scripts/rl_protocol.gd")
+const ROCK_MODELS = [preload("res://assets/models/kenney_nature/rock_tallA.glb"), preload("res://assets/models/kenney_nature/rock_tallB.glb")]
+const TREE_MODELS = [preload("res://assets/models/kenney_nature/tree_default.glb"), preload("res://assets/models/kenney_nature/tree_cone.glb"), preload("res://assets/models/kenney_nature/tree_oak.glb")]
+const BUSH_MODEL = preload("res://assets/models/kenney_nature/plant_bushDetailed.glb")
 
 const MAP_SIZE := 160.0
 const WALL_HEIGHT := 3.0
@@ -12,15 +16,15 @@ const HEADLESS_ENV_VAR := "IA_LIFE_HEADLESS_CONFIG"
 const PROJECT_REVISION_ENV_VAR := "IA_LIFE_PROJECT_REVISION"
 const DEV_MODE_ENV_VAR := "IA_LIFE_DEV_MODE"
 const RL_MODE_ENV_VAR := "IA_LIFE_RL_MODE"
-const TERRAIN_RESOLUTION := 80
-const TERRAIN_AMPLITUDE := 5.0
-const TERRAIN_NOISE_FREQUENCY := 0.045
+const TERRAIN_RESOLUTION := 160
+const TERRAIN_BROAD_AMPLITUDE := 3.4
+const TERRAIN_DETAIL_AMPLITUDE := 0.55
+const TERRAIN_RIDGE_AMPLITUDE := 0.85
+const TERRAIN_WARP_DISTANCE := 4.0
 const DEFAULT_EXPERIMENT_SEED := 1337
-const TERRAIN_FLAT_MARGIN := 12.0
-const VALLEY_RADIUS := 20.0
-const VALLEY_DEPTH := 3.5
-const CENTER_FLAT_RADIUS := 45.0
-const SPAWN_FLAT_RADIUS := 20.0
+const TERRAIN_FLAT_MARGIN := 10.0
+const CENTER_FLAT_RADIUS := 24.0
+const SPAWN_FLAT_RADIUS := 16.0
 const SPAWN_POINTS := [Vector2(-40, -40), Vector2(40, -40), Vector2(-40, 40), Vector2(40, 40)]
 const DEV_INTERACTION_RADIUS := 2.4
 const DANGER_RNG_SEED_OFFSET := 7919
@@ -42,6 +46,10 @@ var _quit_on_all_dead: bool = false
 var _max_simulation_seconds: float = 0.0
 var _characters: Array = []
 var _terrain_noise: FastNoiseLite
+var _terrain_detail_noise: FastNoiseLite
+var _terrain_ridge_noise: FastNoiseLite
+var _terrain_roughness_noise: FastNoiseLite
+var _terrain_warp_noise: FastNoiseLite
 var _screenshot_path: String = ""
 var _screenshot_delay: float = 0.0
 var _screenshot_clock: float = 0.0
@@ -103,10 +111,10 @@ func _ready() -> void:
 	var camera := _build_camera()
 	_camera = camera
 	var characters := [
-		_spawn_character(-40, -40, Color(0.8, 0.2, 0.2), "Rouge", "top_left"),
-		_spawn_character(40, -40, Color(0.2, 0.4, 0.8), "Bleu", "top_right"),
-		_spawn_character(-40, 40, Color(0.2, 0.7, 0.3), "Vert", "bottom_left"),
-		_spawn_character(40, 40, Color(0.9, 0.7, 0.1), "Jaune", "bottom_right"),
+		_spawn_character(-40, -40, ObservatoryStyle.RED, "Rouge", "top_left"),
+		_spawn_character(40, -40, ObservatoryStyle.BLUE, "Bleu", "top_right"),
+		_spawn_character(-40, 40, ObservatoryStyle.GREEN, "Vert", "bottom_left"),
+		_spawn_character(40, 40, ObservatoryStyle.YELLOW, "Jaune", "bottom_right"),
 	]
 	_spawn_ronces()
 	_spawn_danger_zones()
@@ -598,10 +606,10 @@ func _spawn_event_ronces(count: int, event_index: int) -> int:
 
 func _build_environment() -> void:
 	var sky_material := ProceduralSkyMaterial.new()
-	sky_material.sky_top_color = Color(0.35, 0.6, 0.9)
-	sky_material.sky_horizon_color = Color(0.75, 0.85, 0.95)
-	sky_material.ground_bottom_color = Color(0.35, 0.3, 0.22)
-	sky_material.ground_horizon_color = Color(0.75, 0.85, 0.95)
+	sky_material.sky_top_color = Color(0.44, 0.58, 0.66)
+	sky_material.sky_horizon_color = Color(0.77, 0.83, 0.83)
+	sky_material.ground_bottom_color = Color(0.43, 0.45, 0.40)
+	sky_material.ground_horizon_color = Color(0.77, 0.83, 0.83)
 	sky_material.sun_angle_max = 50.0
 
 	var sky := Sky.new()
@@ -618,11 +626,11 @@ func _build_environment() -> void:
 	env.ssr_enabled = true
 
 	env.glow_enabled = true
-	env.glow_intensity = 0.6
-	env.glow_bloom = 0.1
+	env.glow_intensity = 0.25
+	env.glow_bloom = 0.03
 
 	env.tonemap_mode = Environment.TONE_MAPPER_ACES
-	env.tonemap_exposure = 2.0
+	env.tonemap_exposure = 1.25
 
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
@@ -643,39 +651,46 @@ func _build_light() -> DirectionalLight3D:
 	return light
 
 func _init_terrain_noise() -> void:
-	_terrain_noise = FastNoiseLite.new()
-	_terrain_noise.seed = _experiment_seed
-	_terrain_noise.frequency = TERRAIN_NOISE_FREQUENCY
-	_terrain_noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	_terrain_noise = _new_terrain_noise(0, 0.013)
+	_terrain_detail_noise = _new_terrain_noise(1907, 0.045)
+	_terrain_ridge_noise = _new_terrain_noise(3907, 0.032)
+	_terrain_roughness_noise = _new_terrain_noise(5903, 0.018)
+	_terrain_warp_noise = _new_terrain_noise(7907, 0.024)
+
+func _new_terrain_noise(seed_offset: int, frequency: float) -> FastNoiseLite:
+	var noise := FastNoiseLite.new()
+	noise.seed = _experiment_seed + seed_offset
+	noise.frequency = frequency
+	noise.noise_type = FastNoiseLite.TYPE_SIMPLEX
+	return noise
 
 func _terrain_height(x: float, z: float) -> float:
 	var half := MAP_SIZE / 2.0
 	var edge_dist: float = min(half - abs(x), half - abs(z))
-	var falloff: float = clamp(edge_dist / TERRAIN_FLAT_MARGIN, 0.0, 1.0)
-	var base := _terrain_noise.get_noise_2d(x, z) * TERRAIN_AMPLITUDE * falloff * _center_flatten_factor(x, z) * _spawn_flatten_factor(x, z)
-	return base + _valley_offset(x, z)
+	var edge_t: float = clampf(edge_dist / TERRAIN_FLAT_MARGIN, 0.0, 1.0)
+	var edge_factor := edge_t * edge_t * (3.0 - 2.0 * edge_t)
+	var warped_x := x + _terrain_warp_noise.get_noise_2d(x, z) * TERRAIN_WARP_DISTANCE
+	var warped_z := z + _terrain_warp_noise.get_noise_2d(x + 137.0, z - 91.0) * TERRAIN_WARP_DISTANCE
+	var broad := _terrain_noise.get_noise_2d(warped_x, warped_z) * TERRAIN_BROAD_AMPLITUDE
+	var detail := _terrain_detail_noise.get_noise_2d(warped_x, warped_z) * TERRAIN_DETAIL_AMPLITUDE
+	var rough_t: float = clampf((_terrain_roughness_noise.get_noise_2d(x, z) - 0.08) / 0.38, 0.0, 1.0)
+	var roughness := rough_t * rough_t * (3.0 - 2.0 * rough_t)
+	var ridge_noise := _terrain_ridge_noise.get_noise_2d(warped_x, warped_z)
+	var ridge := pow(1.0 - absf(ridge_noise), 3.0) * TERRAIN_RIDGE_AMPLITUDE * roughness
+	return (broad + detail + ridge) * edge_factor * _center_flatten_factor(x, z) * _spawn_flatten_factor(x, z)
 
 func _center_flatten_factor(x: float, z: float) -> float:
 	var d := Vector2(x, z).length()
 	var t: float = clamp(d / CENTER_FLAT_RADIUS, 0.0, 1.0)
-	return t * t * (3.0 - 2.0 * t)
+	return lerpf(0.35, 1.0, t * t * (3.0 - 2.0 * t))
 
 func _spawn_flatten_factor(x: float, z: float) -> float:
 	var factor := 1.0
 	for p in SPAWN_POINTS:
 		var d: float = Vector2(x - p.x, z - p.y).length()
 		var t: float = clamp(d / SPAWN_FLAT_RADIUS, 0.0, 1.0)
-		factor = min(factor, t * t * (3.0 - 2.0 * t))
+		factor = min(factor, lerpf(0.12, 1.0, t * t * (3.0 - 2.0 * t)))
 	return factor
-
-func _valley_offset(x: float, z: float) -> float:
-	var offset := 0.0
-	for p in SPAWN_POINTS:
-		var d: float = Vector2(x - p.x, z - p.y).length()
-		var t: float = clamp(1.0 - d / VALLEY_RADIUS, 0.0, 1.0)
-		var smooth_t: float = t * t * (3.0 - 2.0 * t)
-		offset -= VALLEY_DEPTH * smooth_t
-	return offset
 
 func _build_triplanar_material(dir: String, scale: float) -> ShaderMaterial:
 	var mat := ShaderMaterial.new()
@@ -684,6 +699,12 @@ func _build_triplanar_material(dir: String, scale: float) -> ShaderMaterial:
 	mat.set_shader_parameter("normal_tex", load("res://assets/textures/%s/nor_gl_1k.jpg" % dir))
 	mat.set_shader_parameter("arm_tex", load("res://assets/textures/%s/arm_1k.jpg" % dir))
 	mat.set_shader_parameter("texture_scale", scale)
+	if dir == "leafy_grass":
+		mat.set_shader_parameter("albedo_tint", Color(0.83, 0.91, 0.82))
+		mat.set_shader_parameter("desaturation", 0.35)
+	elif dir == "brick_wall_001":
+		mat.set_shader_parameter("albedo_tint", Color(0.85, 0.91, 0.92))
+		mat.set_shader_parameter("desaturation", 1.0)
 	return mat
 
 func _build_terrain_mesh() -> ArrayMesh:
@@ -784,70 +805,48 @@ func _build_decor() -> void:
 	for i in 8:
 		var x := rng.randf_range(-half, half)
 		var z := rng.randf_range(-half, half)
-		_add_rock(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.5, 1.1))
-	for i in 6:
+		_add_rock(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.5, 1.1), i % ROCK_MODELS.size())
+	for i in 108:
 		var x := rng.randf_range(-half, half)
 		var z := rng.randf_range(-half, half)
-		_add_tree(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.85, 1.3))
+		_add_tree(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.85, 1.3), i % TREE_MODELS.size())
 
-func _add_rock(pos: Vector3, scale: float) -> void:
+func _add_rock(pos: Vector3, scale: float, variant: int) -> void:
 	var body := StaticBody3D.new()
 	body.name = "Rock"
 
-	var mesh_instance := MeshInstance3D.new()
-	var mesh := BoxMesh.new()
-	mesh.size = Vector3(1.0, 0.7, 0.9) * scale
-	mesh_instance.mesh = mesh
-	mesh_instance.rotation_degrees = Vector3(0, randf() * 90.0, 0)
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.45, 0.44, 0.42)
-	mat.roughness = 0.95
-	mesh_instance.material_override = mat
-	body.add_child(mesh_instance)
+	var visual: Node3D = ROCK_MODELS[variant].instantiate()
+	visual.name = "RockVisual"
+	visual.scale = Vector3(scale, (0.7 if variant == 0 else 0.79) * scale, (1.3 if variant == 0 else 1.16) * scale)
+	visual.position.y = -0.35 * scale
+	body.add_child(visual)
 
 	var collision := CollisionShape3D.new()
 	var shape := BoxShape3D.new()
-	shape.size = mesh.size
+	shape.size = Vector3(1.0, 0.7, 0.9) * scale
 	collision.shape = shape
 	body.add_child(collision)
 
-	body.position = pos + Vector3(0, mesh.size.y / 2.0, 0)
+	body.position = pos + Vector3(0, shape.size.y / 2.0, 0)
 	add_child(body)
 
-func _add_tree(pos: Vector3, scale: float) -> void:
+func _add_tree(pos: Vector3, scale: float, variant: int) -> void:
 	var root := Node3D.new()
 	root.name = "Tree"
 
-	var trunk_mesh := MeshInstance3D.new()
-	var trunk := CylinderMesh.new()
-	trunk.top_radius = 0.15 * scale
-	trunk.bottom_radius = 0.2 * scale
-	trunk.height = 2.0 * scale
-	trunk_mesh.mesh = trunk
-	trunk_mesh.position = Vector3(0, trunk.height / 2.0, 0)
-	var trunk_mat := StandardMaterial3D.new()
-	trunk_mat.albedo_color = Color(0.35, 0.24, 0.15)
-	trunk_mesh.material_override = trunk_mat
-	root.add_child(trunk_mesh)
-
-	var canopy_mesh := MeshInstance3D.new()
-	var canopy := SphereMesh.new()
-	canopy.radius = 1.1 * scale
-	canopy.height = 1.8 * scale
-	canopy_mesh.mesh = canopy
-	canopy_mesh.position = Vector3(0, trunk.height + canopy.height / 2.5, 0)
-	var canopy_mat := StandardMaterial3D.new()
-	canopy_mat.albedo_color = Color(0.2, 0.4, 0.18)
-	canopy_mesh.material_override = canopy_mat
-	root.add_child(canopy_mesh)
+	var visual: Node3D = TREE_MODELS[variant].instantiate()
+	visual.name = "TreeVisual"
+	visual.scale = Vector3.ONE * [2.2, 2.65, 3.05][variant] * scale
+	root.add_child(visual)
 
 	var body := StaticBody3D.new()
 	var collision := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
-	shape.radius = trunk.bottom_radius
-	shape.height = trunk.height
+	shape.radius = 0.2 * scale
+	shape.height = 2.0 * scale
 	collision.shape = shape
-	collision.position = Vector3(0, trunk.height / 2.0, 0)
+	collision.disabled = true
+	collision.position = Vector3(0, scale, 0)
 	body.add_child(collision)
 	root.add_child(body)
 
@@ -918,8 +917,8 @@ func _spawn_character(x: float, z: float, color: Color, char_name: String, corne
 func _add_locator_marker(character: CharacterBody3D, color: Color, char_name: String) -> void:
 	var marker := Label3D.new()
 	marker.name = "LocatorMarker"
-	marker.text = "%s\n▼" % char_name
 	marker.position = Vector3(0, 2.4, 0)
+	marker.text = "%s %s%s▼" % [ObservatoryStyle.agent_symbol(char_name), char_name, char(10)]
 	marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 	marker.no_depth_test = true
 	marker.fixed_size = true
@@ -1088,7 +1087,7 @@ func _spawn_danger_zone(index: int, position: Vector3, attempt: int, placement_d
 	mesh.radial_segments = 40
 	mesh_instance.mesh = mesh
 	var material := StandardMaterial3D.new()
-	material.albedo_color = Color(0.9, 0.12, 0.08, 0.42)
+	material.albedo_color = Color(ObservatoryStyle.DANGER.r, ObservatoryStyle.DANGER.g, ObservatoryStyle.DANGER.b, 0.42)
 	material.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
 	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mesh_instance.material_override = material
@@ -1124,36 +1123,47 @@ func _spawn_dev_spawn_ronces() -> void:
 		var pos := Vector3(offset.x, _terrain_height(offset.x, offset.y) + 0.5, offset.y)
 		_spawn_ronce(pos)
 
-const BUSH_LOBES := [
-	{"pos": Vector3(0, 0.4, 0), "radius": 1.0, "height": 1.4},
-	{"pos": Vector3(0.7, 0.5, 0.3), "radius": 0.55, "height": 0.75},
-	{"pos": Vector3(-0.6, 0.45, -0.4), "radius": 0.6, "height": 0.8},
-	{"pos": Vector3(0.1, 0.75, -0.6), "radius": 0.5, "height": 0.7},
-	{"pos": Vector3(-0.4, 0.7, 0.6), "radius": 0.45, "height": 0.65},
-	{"pos": Vector3(0.5, 0.35, -0.75), "radius": 0.45, "height": 0.6},
-	{"pos": Vector3(-0.75, 0.3, 0.25), "radius": 0.4, "height": 0.55},
-]
-
-func _build_bush_mesh() -> ArrayMesh:
-	var surface_tool := SurfaceTool.new()
-	surface_tool.begin(Mesh.PRIMITIVE_TRIANGLES)
-	for lobe in BUSH_LOBES:
-		var sphere := SphereMesh.new()
-		sphere.radius = lobe["radius"]
-		sphere.height = lobe["height"]
-		sphere.radial_segments = 8
-		sphere.rings = 5
-		var transform := Transform3D(Basis(), lobe["pos"])
-		surface_tool.append_from(sphere, 0, transform)
-	return surface_tool.commit()
-
-func _bush_berry_positions(count: int) -> Array:
+func _bush_berry_positions(count: int, ronce: Area3D, visual: Node3D) -> Array:
+	var triangles: Array = []
+	var total_area := 0.0
+	for mesh_node in visual.find_children("*", "MeshInstance3D", true, false):
+		var mesh_instance: MeshInstance3D = mesh_node
+		for surface_index in mesh_instance.mesh.get_surface_count():
+			var arrays := mesh_instance.mesh.surface_get_arrays(surface_index)
+			var vertices: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+			var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+			if indices.is_empty():
+				indices.resize(vertices.size())
+				for vertex_index in vertices.size():
+					indices[vertex_index] = vertex_index
+			for triangle_index in range(0, indices.size(), 3):
+				var a: Vector3 = ronce.to_local(mesh_instance.to_global(vertices[indices[triangle_index]]))
+				var b: Vector3 = ronce.to_local(mesh_instance.to_global(vertices[indices[triangle_index + 1]]))
+				var c: Vector3 = ronce.to_local(mesh_instance.to_global(vertices[indices[triangle_index + 2]]))
+				var normal := (b - a).cross(c - a).normalized()
+				var center := (a + b + c) / 3.0
+				if normal.y < 0.35 or center.y < 0.05:
+					continue
+				var area := (b - a).cross(c - a).length() * 0.5
+				if area < 0.001:
+					continue
+				total_area += area
+				triangles.append({"a": a, "b": b, "c": c, "normal": normal, "limit": total_area})
 	var positions: Array = []
 	for i in count:
-		var lobe: Dictionary = BUSH_LOBES[i % BUSH_LOBES.size()]
-		var dir := Vector3(randf_range(-1.0, 1.0), randf_range(0.4, 1.0), randf_range(-1.0, 1.0)).normalized()
-		var pos: Vector3 = lobe["pos"] + dir * (lobe["radius"] * 0.85)
-		positions.append(pos)
+		var roll := randf() * total_area
+		var u := sqrt(randf())
+		var v := randf()
+		if triangles.is_empty():
+			positions.append(Vector3(0, 0.4, 0))
+			continue
+		var selected: Dictionary = triangles.back()
+		for triangle in triangles:
+			if roll <= triangle["limit"]:
+				selected = triangle
+				break
+		var point: Vector3 = selected["a"] * (1.0 - u) + selected["b"] * (u * (1.0 - v)) + selected["c"] * (u * v)
+		positions.append(point + selected["normal"] * 0.035)
 	return positions
 
 func _spawn_ronce(pos: Vector3) -> void:
@@ -1165,13 +1175,11 @@ func _spawn_ronce(pos: Vector3) -> void:
 	_ronce_serial += 1
 	ronce.position = pos
 
-	var mesh_instance := MeshInstance3D.new()
-	mesh_instance.mesh = _build_bush_mesh()
-	var bush_mat := StandardMaterial3D.new()
-	bush_mat.albedo_color = Color(0.16, 0.34, 0.12)
-	bush_mat.roughness = 0.95
-	mesh_instance.material_override = bush_mat
-	ronce.add_child(mesh_instance)
+	var visual: Node3D = BUSH_MODEL.instantiate()
+	visual.name = "RonceVisual"
+	visual.scale = Vector3.ONE * 4.0
+	visual.position.y = -0.45
+	ronce.add_child(visual)
 
 	var berry_mat := StandardMaterial3D.new()
 	berry_mat.albedo_color = Color(0.04, 0.04, 0.05)
@@ -1198,5 +1206,5 @@ func _spawn_ronce(pos: Vector3) -> void:
 	ronce.solid_body = solid_body
 	ronce.add_to_group("perceptible")
 	add_child(ronce)
-	ronce.setup_visual(_bush_berry_positions(ronce.berries), berry_mat)
+	ronce.setup_visual(_bush_berry_positions(ronce.berries, ronce, visual), berry_mat)
 	_ronces.append(ronce)

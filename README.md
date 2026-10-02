@@ -50,6 +50,14 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM local via Oll
 - `DESIGN/` : zone dédiée à la conception graphique (pistes et roadmap).
 
 ## État actuel
+La direction visuelle Observatoire est intégrée : interface bleu nuit/IBM Plex, repères distincts
+pour les quatre agents, états faim/mort/danger, décor low-poly Kenney CC0 et relief multi-échelle.
+L'arène compte 108 arbres dont les collisions sont actuellement désactivées à la demande de
+l'utilisateur ; les mûres sont ancrées au feuillage. Les tests automatiques ciblés passent,
+mais les contrôles visuels des phases 1-2 restent ouverts. Le nouveau relief rompt la
+comparabilité directe avec les parcours enregistrés sur l'ancien terrain. La phase 3
+(personnages et états 3D) n'est pas commencée.
+
 Survie pilotée par LLM (`llm_survie`, `gemma3:1b`) livrée avec mémoire des ronciers et mémoire
 cartographique (bords, zones parcourues) ; l'usage de la carte par le LLM est partiel et son effet sur la
 survie n'est pas mesuré. Chat LLM consultable par personnage en mode jeu.

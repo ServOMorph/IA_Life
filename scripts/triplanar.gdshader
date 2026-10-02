@@ -8,6 +8,8 @@ uniform float texture_scale = 0.5;
 uniform float blend_sharpness = 4.0;
 uniform float min_roughness = 0.6;
 uniform float normal_strength = 0.6;
+uniform vec4 albedo_tint : source_color = vec4(1.0);
+uniform float desaturation = 0.0;
 
 varying vec3 world_position;
 varying vec3 world_normal;
@@ -28,7 +30,9 @@ void fragment() {
 	vec4 albedo_x = texture(albedo_tex, uv_x);
 	vec4 albedo_y = texture(albedo_tex, uv_y);
 	vec4 albedo_z = texture(albedo_tex, uv_z);
-	ALBEDO = (albedo_x.rgb * blend_weights.x + albedo_y.rgb * blend_weights.y + albedo_z.rgb * blend_weights.z);
+	vec3 albedo = albedo_x.rgb * blend_weights.x + albedo_y.rgb * blend_weights.y + albedo_z.rgb * blend_weights.z;
+	float luminance = dot(albedo, vec3(0.2126, 0.7152, 0.0722));
+	ALBEDO = mix(albedo, vec3(luminance), desaturation) * albedo_tint.rgb;
 
 	vec4 arm_x = texture(arm_tex, uv_x);
 	vec4 arm_y = texture(arm_tex, uv_y);

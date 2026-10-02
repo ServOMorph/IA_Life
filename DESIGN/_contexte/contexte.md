@@ -15,12 +15,11 @@ l'objectif d'étude comportementale des IA pilotées par LLM.
 - Architecture pensée pour évoluer fortement — ne pas figer le design prématurément.
 
 ## État actuel (réécrit intégralement à chaque /close)
-Roadmap graphisme (roadmap_graphisme.md, 6 phases) : Phases 1 à 5 [FAIT] (PBR + ronces,
-animation procédurale, terrain/décor procédural, rig Blender limité au personnage de
-développement — décision 2026-08-23). Ronces refondues visuellement le 2026-08-22 (buisson
-vert + mûres visibles). Cycle caméra 3 clics ajouté ad hoc, hors séquence roadmap. Bug
-clignotement texture herbe résolu (confirmé CHANGELOG v0.6). Reste : Phase 6 (bilan +
-rédaction de la roadmap graphisme suivante).
+Direction Observatoire choisie ; ancienne roadmap graphisme archivée, nouvelle progression en trois phases.
+Palette, IBM Plex, repères et états UI intégrés ; contrôle visuel de la phase 1 encore en attente.
+Décor Kenney CC0, 108 arbres à collisions désactivées, mûres ancrées au feuillage et relief multi-échelle intégrés.
+Tests automatisés ciblés passés ; contrôles visuels et de déplacement de la phase 2 encore en attente.
+La phase 3 (personnages et états 3D) n'est pas commencée ; rig de développement toujours réservé au personnage de test.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-08-17 : Initialisation du protocole vibecoding.
@@ -31,3 +30,5 @@ rédaction de la roadmap graphisme suivante).
 - 2026-08-18 : Rig Blender custom (`tools/blender/build_character.py`) intégré, limité au personnage de test.
 - 2026-08-22 : Ronces refondues visuellement (buisson vert + mûres noires visibles).
 - 2026-08-23 : Rig Blender confirmé réservé au personnage de développement (les 4 agents normaux gardent la géométrie boîte).
+- 2026-10-02 : Direction visuelle Observatoire retenue ; UI bleu nuit/IBM Plex, repères géométriques et modèles Nature Kit de Kenney (CC0) pour le décor.
+- 2026-10-02 : Densité de 108 arbres confirmée par l'utilisateur, collisions d'arbres désactivées à sa demande ; relief multi-échelle remplace les cuvettes symétriques et rompt la comparabilité des anciens parcours.
