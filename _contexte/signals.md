@@ -1,4 +1,4 @@
-# Signals — ia_life (MAJ 2026-10-02)
+﻿# Signals — ia_life (MAJ 2026-10-03)
 
 ## Actions ouvertes
 
@@ -17,6 +17,9 @@
 - [P3|ouvert] `python tools/run_manual_checks.py` renvoie le code 1 sans sortie ; contournement : lancer Godot directement (`D:/Godot/godot.exe --headless --path . --scene tools/manual_checks.tscn`).
   fait quand: le wrapper affiche la sortie de la suite et le bon code retour.
   réf: `tools/run_manual_checks.py`.
+- [P3|ouvert] Démarrer la Phase 0 de `roadmap_decor_collisions.md` (contrat : rayons d'exclusion, seuils N et M du gate de Phase 3, indicateurs, critère de succès) avant toute activation des collisions d'arbres.
+  fait quand: `experiments/decor_collisions_contrat_v1.md` est écrit et validé par l'utilisateur.
+  réf: `roadmap_decor_collisions.md`, `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`.
 - [P4|dormant] Usage stratégique de la carte `llm_survie` (bords, zones explorées) : repoussé par l'utilisateur à plus tard.
   fait quand: une décision définit comment la carte entre dans la stratégie (prompt ou moteur) et une campagne la mesure.
   réf: `scripts/llm_survie_ollama_backend.gd` (`map_lines`), `_docs/decisions/2026-10-02_memoire-cartographique-llm-survie.md`.
@@ -37,27 +40,27 @@
 - Suite `tools/run_manual_checks.gd` : seuls les 5 échecs Phase 8 vision préexistants subsistent.
 - Roadmap `roadmap_survie_llm.md` exécutée en entier (Phases 0 à 5), résultat : vie moyenne automate 292 s, `llm_survie` 542 s (6 cartes, x1, `--jobs 1`), 0 repli ; critère non validé.
 - Ollama doit être lancé (`ollama serve`, relancé en fin de session, limite 2 h) pour la démonstration et les campagnes `llm_survie`.
+- Collisions d'arbres toujours désactivées (`collision.disabled = true` dans `_add_tree`, `scripts/main.gd`) ; ne pas les réactiver sans la roadmap `roadmap_decor_collisions.md` : les agents ne contournent aucun obstacle. Comportement contre un tronc non testé (hypothèse issue de la lecture du code).
 - Working tree hors session non commité : `.claude/CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.claude/commands/roberto.md` supprimé, `ROBERTO/com_telephone/*`, logs `experiments/t0_v3_results.jsonl.workers/`, `.uid` divers.
 
-## Dernière session (2026-10-02)
+## Dernière session (2026-10-03)
 
-# Session du 2026-10-02
+# Session du 2026-10-03
 
 ## Décisions prises
-- La carte de `llm_survie` ne sert qu'à retirer du choix d'explorer les directions menant à un bord connu ; aucune influence stratégique, prompt identique à la v1, usage stratégique reporté.
+- Collisions des arbres non réactivées telles quelles : variable `decor_collisions` (défaut `false`) pour arbres et futurs décors, rochers toujours bloquants, placement des rochers soumis à la même exclusion que les arbres (références automate et `llm_survie` rompues, à remesurer).
 
 ## Livrables produits ou modifiés
-- `scripts/llm_survie_ollama_backend.gd`, `llm_survie_engine.gd`, `variable_registry.gd` : modifiés (exclusion des directions bord, prompt sans carte, plus de tour sur bord).
-- `tools/run_manual_checks.gd` : tests adaptés et ajoutés (suite : seuls 5 échecs vision préexistants).
-- `_docs/decisions/2026-10-02_memoire-cartographique-llm-survie.md`, `INDEX.md` : décision révisée, validée.
+- `roadmap_decor_collisions.md` : créée (Phases 0 à 5, toutes `[TODO]`).
+- `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`, `INDEX.md` : décision ajoutée (proposé).
+- `_contexte/`, `README.md`, `CHANGELOG.md` (v0.48) : mis à jour. Aucun code modifié.
 
 ## Hypothèses validées / invalidées
-- VALIDE : exclusion des directions bord garantie par construction, prompt identique avec ou sans carte (tests automatiques).
-- INVALIDE : le banc d'usage n'a plus d'objet ; l'idée d'injecter la carte dans le prompt est abandonnée pour l'instant.
-- EN ATTENTE : effet de l'exclusion sur la survie (aucune campagne) ; 5 échecs vision préexistants non instruits ; critère Phase 5 non validé.
+- VALIDE : l'automate recalcule sa direction vers la cible à chaque image en ciblage de roncier, donc le demi-tour au contact n'agit qu'en errance (lecture de `baseline_decider.gd` et `character.gd`).
+- EN ATTENTE : comportement réel d'un agent contre un tronc (glissement ou blocage frontal), non testé ; critère Phase 5 `llm_survie` toujours non validé ; 5 échecs vision non instruits.
 
 ## Prochaine étape exacte
-Valider ou remplacer le critère Phase 5, puis instruire les échecs vision avant toute campagne `llm_survie`.
+Valider ou remplacer le critère Phase 5 `llm_survie` (P1), puis instruire les échecs vision. La Phase 0 de la roadmap décors peut ensuite démarrer.
 
 ## Question bloquante pour la session suivante
 Aucune

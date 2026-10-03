@@ -12,14 +12,10 @@ Laboratoire headless reproductible. Survie pilotée par LLM livrée (Phases 0 à
 542 s de vie moyenne contre 292 s (automate), critère non validé. Mémoire cartographique (bords, zones
 parcourues, active par défaut) sans influence stratégique : elle retire seulement du choix les directions
 « bord ». Mode dev : F6, F1-F4, marqueurs, chat LLM. Axes apprentissage et danger en pause.
+Roadmap `roadmap_decor_collisions.md` créée (Phases 0 à 5 `[TODO]`) : 108 arbres sans collision en attente
+d'un placement sûr et d'un contournement des agents.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-09-26 : T0 v4 franchit le gate sur 1 248 résultats : `trained` 96/96, initial 12/96,
-  aléatoire 57/96. La recharge reproduit les décisions ; preuve limitée aux huit secteurs T0.
-  Voir `_docs/decisions/2026-09-26_t0-v4-gate-atteint.md`.
-- 2026-09-26 : Phase 3 valide le bridge TCP/JSONL et les adaptateurs Gymnasium T0/monde :
-  12 tests d'intégration, vérification SB3 et 24/24 secteurs T0 des checkpoints retenus.
-  Voir `_docs/decisions/2026-09-26_phase3-interface-t0.md`.
 - 2026-09-27 : T1 v2/v3/v4 échouent au gate. V4 apprend le premier choix (96/96), mais
   consomme dans 70/96 cas, sous le seuil de 0,80. Phase 4 ouverte ; diagnostic de navigation
   requis avant tout nouveau contrat. Voir `_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.
@@ -48,3 +44,7 @@ parcourues, active par défaut) sans influence stratégique : elle retire seulem
 - 2026-10-01 : survie pilotée par LLM livrée (Phases 0 à 5) : `llm_survie` 542 s de vie moyenne
   contre 292 s (automate), 6/6 cartes, 0 repli ; prompt directif et cueillette libre, critère non
   validé. Voir `_docs/decisions/2026-09-30_survie-pilotee-par-llm.md`.
+- 2026-10-03 : décors bloquants cadrés par `roadmap_decor_collisions.md` : variable `decor_collisions`
+  (défaut `false`) pour arbres et futurs décors, rochers toujours bloquants, placement des rochers
+  soumis à la même exclusion que les arbres (références automate et `llm_survie` rompues).
+  Voir `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`.

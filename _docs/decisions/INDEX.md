@@ -6,6 +6,7 @@ Une décision est notée dès qu'elle est prise, avec le statut `proposé`. Elle
 
 | Date | Décision | Statut | Détail |
 |------|----------|--------|--------|
+| 2026-10-03 | Décors bloquants : variable `decor_collisions` (défaut `false`) pour arbres et futurs décors, rochers toujours bloquants, placement des rochers soumis à la même exclusion que les arbres ; roadmap Phases 0 à 5 | proposé (cadrage, aucune mesure) | [detail](2026-10-03_decors-collisions-roadmap.md) |
 | 2026-10-02 | Direction Observatoire ; décor Kenney CC0, 108 arbres sans collision active et relief multi-échelle | validé pour direction/densité ; visuel des phases 1-2 en attente | [detail](2026-10-02_direction-observatoire.md) |
 | 2026-10-02 | Mémoire cartographique `llm_survie` (cases parcourues, bords touchés) sans influence stratégique : prompt inchangé, seules les directions « bord » sont retirées du choix d'explorer ; usage stratégique reporté | validé (révision du même jour), effet sur la survie non mesuré | [detail](2026-10-02_memoire-cartographique-llm-survie.md) |
 | 2026-09-30 | Survie pilotée par LLM (`gemma3:1b`, 4 agents) : cible + actions explicites, mémoire par coordonnées, décision asynchrone sans pause ; axe apprentissage en pause | validé (périmètre), critère Phase 5 à valider | [detail](2026-09-30_survie-pilotee-par-llm.md) |

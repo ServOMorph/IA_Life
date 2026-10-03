@@ -1,3 +1,9 @@
+## v0.48 — 2026-10-03
+
+### Ajouté
+- Roadmap `roadmap_decor_collisions.md` (Phases 0 à 5) : variable `decor_collisions` (défaut `false`), placement sûr des décors, contournement automate puis `llm_survie`, campagne de contrôle.
+- Décision `2026-10-03_decors-collisions-roadmap.md` (proposé) : rochers toujours bloquants, placement des rochers soumis à la même exclusion que les arbres, références de survie rompues et à remesurer.
+
 ## v0.47 — 2026-10-02
 
 ### Modifié

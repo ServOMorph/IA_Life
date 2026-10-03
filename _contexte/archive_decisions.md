@@ -166,3 +166,10 @@
 - 2026-09-24 : T0 v3 (ronce à 3 m) est invalidé : 1 248 résultats conformes, mais `trained`
   atteint 0,458 contre 0,604 pour `random_valid` et échoue au seuil absolu. T1 reste gelé ; voir
   `_docs/decisions/2026-09-24_t0-v3-gate-non-atteint.md`.
+
+- 2026-09-26 : T0 v4 franchit le gate sur 1 248 résultats : `trained` 96/96, initial 12/96,
+  aléatoire 57/96. La recharge reproduit les décisions ; preuve limitée aux huit secteurs T0.
+  Voir `_docs/decisions/2026-09-26_t0-v4-gate-atteint.md`.
+- 2026-09-26 : Phase 3 valide le bridge TCP/JSONL et les adaptateurs Gymnasium T0/monde :
+  12 tests d'intégration, vérification SB3 et 24/24 secteurs T0 des checkpoints retenus.
+  Voir `_docs/decisions/2026-09-26_phase3-interface-t0.md`.

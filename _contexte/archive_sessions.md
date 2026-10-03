@@ -604,3 +604,26 @@ Phase 0 : écrire le contrat (schéma d'actions, validation moteur, repli, décl
 
 ## Question bloquante pour la session suivante
 Aucune (le critère de succès de la Phase 5 sera défini à son ouverture).
+
+---
+
+# Session du 2026-10-02
+
+## Décisions prises
+- La carte de `llm_survie` ne sert qu'à retirer du choix d'explorer les directions menant à un bord connu ; aucune influence stratégique, prompt identique à la v1, usage stratégique reporté.
+
+## Livrables produits ou modifiés
+- `scripts/llm_survie_ollama_backend.gd`, `llm_survie_engine.gd`, `variable_registry.gd` : modifiés (exclusion des directions bord, prompt sans carte, plus de tour sur bord).
+- `tools/run_manual_checks.gd` : tests adaptés et ajoutés (suite : seuls 5 échecs vision préexistants).
+- `_docs/decisions/2026-10-02_memoire-cartographique-llm-survie.md`, `INDEX.md` : décision révisée, validée.
+
+## Hypothèses validées / invalidées
+- VALIDE : exclusion des directions bord garantie par construction, prompt identique avec ou sans carte (tests automatiques).
+- INVALIDE : le banc d'usage n'a plus d'objet ; l'idée d'injecter la carte dans le prompt est abandonnée pour l'instant.
+- EN ATTENTE : effet de l'exclusion sur la survie (aucune campagne) ; 5 échecs vision préexistants non instruits ; critère Phase 5 non validé.
+
+## Prochaine étape exacte
+Valider ou remplacer le critère Phase 5, puis instruire les échecs vision avant toute campagne `llm_survie`.
+
+## Question bloquante pour la session suivante
+Aucune
