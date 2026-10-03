@@ -1,3 +1,11 @@
+## v0.49 — 2026-10-03
+
+### Ajouté
+- Contrat `experiments/decor_collisions_contrat_v1.md` (validé) : rayons d'exclusion, N = 3 s, M = 12 cartes, critère de Phase 5.
+- Placement sûr du décor (`scripts/decor_placement.gd`) construit après les ronciers, RNG dédié ; tests `check_decor_placement.gd`.
+- Variable `decor_collisions` (défaut `false`), compteurs de contacts obstacle par type, test `check_decor_collisions.gd`.
+- Phase 3 en cours : `scripts/decor_detour.gd` (contournement local des troncs) branché sur `character.gd` et `main.gd`, test `tools/check_decor_detour.gd` non terminé.
+
 ## v0.48 — 2026-10-03
 
 ### Ajouté

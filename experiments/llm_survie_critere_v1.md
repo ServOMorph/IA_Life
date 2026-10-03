@@ -1,8 +1,22 @@
 # Critère de succès — survie pilotée par LLM (v1, Phase 5)
 
-Statut : proposé par l'assistant, gelé avant toute mesure de Phase 5. Non validé par l'utilisateur :
-la roadmap demandait de le définir avec lui ; il doit être confirmé ou remplacé avant toute
-interprétation des résultats.
+Statut : proposé par l'assistant, gelé avant toute mesure de Phase 5. Validé par l'utilisateur le
+2026-10-03 avec trois amendements (section « Amendements du 2026-10-03 »). Le texte d'origine
+des critères est conservé ci-dessous ; les amendements prévalent.
+
+## Amendements du 2026-10-03 (post-mesure, validés par l'utilisateur)
+
+Posés après la mesure de la Phase 5 : ils sont donc posthoc et signalés comme tels. Ils ne changent
+pas le verdict.
+
+1. Comparateur principal : l'`automate` à cueillette libre (`pickup_hunger_threshold` = 100,
+   « témoin »), seul apparié à `llm_survie` sur la règle de cueillette. L'`automate` de référence
+   (seuil 90) reste rapporté. Les critères 2 et 3 s'évaluent contre le témoin.
+2. Libellé du succès : « exécuteur viable d'une stratégie décrite dans le prompt », et non
+   « raisonnement spatial autonome » ni « le LLM sait survivre ».
+3. Portée de l'exploitation : un modèle (`gemma3:1b`), une version de prompt, 6 cartes, stock fini
+   de mûres sans repousse. Le résultat ne sert pas à conclure sur l'évolution des comportements
+   ni à généraliser à d'autres modèles ou prompts.
 
 ## Protocole (figé)
 

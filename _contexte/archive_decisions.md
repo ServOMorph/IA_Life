@@ -173,3 +173,7 @@
 - 2026-09-26 : Phase 3 valide le bridge TCP/JSONL et les adaptateurs Gymnasium T0/monde :
   12 tests d'intégration, vérification SB3 et 24/24 secteurs T0 des checkpoints retenus.
   Voir `_docs/decisions/2026-09-26_phase3-interface-t0.md`.
+
+- 2026-09-27 : T1 v2/v3/v4 échouent au gate. V4 apprend le premier choix (96/96), mais
+  consomme dans 70/96 cas, sous le seuil de 0,80. Phase 4 ouverte ; diagnostic de navigation
+  requis avant tout nouveau contrat. Voir `_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.

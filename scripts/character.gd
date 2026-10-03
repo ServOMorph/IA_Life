@@ -64,6 +64,11 @@ var berries_eaten_total: int = 0
 var current_goal: String = ""
 var wander_reorientations_total: int = 0
 var distance_travelled_total: float = 0.0
+var obstacle_contacts: Dictionary = {"tronc": 0, "rocher": 0, "mur": 0}
+var _obstacle_contact_active: Dictionary = {"tronc": false, "rocher": false, "mur": false}
+const DECOR_DETOUR_GOALS := ["ronce_visible", "ronce_memorisee", "souvenir_ancien"]
+var decor_detour = preload("res://scripts/decor_detour.gd").new()
+var _decor_obstacles: Array = []
 var death_elapsed_seconds: float = -1.0
 var simulation_elapsed_seconds: float = -1.0
 var visited_zones_total: int = 0
@@ -242,6 +247,10 @@ func reset_for_rl(spawn_position: Vector3) -> void:
 func set_danger_zones(zones: Array) -> void:
 	_danger_zones = zones
 
+func set_decor_obstacles(obstacles: Array) -> void:
+	_decor_obstacles = obstacles
+	decor_detour.reset()
+
 func _physics_process(delta: float) -> void:
 	var scaled_delta := delta * GameSpeed.time_scale
 
@@ -275,6 +284,14 @@ func _physics_process(delta: float) -> void:
 
 	move_and_slide()
 
+	var touched: Dictionary = {}
+	for i in get_slide_collision_count():
+		var collision := get_slide_collision(i)
+		if absf(collision.get_normal().y) < 0.5:
+			var kind := _obstacle_kind(collision.get_collider())
+			if kind != "":
+				touched[kind] = true
+	_record_obstacle_contacts(touched)
 	for i in get_slide_collision_count():
 		var collision := get_slide_collision(i)
 		if absf(collision.get_normal().y) < 0.5:
@@ -405,6 +422,10 @@ func _apply_decision(scaled_delta: float) -> void:
 			"decider_type": decider_type,
 		})
 		action = {"goal": current_goal, "direction": _direction, "renew_wander": false}
+	if not _decor_obstacles.is_empty() and not manual_control and DECOR_DETOUR_GOALS.has(action["goal"]):
+		action["direction"] = decor_detour.steer(position, action["direction"], _decor_obstacles, scaled_delta)
+	else:
+		decor_detour.reset()
 	_set_goal(action["goal"])
 	if action["renew_wander"]:
 		_pick_new_direction()
@@ -507,6 +528,24 @@ func _pick_new_direction(count_as_reorientation: bool = true) -> void:
 			"reorientation_count": wander_reorientations_total,
 			"exploration_tendency": exploration_tendency,
 		})
+
+func _obstacle_kind(collider) -> String:
+	if not (collider is Node):
+		return ""
+	if collider.name == "Wall":
+		return "mur"
+	if collider.name == "Rock":
+		return "rocher"
+	if collider.name == "TreeCollision":
+		return "tronc"
+	return ""
+
+func _record_obstacle_contacts(touched: Dictionary) -> void:
+	for kind in ["tronc", "rocher", "mur"]:
+		var now: bool = touched.has(kind)
+		if now and not _obstacle_contact_active[kind]:
+			obstacle_contacts[kind] += 1
+		_obstacle_contact_active[kind] = now
 
 func _bounce_back() -> void:
 	_direction = -_direction

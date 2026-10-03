@@ -4,6 +4,7 @@ const DangerZoneContract = preload("res://scripts/danger_zone_contract.gd")
 const DangerZoneScript = preload("res://scripts/danger_zone.gd")
 const DangerZonePlacement = preload("res://scripts/danger_zone_placement.gd")
 const ObservatoryStyle = preload("res://scripts/observatory_style.gd")
+const DecorPlacement = preload("res://scripts/decor_placement.gd")
 const RLProtocol = preload("res://scripts/rl_protocol.gd")
 const ROCK_MODELS = [preload("res://assets/models/kenney_nature/rock_tallA.glb"), preload("res://assets/models/kenney_nature/rock_tallB.glb")]
 const TREE_MODELS = [preload("res://assets/models/kenney_nature/tree_default.glb"), preload("res://assets/models/kenney_nature/tree_cone.glb"), preload("res://assets/models/kenney_nature/tree_oak.glb")]
@@ -57,6 +58,7 @@ var _dev_mode: bool = false
 var _ronces: Array = []
 var _ronce_serial: int = 0
 var _danger_zones: Array = []
+var _decor_obstacles: Array = []
 var _dev_frozen_scale: float = -1.0
 var _dev_step_frames: int = 0
 var _ui: CanvasLayer
@@ -107,7 +109,6 @@ func _ready() -> void:
 	var light := _build_light()
 	_build_floor()
 	_build_walls()
-	_build_decor()
 	var camera := _build_camera()
 	_camera = camera
 	var characters := [
@@ -117,9 +118,11 @@ func _ready() -> void:
 		_spawn_character(40, 40, ObservatoryStyle.YELLOW, "Jaune", "bottom_right"),
 	]
 	_spawn_ronces()
+	_build_decor()
 	_spawn_danger_zones()
 	for character in characters:
 		character.node.set_danger_zones(_danger_zones)
+		character.node.set_decor_obstacles(_decor_obstacles)
 	_build_ui(characters, camera, light)
 	for c in characters:
 		_characters.append(c.node)
@@ -514,6 +517,13 @@ func _finish_headless_run(reason: String) -> void:
 				"vision_to_contact_events_total": character.vision_to_contact_events_total,
 				"wander_reorientations_total": character.wander_reorientations_total,
 				"distance_travelled_total": character.distance_travelled_total,
+				"obstacle_contacts_tronc_total": character.obstacle_contacts["tronc"],
+				"obstacle_contacts_rocher_total": character.obstacle_contacts["rocher"],
+				"obstacle_contacts_mur_total": character.obstacle_contacts["mur"],
+				"decor_detours_total": character.decor_detour.detours_total,
+				"decor_detour_seconds_total": character.decor_detour.detour_seconds_total,
+				"decor_detours_failed_total": character.decor_detour.failed_total,
+				"decor_blocked_seconds_max": character.decor_detour.blocked_seconds_max,
 				"visited_zones_total": character.visited_zones_total,
 				"zone_discoveries_total": character.zone_discoveries_total,
 				"zone_revisits_total": character.zone_revisits_total,
@@ -802,14 +812,30 @@ func _build_decor() -> void:
 	var half := MAP_SIZE / 2.0 - WALL_THICKNESS - 3.0
 	var rng := RandomNumberGenerator.new()
 	rng.seed = _experiment_seed
+	var ronce_points: Array = []
+	for ronce in _ronces:
+		ronce_points.append(Vector2(ronce.position.x, ronce.position.z))
+	var placed: Array = []
+	var unplaced := 0
 	for i in 8:
-		var x := rng.randf_range(-half, half)
-		var z := rng.randf_range(-half, half)
-		_add_rock(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.5, 1.1), i % ROCK_MODELS.size())
+		var pick := DecorPlacement.pick(rng, half, ronce_points, SPAWN_POINTS, placed)
+		if pick.is_empty():
+			unplaced += 1
+			GameLogger.log_event("decor", "Rocher %d non placé après %d tentatives" % [i, DecorPlacement.MAX_ATTEMPTS])
+			continue
+		var p: Vector2 = pick["position"]
+		placed.append(p)
+		_add_rock(Vector3(p.x, _terrain_height(p.x, p.y), p.y), rng.randf_range(0.5, 1.1), i % ROCK_MODELS.size())
 	for i in 108:
-		var x := rng.randf_range(-half, half)
-		var z := rng.randf_range(-half, half)
-		_add_tree(Vector3(x, _terrain_height(x, z), z), rng.randf_range(0.85, 1.3), i % TREE_MODELS.size())
+		var pick := DecorPlacement.pick(rng, half, ronce_points, SPAWN_POINTS, placed)
+		if pick.is_empty():
+			unplaced += 1
+			GameLogger.log_event("decor", "Arbre %d non placé après %d tentatives" % [i, DecorPlacement.MAX_ATTEMPTS])
+			continue
+		var p: Vector2 = pick["position"]
+		placed.append(p)
+		_add_tree(Vector3(p.x, _terrain_height(p.x, p.y), p.y), rng.randf_range(0.85, 1.3), i % TREE_MODELS.size())
+	GameLogger.log_event("decor", "Décor placé : %d éléments, %d non placés" % [placed.size(), unplaced])
 
 func _add_rock(pos: Vector3, scale: float, variant: int) -> void:
 	var body := StaticBody3D.new()
@@ -840,18 +866,21 @@ func _add_tree(pos: Vector3, scale: float, variant: int) -> void:
 	root.add_child(visual)
 
 	var body := StaticBody3D.new()
+	body.name = "TreeCollision"
 	var collision := CollisionShape3D.new()
 	var shape := CylinderShape3D.new()
 	shape.radius = 0.2 * scale
 	shape.height = 2.0 * scale
 	collision.shape = shape
-	collision.disabled = true
+	collision.disabled = not GameConfig.decor_collisions
 	collision.position = Vector3(0, scale, 0)
 	body.add_child(collision)
 	root.add_child(body)
 
 	root.position = pos
 	add_child(root)
+	if GameConfig.decor_collisions:
+		_decor_obstacles.append({"id": str(root.name), "position": pos, "radius": shape.radius})
 
 func _build_camera() -> Camera3D:
 	var camera := Camera3D.new()

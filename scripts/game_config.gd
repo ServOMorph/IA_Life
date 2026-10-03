@@ -4,7 +4,7 @@ const SAVE_PATH := "res://logs/game_config.json"
 const PERSISTED_KEYS := ["max_berries_carried", "pickup_hunger_threshold", "eat_hunger_threshold",
 	"full_life_berries", "ronce_count", "berries_per_ronce", "danger_zone_count", "danger_zone_radius",
 	"danger_hunger_cost_rate", "danger_zone_visible", "danger_zone_safety_radius", "danger_zone_placement_mode",
-	"danger_zone_approach_spawn_index", "danger_zone_approach_clearance", "light_energy"]
+	"danger_zone_approach_spawn_index", "danger_zone_approach_clearance", "decor_collisions", "light_energy"]
 
 var max_berries_carried: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["max_berries_carried"])
 var pickup_hunger_threshold: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["pickup_hunger_threshold"])
@@ -20,6 +20,7 @@ var danger_zone_safety_radius: float = VariableRegistry.default_value(VariableRe
 var danger_zone_placement_mode: String = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_zone_placement_mode"])
 var danger_zone_approach_spawn_index: int = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_zone_approach_spawn_index"])
 var danger_zone_approach_clearance: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["danger_zone_approach_clearance"])
+var decor_collisions: bool = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["decor_collisions"])
 var light_energy: float = VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["light_energy"])
 
 func _ready() -> void:

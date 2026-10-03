@@ -54,7 +54,7 @@ La direction visuelle Observatoire est intégrée : interface bleu nuit/IBM Plex
 pour les quatre agents, états faim/mort/danger, décor low-poly Kenney CC0 et relief multi-échelle.
 L'arène compte 108 arbres dont les collisions sont actuellement désactivées à la demande de
 l'utilisateur (leur activation et celle des futurs décors bloquants sont cadrées par
-`roadmap_decor_collisions.md`, Phases 0 à 5 non commencées) ; les mûres sont ancrées au feuillage. Les tests automatiques ciblés passent,
+`roadmap_decor_collisions.md`, Phases 0 à 2 faites, Phase 3 en cours) ; les mûres sont ancrées au feuillage. Les tests automatiques ciblés passent,
 mais les contrôles visuels des phases 1-2 restent ouverts. Le nouveau relief rompt la
 comparabilité directe avec les parcours enregistrés sur l'ancien terrain. La phase 3
 (personnages et états 3D) n'est pas commencée.

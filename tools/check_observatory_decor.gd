@@ -23,16 +23,14 @@ func _init() -> void:
 		_fail("Nombre d'objets modifié")
 		return
 
-	var rng := RandomNumberGenerator.new()
-	rng.seed = 1337
-	var half := 160.0 / 2.0 - 1.0 - 3.0
 	for index in rocks.size():
-		var x := rng.randf_range(-half, half)
-		var z := rng.randf_range(-half, half)
-		var scale := rng.randf_range(0.5, 1.1)
 		var rock: StaticBody3D = rocks[index]
 		var shape: BoxShape3D = _direct_collision(rock).shape
-		if rock.position.distance_to(Vector3(x, scene._terrain_height(x, z) + 0.35 * scale, z)) > 0.001:
+		var scale: float = shape.size.x
+		if scale < 0.5 - 0.001 or scale > 1.1 + 0.001:
+			_fail("Échelle d'un rocher hors bornes")
+			return
+		if rock.position.distance_to(Vector3(rock.position.x, scene._terrain_height(rock.position.x, rock.position.z) + 0.35 * scale, rock.position.z)) > 0.001:
 			_fail("Position d'un rocher modifiée")
 			return
 		if shape.size.distance_to(Vector3(1.0, 0.7, 0.9) * scale) > 0.001:
@@ -43,9 +41,6 @@ func _init() -> void:
 			return
 
 	for index in trees.size():
-		var x := rng.randf_range(-half, half)
-		var z := rng.randf_range(-half, half)
-		var scale := rng.randf_range(0.85, 1.3)
 		var tree: Node3D = trees[index]
 		var tree_body: StaticBody3D
 		for child in tree.get_children():
@@ -54,7 +49,11 @@ func _init() -> void:
 				break
 		var collision := _direct_collision(tree_body)
 		var shape: CylinderShape3D = collision.shape
-		if tree.position.distance_to(Vector3(x, scene._terrain_height(x, z), z)) > 0.001:
+		var scale: float = shape.radius / 0.2
+		if scale < 0.85 - 0.001 or scale > 1.3 + 0.001:
+			_fail("Échelle d'un arbre hors bornes")
+			return
+		if tree.position.distance_to(Vector3(tree.position.x, scene._terrain_height(tree.position.x, tree.position.z), tree.position.z)) > 0.001:
 			_fail("Position d'un arbre modifiée")
 			return
 		if absf(shape.radius - 0.2 * scale) > 0.001 or absf(shape.height - 2.0 * scale) > 0.001:

@@ -48,7 +48,7 @@ agents. Les arbres actuels (108, collisions désactivées) servent de premier ca
 
 ## Phases
 
-### Phase 0 — Contrat et référence [TODO]
+### Phase 0 — Contrat et référence [FAIT]
 
 - Définir la variable `decor_collisions` (registre, portée globale, non modifiable en direct).
 - Décidé (2026-10-03) : l'exclusion de placement s'applique aux rochers comme aux arbres. Rupture
@@ -66,7 +66,7 @@ agents. Les arbres actuels (108, collisions désactivées) servent de premier ca
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-### Phase 1 — Placement sûr [TODO]
+### Phase 1 — Placement sûr [FAIT]
 
 - Construire le décor après les ronciers, avec rejet des positions trop proches des ronciers,
   des points de départ et des autres décors (RNG dédié conservé).
@@ -78,7 +78,7 @@ inchangées.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-### Phase 2 — Interrupteur de collisions [TODO]
+### Phase 2 — Interrupteur de collisions [FAIT]
 
 - `decor_collisions` active les troncs ; journalisation des contacts obstacle.
 - Vérifier l'occlusion de la vision quand `vision_blocked_by_terrain` est actif.
@@ -89,7 +89,7 @@ physiquement bloqué par un tronc ; occlusion effective si la vision bloquée es
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-### Phase 3 — Contournement automate [TODO]
+### Phase 3 — Contournement automate [EN COURS]
 
 - Ciblage de roncier (risque principal) : contournement local du décor (décalage latéral puis
   reprise du cap vers la cible) ; évaluer la réutilisation de `danger_detour.gd`.

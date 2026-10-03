@@ -12,13 +12,10 @@ Laboratoire headless reproductible. Survie pilotée par LLM livrée (Phases 0 à
 542 s de vie moyenne contre 292 s (automate), critère non validé. Mémoire cartographique (bords, zones
 parcourues, active par défaut) sans influence stratégique : elle retire seulement du choix les directions
 « bord ». Mode dev : F6, F1-F4, marqueurs, chat LLM. Axes apprentissage et danger en pause.
-Roadmap `roadmap_decor_collisions.md` créée (Phases 0 à 5 `[TODO]`) : 108 arbres sans collision en attente
-d'un placement sûr et d'un contournement des agents.
+Roadmap `roadmap_decor_collisions.md` : Phases 0 à 2 faites (contrat, placement sûr, interrupteur
+`decor_collisions`), Phase 3 (contournement automate) en cours ; Phases 4 et 5 à faire.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-09-27 : T1 v2/v3/v4 échouent au gate. V4 apprend le premier choix (96/96), mais
-  consomme dans 70/96 cas, sous le seuil de 0,80. Phase 4 ouverte ; diagnostic de navigation
-  requis avant tout nouveau contrat. Voir `_docs/decisions/2026-09-27_t1-v4-gate-non-atteint.md`.
 - 2026-09-28 : T1 v5 franchit le gate : la direction tenue remplace les redécisions instables
   et produit 96/96 consommations, avec trois checkpoints à 1 000 stables au replay. Voir
   `_docs/decisions/2026-09-28_t1-v5-gate-atteint.md`.
@@ -48,3 +45,5 @@ d'un placement sûr et d'un contournement des agents.
   (défaut `false`) pour arbres et futurs décors, rochers toujours bloquants, placement des rochers
   soumis à la même exclusion que les arbres (références automate et `llm_survie` rompues).
   Voir `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`.
+- 2026-10-03 : contrat décors validé (exclusions 3,0 / 5,0 / 1,5 / 3,0 m ; N = 3 s ; M = 12 cartes) ;
+  `decor_collisions` livré (défaut `false`). Voir `experiments/decor_collisions_contrat_v1.md`.

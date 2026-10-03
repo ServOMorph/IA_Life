@@ -627,3 +627,24 @@ Valider ou remplacer le critère Phase 5, puis instruire les échecs vision avan
 
 ## Question bloquante pour la session suivante
 Aucune
+
+---
+# Session du 2026-10-03
+
+## Décisions prises
+- Collisions des arbres non réactivées telles quelles : variable `decor_collisions` (défaut `false`) pour arbres et futurs décors, rochers toujours bloquants, placement des rochers soumis à la même exclusion que les arbres (références automate et `llm_survie` rompues, à remesurer).
+
+## Livrables produits ou modifiés
+- `roadmap_decor_collisions.md` : créée (Phases 0 à 5, toutes `[TODO]`).
+- `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`, `INDEX.md` : décision ajoutée (proposé).
+- `_contexte/`, `README.md`, `CHANGELOG.md` (v0.48) : mis à jour. Aucun code modifié.
+
+## Hypothèses validées / invalidées
+- VALIDE : l'automate recalcule sa direction vers la cible à chaque image en ciblage de roncier, donc le demi-tour au contact n'agit qu'en errance (lecture de `baseline_decider.gd` et `character.gd`).
+- EN ATTENTE : comportement réel d'un agent contre un tronc (glissement ou blocage frontal), non testé ; critère Phase 5 `llm_survie` toujours non validé ; 5 échecs vision non instruits.
+
+## Prochaine étape exacte
+Valider ou remplacer le critère Phase 5 `llm_survie` (P1), puis instruire les échecs vision. La Phase 0 de la roadmap décors peut ensuite démarrer.
+
+## Question bloquante pour la session suivante
+Aucune

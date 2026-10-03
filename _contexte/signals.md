@@ -1,10 +1,10 @@
-﻿# Signals — ia_life (MAJ 2026-10-03)
+﻿# Signals — ia_life (MAJ 2026-10-03, clôture 2)
 
 ## Actions ouvertes
 
-- [P1|ouvert] Valider ou remplacer le critère de succès de la Phase 5 (proposé par l'assistant, non co-défini) avant d'exploiter le résultat.
-  fait quand: l'utilisateur a validé ou remplacé `experiments/llm_survie_critere_v1.md` et le rapport est relu en conséquence.
-  réf: `experiments/llm_survie_critere_v1.md`, `experiments/llm_survie_rapport_v1.md`, `tools/analyze_llm_survie.py`.
+- [P1|ouvert] Terminer la Phase 3 de `roadmap_decor_collisions.md` (contournement automate) : relancer `tools/check_decor_detour.gd` (scénario corrigé, boucle 12 cartes seeds 26103001-26103012, N = 3 s), puis `decor_collisions = false` inchangé et relance de `check_decor_collisions/placement/observatory`.
+  fait quand: `check_decor_detour.gd` passe (roncier derrière tronc rejoint, aucun blocage frontal > 3 s sur 12 cartes) et les trois autres tests restent verts.
+  réf: `roadmap_decor_collisions.md`, `scripts/decor_detour.gd`, `scripts/character.gd` (`_apply_decision`), `tools/check_decor_detour.gd`, `experiments/decor_collisions_contrat_v1.md`.
 - [P2|ouvert] Démonstration fenêtrée de la survie pilotée par LLM (Phase 4) sur le bureau virtuel IA_Life, y compris le chat LLM repliable et le filtre des bords connus.
   fait quand: les contrôles de la section Phase 4 et de la section Chat LLM / carte de `tests_manuels.md` sont validés et les sections supprimées.
   réf: `tests_manuels.md`, `run_survie_demo.py`, `experiments/llm_survie_v1.json`.
@@ -17,9 +17,6 @@
 - [P3|ouvert] `python tools/run_manual_checks.py` renvoie le code 1 sans sortie ; contournement : lancer Godot directement (`D:/Godot/godot.exe --headless --path . --scene tools/manual_checks.tscn`).
   fait quand: le wrapper affiche la sortie de la suite et le bon code retour.
   réf: `tools/run_manual_checks.py`.
-- [P3|ouvert] Démarrer la Phase 0 de `roadmap_decor_collisions.md` (contrat : rayons d'exclusion, seuils N et M du gate de Phase 3, indicateurs, critère de succès) avant toute activation des collisions d'arbres.
-  fait quand: `experiments/decor_collisions_contrat_v1.md` est écrit et validé par l'utilisateur.
-  réf: `roadmap_decor_collisions.md`, `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`.
 - [P4|dormant] Usage stratégique de la carte `llm_survie` (bords, zones explorées) : repoussé par l'utilisateur à plus tard.
   fait quand: une décision définit comment la carte entre dans la stratégie (prompt ou moteur) et une campagne la mesure.
   réf: `scripts/llm_survie_ollama_backend.gd` (`map_lines`), `_docs/decisions/2026-10-02_memoire-cartographique-llm-survie.md`.
@@ -40,27 +37,30 @@
 - Suite `tools/run_manual_checks.gd` : seuls les 5 échecs Phase 8 vision préexistants subsistent.
 - Roadmap `roadmap_survie_llm.md` exécutée en entier (Phases 0 à 5), résultat : vie moyenne automate 292 s, `llm_survie` 542 s (6 cartes, x1, `--jobs 1`), 0 repli ; critère non validé.
 - Ollama doit être lancé (`ollama serve`, relancé en fin de session, limite 2 h) pour la démonstration et les campagnes `llm_survie`.
-- Collisions d'arbres toujours désactivées (`collision.disabled = true` dans `_add_tree`, `scripts/main.gd`) ; ne pas les réactiver sans la roadmap `roadmap_decor_collisions.md` : les agents ne contournent aucun obstacle. Comportement contre un tronc non testé (hypothèse issue de la lecture du code).
+- Décors bloquants : `decor_collisions` (défaut `false`, non modifiable en direct) ; collisions de troncs actives seulement si `true`. Phases 0 à 2 faites et testées ; Phase 3 en cours, non commitée. Limites : occlusion testée sur un seul arbre (rayon d'œil possiblement au-dessus des petits troncs), blocage testé en `move_and_slide` manuel, rochers non contournés. Le contournement n'est actif que si `decor_collisions` est vrai (obstacles alimentés par `_add_tree`).
+- `tools/check_decor_detour.gd` : partie unitaire passée ; scénario corrigé (autres ronciers déplacés à +200 en z) non relancé ; boucle 12 cartes jamais exécutée (90 s simulées par carte, environ 26 s de temps réel pour un premier essai).
 - Working tree hors session non commité : `.claude/CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, `.claude/commands/roberto.md` supprimé, `ROBERTO/com_telephone/*`, logs `experiments/t0_v3_results.jsonl.workers/`, `.uid` divers.
 
-## Dernière session (2026-10-03)
+## Dernière session (2026-10-03, clôture 2)
 
 # Session du 2026-10-03
 
 ## Décisions prises
-- Collisions des arbres non réactivées telles quelles : variable `decor_collisions` (défaut `false`) pour arbres et futurs décors, rochers toujours bloquants, placement des rochers soumis à la même exclusion que les arbres (références automate et `llm_survie` rompues, à remesurer).
+- Contrat de Phase 0 validé : exclusions 3,0 / 5,0 / 1,5 / 3,0 m, N = 3 s, M = 12 cartes (26103001 à 26103012), critère Phase 5 (automate >= 90 %, `llm_survie` >= 80 %).
+- P1 `llm_survie` clos avec l'option B.
 
 ## Livrables produits ou modifiés
-- `roadmap_decor_collisions.md` : créée (Phases 0 à 5, toutes `[TODO]`).
-- `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`, `INDEX.md` : décision ajoutée (proposé).
-- `_contexte/`, `README.md`, `CHANGELOG.md` (v0.48) : mis à jour. Aucun code modifié.
+- `scripts/decor_placement.gd`, `variable_registry.gd`, `game_config.gd`, `main.gd`, `character.gd` : Phases 1 et 2 faites, testées, non commitées avant cette clôture.
+- `scripts/decor_detour.gd`, `tools/check_decor_detour.gd` : Phase 3 en cours, test non terminé.
+- `tools/check_decor_placement.gd`, `check_decor_collisions.gd`, `check_observatory_decor.gd` : verts.
+- `roadmap_decor_collisions.md` : Phases 0 à 2 `[FAIT]`, Phase 3 `[EN COURS]`.
 
 ## Hypothèses validées / invalidées
-- VALIDE : l'automate recalcule sa direction vers la cible à chaque image en ciblage de roncier, donc le demi-tour au contact n'agit qu'en errance (lecture de `baseline_decider.gd` et `character.gd`).
-- EN ATTENTE : comportement réel d'un agent contre un tronc (glissement ou blocage frontal), non testé ; critère Phase 5 `llm_survie` toujours non validé ; 5 échecs vision non instruits.
+- VALIDE : blocage physique, contacts journalisés et occlusion avec `decor_collisions = true` ; placement indépendant de l'interrupteur.
+- EN ATTENTE : contournement automate (scénario et 12 cartes jamais passés) ; effet des collisions sur la survie.
 
 ## Prochaine étape exacte
-Valider ou remplacer le critère Phase 5 `llm_survie` (P1), puis instruire les échecs vision. La Phase 0 de la roadmap décors peut ensuite démarrer.
+Relancer `tools/check_decor_detour.gd`, corriger si besoin, puis checkpoint `/compact` avant la Phase 4.
 
 ## Question bloquante pour la session suivante
 Aucune
