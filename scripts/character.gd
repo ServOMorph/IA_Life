@@ -250,6 +250,8 @@ func set_danger_zones(zones: Array) -> void:
 func set_decor_obstacles(obstacles: Array) -> void:
 	_decor_obstacles = obstacles
 	decor_detour.reset()
+	if _survie != null:
+		_survie.set_decor_obstacles(obstacles)
 
 func _physics_process(delta: float) -> void:
 	var scaled_delta := delta * GameSpeed.time_scale

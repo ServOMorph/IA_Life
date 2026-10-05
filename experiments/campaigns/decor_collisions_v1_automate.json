@@ -1,0 +1,31 @@
+{
+  "base_config": "../llm_survie_v1.json",
+  "parameter_grid": {},
+  "seeds": [26103101, 26103102, 26103103, 26103104, 26103105, 26103106],
+  "repetitions": 1,
+  "campaign_id": "decor-collisions-v1-automate",
+  "arms": [
+    {
+      "name": "sans_collisions",
+      "overrides": {
+        "environment.game_config.decor_collisions": false,
+        "agents.individual.Rouge.decider_type": "automate",
+        "agents.individual.Bleu.decider_type": "automate",
+        "agents.individual.Vert.decider_type": "automate",
+        "agents.individual.Jaune.decider_type": "automate"
+      }
+    },
+    {
+      "name": "avec_collisions",
+      "overrides": {
+        "environment.game_config.decor_collisions": true,
+        "agents.individual.Rouge.decider_type": "automate",
+        "agents.individual.Bleu.decider_type": "automate",
+        "agents.individual.Vert.decider_type": "automate",
+        "agents.individual.Jaune.decider_type": "automate"
+      }
+    }
+  ],
+  "python_timeout_seconds": 1500,
+  "output_dir": "../../results/_decor_collisions_v1_automate"
+}

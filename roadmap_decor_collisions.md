@@ -1,7 +1,7 @@
 # Roadmap — Décors avec collisions
 
 Créée le : 2026-10-03
-Statut : **[TODO]**
+Statut : **[FAIT]**
 
 ## Objectif
 
@@ -31,7 +31,7 @@ agents. Les arbres actuels (108, collisions désactivées) servent de premier ca
 
 | Sujet | Décision |
 |---|---|
-| Activation | Variable `decor_collisions`, défaut `false`, pilote arbres et futurs décors ; rochers toujours bloquants |
+| Activation | Variable `decor_collisions`, défaut `true`, pilote arbres et futurs décors ; rochers toujours bloquants |
 | Premier décor | Troncs d'arbres ; tout nouveau décor bloquant passe par le même mécanisme |
 | Mesure | `game_speed = 1.0` ; `llm_survie` à `--jobs 1` |
 | Hors périmètre | Pathfinding global (NavigationServer), repousse, danger, apprentissage |
@@ -89,7 +89,7 @@ physiquement bloqué par un tronc ; occlusion effective si la vision bloquée es
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-### Phase 3 — Contournement automate [EN COURS]
+### Phase 3 — Contournement automate [FAIT]
 
 - Ciblage de roncier (risque principal) : contournement local du décor (décalage latéral puis
   reprise du cap vers la cible) ; évaluer la réutilisation de `danger_detour.gd`.
@@ -103,7 +103,7 @@ avec collisions ; `decor_collisions = false` inchangé.
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-### Phase 4 — Contournement `llm_survie` [TODO]
+### Phase 4 — Contournement `llm_survie` [FAIT]
 
 - Appliquer le contournement aux actions `aller_vers` et `explorer` du moteur.
 - Un blocage n'est déclaré qu'après échec du contournement.
@@ -114,13 +114,17 @@ Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmati
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.
 
-### Phase 5 — Campagne de contrôle [TODO]
+### Phase 5 — Campagne de contrôle [FAIT]
 
 - Bras `automate` avec et sans collisions sur 6 cartes (parallélisable).
 - Si l'automate est viable : bras `llm_survie` avec et sans collisions (`--jobs 1`, Ollama actif).
 - Rapport : survie, contacts, contournements, blocages ; décision d'activation par défaut ou non.
 
 **Gate** : critère de la Phase 0 évalué ; décision consignée dans `_docs/decisions/`.
+
+Résultat : automate 102,02 % et `llm_survie` 100,84 % de leur référence sans collisions ;
+zéro échec de contournement et zéro repli LLM sur 1 417 tours. `decor_collisions` est activé
+par défaut. Détail : `_docs/decisions/2026-10-03_decor_collisions_gate.md`.
 
 **⏸ Checkpoint** — Demander à l'utilisateur de faire `/compact` avant de continuer.
 Attendre sa réponse écrite. Ne pas commencer la phase suivante sans confirmation.

@@ -8,17 +8,13 @@ Godot 4.5 (GDScript), LLM local via Ollama (`gemma3:1b` en référence pour les 
 `gemma3:4b` disponible mais s'effondre sur ce prompt — voir décisions).
 
 ## État actuel (réécrit intégralement à chaque /close)
-Laboratoire headless reproductible. Survie pilotée par LLM livrée (Phases 0 à 5) : `llm_survie` (`gemma3:1b`)
-542 s de vie moyenne contre 292 s (automate), critère non validé. Mémoire cartographique (bords, zones
-parcourues, active par défaut) sans influence stratégique : elle retire seulement du choix les directions
-« bord ». Mode dev : F6, F1-F4, marqueurs, chat LLM. Axes apprentissage et danger en pause.
-Roadmap `roadmap_decor_collisions.md` : Phases 0 à 2 faites (contrat, placement sûr, interrupteur
-`decor_collisions`), Phase 3 (contournement automate) en cours ; Phases 4 et 5 à faire.
+Laboratoire headless reproductible. Survie LLM livrée avec `gemma3:1b`, mémoire des ronciers et
+carte limitée à l'exclusion des bords ; la mesure historique LLM ne valide pas son critère propre.
+Décors bloquants livrés : placement sûr, contournements automate/LLM et `decor_collisions` activé
+par défaut après gate sur six cartes (automate 102,02 %, LLM 100,84 % de la référence).
+Les axes apprentissage et danger restent en pause. Les cinq échecs Phase 8 vision restent à instruire.
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
-- 2026-09-28 : T1 v5 franchit le gate : la direction tenue remplace les redécisions instables
-  et produit 96/96 consommations, avec trois checkpoints à 1 000 stables au replay. Voir
-  `_docs/decisions/2026-09-28_t1-v5-gate-atteint.md`.
 - 2026-09-29 : T2 v1 franchit le gate : la politique avec mémoire réussit 96/96, contre 12/96
   pour l'état initial et le contrôle sans mémoire ; les replays sont stables. Voir
   `_docs/decisions/2026-09-29_t2-v1-gate-atteint.md`.
@@ -47,3 +43,7 @@ Roadmap `roadmap_decor_collisions.md` : Phases 0 à 2 faites (contrat, placement
   Voir `_docs/decisions/2026-10-03_decors-collisions-roadmap.md`.
 - 2026-10-03 : contrat décors validé (exclusions 3,0 / 5,0 / 1,5 / 3,0 m ; N = 3 s ; M = 12 cartes) ;
   `decor_collisions` livré (défaut `false`). Voir `experiments/decor_collisions_contrat_v1.md`.
+- 2026-10-05 : décors bloquants validés sur six cartes appariées ; `decor_collisions` passe à
+  `true` par défaut. Automate 102,02 % et LLM 100,84 % de leur référence, zéro échec de détour ;
+  les blocages LLM de cible ne sont pas attribuables à un tronc dans l'audit spatial. Voir
+  `_docs/decisions/2026-10-03_decor_collisions_gate.md`.

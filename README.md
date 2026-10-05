@@ -52,12 +52,12 @@ Godot 4.5 (GDScript), scène construite entièrement par code. LLM local via Oll
 ## État actuel
 La direction visuelle Observatoire est intégrée : interface bleu nuit/IBM Plex, repères distincts
 pour les quatre agents, états faim/mort/danger, décor low-poly Kenney CC0 et relief multi-échelle.
-L'arène compte 108 arbres dont les collisions sont actuellement désactivées à la demande de
-l'utilisateur (leur activation et celle des futurs décors bloquants sont cadrées par
-`roadmap_decor_collisions.md`, Phases 0 à 2 faites, Phase 3 en cours) ; les mûres sont ancrées au feuillage. Les tests automatiques ciblés passent,
-mais les contrôles visuels des phases 1-2 restent ouverts. Le nouveau relief rompt la
-comparabilité directe avec les parcours enregistrés sur l'ancien terrain. La phase 3
-(personnages et états 3D) n'est pas commencée.
+L'arène compte 108 arbres bloquants par défaut (`decor_collisions = true`) ; placement sûr,
+contournements automate et LLM, et campagne de contrôle sont terminés. Sur six cartes appariées,
+les collisions conservent 102,02 % de la vie automate et 100,84 % de la vie LLM ; détail dans
+`_docs/decisions/2026-10-03_decor_collisions_gate.md`. Les contrôles visuels Observatoire restent
+ouverts dans `tests_manuels.md`. Le nouveau relief rompt la comparabilité directe avec les parcours
+enregistrés sur l'ancien terrain.
 
 Survie pilotée par LLM (`llm_survie`, `gemma3:1b`) livrée avec mémoire des ronciers et mémoire
 cartographique (bords, zones parcourues) ; la carte n'est pas dans le prompt et ne sert qu'à retirer du

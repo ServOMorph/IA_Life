@@ -1,3 +1,13 @@
+## v0.50 — 2026-10-05
+
+### Ajouté
+- Phases 3 à 5 des décors bloquants : contournement automate et `llm_survie`, campagnes appariées, contrôle d'accessibilité et audit spatial des blocages LLM.
+- Décision `_docs/decisions/2026-10-03_decor_collisions_gate.md` et outillage d'analyse des campagnes.
+
+### Modifié
+- `decor_collisions` est activé par défaut après gate atteint : automate 102,02 % et `llm_survie` 100,84 % de leur référence sans collisions.
+- `roadmap_decor_collisions.md`, contexte, README et test manuel de décor alignés sur la livraison.
+
 ## v0.49 — 2026-10-03
 
 ### Ajouté

@@ -5,6 +5,15 @@ const PROBE_HEIGHT := 0.0
 
 func _init() -> void:
 	await process_frame
+	if not VariableRegistry.default_value(VariableRegistry.GAME_CONFIG["decor_collisions"]):
+		_fail("decor_collisions doit être activé par défaut")
+		return
+	var fresh_config = preload("res://scripts/game_config.gd").new()
+	if not fresh_config.decor_collisions:
+		fresh_config.free()
+		_fail("nouvelle configuration sans collisions de décor")
+		return
+	fresh_config.free()
 	for enabled in [false, true]:
 		root.get_node("GameConfig").decor_collisions = enabled
 		var scene: Node3D = load("res://scenes/Main.tscn").instantiate()

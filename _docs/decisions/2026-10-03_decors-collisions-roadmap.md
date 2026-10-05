@@ -1,11 +1,12 @@
 # Décors avec collisions : roadmap et cadrage (2026-10-03)
 
-Statut : proposé — cadrage seulement, aucun code modifié, aucune mesure.
+Statut : validé — Phases 0 à 5 terminées ; décision d'activation par défaut dans
+`2026-10-03_decor_collisions_gate.md`.
 
 ## Décision
 
-Les collisions des arbres (108, désactivées) ne sont pas simplement réactivées. Elles passent par
-une variable `decor_collisions` (défaut `false`) qui pilotera aussi les futurs décors bloquants. Les
+Les collisions des arbres (108) ne sont pas simplement réactivées. Elles passent par
+une variable `decor_collisions` (défaut `true` après le gate de Phase 5) qui pilote aussi les futurs décors bloquants. Les
 rochers gardent leur collision en permanence. Le placement des rochers suit la même règle d'exclusion
 que celui des arbres (distance aux ronciers, aux points de départ et aux autres décors). Travail
 planifié dans `roadmap_decor_collisions.md` (Phases 0 à 5).
@@ -24,6 +25,6 @@ planifié dans `roadmap_decor_collisions.md` (Phases 0 à 5).
 
 - Rupture assumée des références (automate 292 s, `llm_survie` 542 s) : le placement des rochers
   change ; nouvelle référence mesurée en Phase 5.
-- Comportement des agents contre un tronc non testé (glissement ou blocage frontal supposé à partir
-  de la lecture du code).
-- Seuils du gate de Phase 3 (N secondes, M cartes) et rayons d'exclusion à fixer en Phase 0.
+- Gate atteint : automate à 102,02 % et `llm_survie` à 100,84 % de la référence sans collisions ;
+  zéro échec de contournement et zéro repli LLM. Détail et limites dans
+  `2026-10-03_decor_collisions_gate.md`.

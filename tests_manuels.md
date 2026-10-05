@@ -6,7 +6,7 @@
 2. Faire traverser une zone accidentée à un agent et vérifier que le déplacement reste fluide ; contrôler que arbres, rochers et ronciers ne flottent pas et ne s'enfoncent pas dans le sol.
 3. Depuis le bureau virtuel Windows « IA_Life », lancer le jeu et comparer la lisibilité du décor depuis la vue initiale, une vue rasante et la vue de dessus : murs gris neutres, sol désaturé, arbres et rochers low-poly, ronciers distincts des arbres.
 4. Vérifier depuis plusieurs angles que les mûres reposent sur le feuillage, sans flotter au-dessus ou à côté, et que leur retrait après cueillette reste perceptible.
-5. Faire longer un mur, un rocher et un roncier à un agent : vérifier leurs collisions et l'accès aux mûres. Traverser ensuite un tronc : l'arbre ne doit pas bloquer l'agent tant que sa collision reste désactivée.
+5. Faire longer un mur, un rocher et un roncier à un agent : vérifier leurs collisions et l'accès aux mûres. Vérifier qu'un tronc bloque l'agent avec la configuration par défaut, puis qu'il ne le bloque pas avec `decor_collisions = false` dans une nouvelle partie.
 6. Vérifier que les quatre couleurs d'agents et les alertes de danger restent lisibles devant le nouveau décor.
 
 ## DESIGN — Observatoire, phase 1 : lisibilité visuelle

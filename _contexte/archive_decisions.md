@@ -84,6 +84,12 @@
 
 ---
 
+- 2026-09-28 : T1 v5 franchit le gate : la direction tenue remplace les redécisions instables
+  et produit 96/96 consommations, avec trois checkpoints à 1 000 stables au replay. Voir
+  `_docs/decisions/2026-09-28_t1-v5-gate-atteint.md`.
+
+---
+
 - 2026-08-27 : Phase 8 (vision) close — primitive de perception, vision portée/angle/occlusion,
   `social_radius` absorbé comme cas particulier de la vision (code partagé, équivalence
   démontrée sur les scénarios sociaux Phase 6) — voir

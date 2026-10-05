@@ -30,10 +30,15 @@ var _anchor := Vector3.ZERO
 var _stalled_seconds: float = 0.0
 var _current_compass: String = ""
 var _blocked_spots: Array = []
+var _decor_obstacles: Array = []
+var _detour_failures_at_start := 0
 
 func setup(agent, memory: RonceMemory) -> void:
 	_agent = agent
 	_memory = memory
+
+func set_decor_obstacles(obstacles: Array) -> void:
+	_decor_obstacles = obstacles
 
 func take_events() -> Array:
 	var taken := events
@@ -67,10 +72,11 @@ func tick(delta: float) -> Vector3:
 		"aller_vers":
 			return _tick_go_to(delta)
 		"explorer":
-			if _is_blocked(delta):
+			var steered := _steer_decor(direction, delta)
+			if _is_blocked(delta) and _detour_exhausted():
 				_finish("blocage", "blocage")
 				return Vector3.ZERO
-			return direction
+			return steered
 	return Vector3.ZERO
 
 func view() -> Dictionary:
@@ -188,17 +194,20 @@ func _apply(action_name: String, action: Dictionary) -> void:
 			target_id = String(action["roncier_id"])
 			direction = Vector3.ZERO
 			_reset_stall()
+			_reset_detour()
 		"explorer":
 			current_action = action_name
 			target_id = ""
 			_current_compass = String(action["direction"])
 			direction = LLMDecider.COMPASS_VECTORS[String(action["direction"])].normalized()
 			_reset_stall()
+			_reset_detour()
 		"attendre":
 			current_action = action_name
 			target_id = ""
 			direction = Vector3.ZERO
 			_reset_stall()
+			_reset_detour()
 		"ramasser":
 			_agent.survie_harvest(_agent.contact_ronce())
 			_log_action(action_name, "ramasse")
@@ -222,11 +231,24 @@ func _tick_go_to(delta: float) -> Vector3:
 		_memory.observe(target_id, _memory.position_of(target_id), 0, _agent._now_elapsed_seconds())
 		_finish("interrompue", "cible_invalide")
 		return Vector3.ZERO
-	if _is_blocked(delta):
+	direction = to_target.normalized()
+	var steered := _steer_decor(direction, delta)
+	if _is_blocked(delta) and _detour_exhausted():
 		_finish("blocage", "blocage")
 		return Vector3.ZERO
-	direction = to_target.normalized()
-	return direction
+	return steered
+
+func _steer_decor(heading: Vector3, delta: float) -> Vector3:
+	if _decor_obstacles.is_empty():
+		return heading
+	return _agent.decor_detour.steer(_agent.position, heading, _decor_obstacles, delta)
+
+func _detour_exhausted() -> bool:
+	return not _agent.decor_detour.active or _agent.decor_detour.failed_total > _detour_failures_at_start
+
+func _reset_detour() -> void:
+	_agent.decor_detour.reset()
+	_detour_failures_at_start = _agent.decor_detour.failed_total
 
 func _is_blocked(delta: float) -> bool:
 	var moved: Vector3 = _agent.position - _anchor
@@ -250,6 +272,7 @@ func _finish(issue: String, event_type: String) -> void:
 	current_action = ""
 	target_id = ""
 	direction = Vector3.ZERO
+	_reset_detour()
 
 func _log_action(action_name: String, issue: String) -> void:
 	GameLogger.log_event_data("llm_survie_action", "%s : %s (%s)" % [_agent.display_name, action_name, issue], {

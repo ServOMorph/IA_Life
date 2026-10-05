@@ -114,28 +114,41 @@ func _scenario(seed_value: int) -> bool:
 
 func _map(seed_value: int) -> Dictionary:
 	var scene: Node3D = await _build(seed_value)
-	var agent = scene.training_character()
+	var agents: Array = scene.training_agents()
 	var delta := 1.0 / float(Engine.physics_ticks_per_second)
-	var blocked := 0.0
+	var blocked: Array = []
+	var contacts_before: Array = []
+	var detours_before: Array = []
+	for agent in agents:
+		blocked.append(0.0)
+		contacts_before.append(agent.obstacle_contacts["tronc"])
+		detours_before.append(agent.decor_detour.detours_total)
 	var worst := 0.0
 	var goal_steps := 0
-	var before: int = agent.obstacle_contacts["tronc"]
 	for step in int(MAP_SECONDS / delta):
 		await physics_frame
-		if agent.is_dead:
-			break
-		var targeting: bool = GOALS.has(agent.current_goal)
-		if targeting:
-			goal_steps += 1
-		if targeting and agent._obstacle_contact_active["tronc"]:
-			blocked += delta
-			worst = maxf(worst, blocked)
-		else:
-			blocked = 0.0
+		for i in agents.size():
+			var agent = agents[i]
+			if agent.is_dead:
+				blocked[i] = 0.0
+				continue
+			var targeting: bool = GOALS.has(agent.current_goal)
+			if targeting:
+				goal_steps += 1
+			if targeting and agent._obstacle_contact_active["tronc"]:
+				blocked[i] += delta
+				worst = maxf(worst, blocked[i])
+			else:
+				blocked[i] = 0.0
+	var contacts := 0
+	var detours := 0
+	for i in agents.size():
+		contacts += agents[i].obstacle_contacts["tronc"] - contacts_before[i]
+		detours += agents[i].decor_detour.detours_total - detours_before[i]
 	var stats := {
 		"blocked_max": worst,
-		"contacts": agent.obstacle_contacts["tronc"] - before,
-		"detours": agent.decor_detour.detours_total,
+		"contacts": contacts,
+		"detours": detours,
 		"goal_steps": goal_steps,
 	}
 	scene.queue_free()
