@@ -2,7 +2,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-GODOT_EXE = Path("D:/Godot/godot.exe")
+GODOT_EXE = Path("D:/Godot/godot_console.exe")
 PROJECT_DIR = Path(__file__).resolve().parent.parent
 
 

@@ -12,7 +12,8 @@ Laboratoire headless reproductible. Survie LLM livrée avec `gemma3:1b`, mémoir
 carte limitée à l'exclusion des bords ; la mesure historique LLM ne valide pas son critère propre.
 Décors bloquants livrés : placement sûr, contournements automate/LLM et `decor_collisions` activé
 par défaut après gate sur six cartes (automate 102,02 %, LLM 100,84 % de la référence).
-Les axes apprentissage et danger restent en pause. Les cinq échecs Phase 8 vision restent à instruire.
+Les axes apprentissage et danger restent en pause. La suite headless `tools/run_manual_checks.py`
+est verte (les échecs Phase 8 vision étaient un défaut d'isolation des tests, corrigé).
 
 ## Décisions structurantes (append only — 10 entrées max, 5 lignes max/entrée, archiver au-delà)
 - 2026-09-29 : T2 v1 franchit le gate : la politique avec mémoire réussit 96/96, contre 12/96

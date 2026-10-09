@@ -1,3 +1,9 @@
+## v0.51 — 2026-10-09
+
+### Corrigé
+- `tools/run_manual_checks.gd` : isolation du test Relancer (`free()` au lieu de `queue_free()`), qui supprime les 5 échecs Phase 8 vision ; suite headless verte.
+- `tools/run_manual_checks.py` : lance `godot_console.exe`, le wrapper affiche désormais la sortie et le bon code retour.
+
 ## v0.50 — 2026-10-05
 
 ### Ajouté

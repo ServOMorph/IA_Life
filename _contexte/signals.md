@@ -1,19 +1,13 @@
-# Signals — ia_life (MAJ 2026-10-05, clôture)
+# Signals — ia_life (MAJ 2026-10-09, clôture)
 
 ## Actions ouvertes
 
-- [P2|ouvert] Démonstration fenêtrée de la survie pilotée par LLM (Phase 4) sur le bureau virtuel IA_Life, y compris le chat LLM repliable et le filtre des bords connus.
-  fait quand: les contrôles de la section Phase 4 et de la section Chat LLM / carte de `tests_manuels.md` sont validés et les sections supprimées.
+- [P2|ouvert] Démonstration fenêtrée sur le bureau virtuel IA_Life : survie pilotée par LLM (Phase 4), chat LLM repliable, filtre des bords connus, et contrôles visuels Observatoire (phases 1 et 2).
+  fait quand: les sections Phase 4, Chat LLM / carte et DESIGN Observatoire (phases 1 et 2) de `tests_manuels.md` sont validées et supprimées.
   réf: `tests_manuels.md`, `run_survie_demo.py`, `experiments/llm_survie_v1.json`.
-- [P2|ouvert] Instruire les 5 échecs « Phase 8 vision » de `tools/run_manual_checks.gd` (`_test_vision_memorization`, `_test_vision_memory_capacity_no_churn`).
-  fait quand: la cause est identifiée et la suite complète est verte, ou l'écart est consigné comme connu.
-  réf: `tools/run_manual_checks.gd`, `_docs/decisions/2026-10-03_decor_collisions_gate.md`.
 - [P3|ouvert] Rétablir le contrôle d'intégrité du kit absent.
   fait quand: `python scripts/check_kit.py` s'exécute et ses écarts sont traités ou consignés.
   réf: `.claude/commands/close.md` (étape 10), `scripts/check_kit.py` absent.
-- [P3|ouvert] Corriger `python tools/run_manual_checks.py`, qui renvoie le code 1 sans sortie.
-  fait quand: le wrapper affiche la sortie de la suite et le bon code retour.
-  réf: `tools/run_manual_checks.py`.
 - [P4|dormant] Usage stratégique de la carte `llm_survie` (bords, zones explorées) : repoussé par l'utilisateur à plus tard.
   fait quand: une décision définit comment la carte entre dans la stratégie (prompt ou moteur) et une campagne la mesure.
   réf: `scripts/llm_survie_ollama_backend.gd`, `_docs/decisions/2026-10-02_memoire-cartographique-llm-survie.md`.
@@ -31,28 +25,27 @@
 
 - Décors bloquants livrés : `decor_collisions` est activé par défaut ; les campagnes peuvent toujours le surcharger explicitement. Décision et limites : `_docs/decisions/2026-10-03_decor_collisions_gate.md`.
 - Les campagnes `llm_survie` avec Ollama doivent tourner en temps réel et à `--jobs 1` : `--fixed-fps 60` provoque des expirations HTTP et des replis artificiels.
-- La suite `tools/run_manual_checks.gd` échoue sur cinq assertions Phase 8 vision ; ces échecs étaient présents avant le chantier décors.
+- La suite headless se lance par `python tools/run_manual_checks.py` (utilise `godot_console.exe`) ; elle est verte (code 0) au 2026-10-09.
 - Working tree hors session non commité : `.claude/CLAUDE.md`, `AGENTS.md`, `GEMINI.md`, suppressions `ROBERTO/com_telephone/*`, PDF ROBERTO, journaux T0 et `.uid` divers.
 
-## Dernière session (2026-10-05)
+## Dernière session (2026-10-09)
 
-# Session du 2026-10-05
+# Session du 2026-10-09
 
 ## Décisions prises
-- `decor_collisions` est activé par défaut après réussite du gate Phase 5 ; les rochers restent bloquants.
+- Aucune décision d'évolution du projet.
 
 ## Livrables produits ou modifiés
-- Phases 3 à 5 des décors : contournements automate et `llm_survie`, campagnes appariées, contrôles de placement et d'accessibilité.
-- `_docs/decisions/2026-10-03_decor_collisions_gate.md` : décision, résultats et limites du gate.
-- `tools/analyze_decor_collisions.py`, `tools/audit_decor_target_blocks.py` : analyse de campagne et audit spatial des blocages de cible.
+- `tools/run_manual_checks.gd` : `restarted_main.free()` au lieu de `queue_free()` (test 6) ; supprime les 5 échecs Phase 8 vision.
+- `tools/run_manual_checks.py` : lance `godot_console.exe` (le wrapper renvoyait le code 1 sans sortie avec `godot.exe`).
 
 ## Hypothèses validées / invalidées
-- VALIDE : le placement sûr et les contournements conservent la survie sur 6 cartes (automate 102,02 %, LLM 100,84 %).
-- VALIDE : aucun des 9 blocages LLM de cible avec collisions n'est attribuable à un tronc dans l'audit spatial.
-- EN ATTENTE : les 5 échecs Phase 8 vision restent à instruire.
+- VALIDE : les 5 échecs Phase 8 vision venaient d'un défaut d'isolation des tests (ronciers du `Main` rechargé non libérés), pas du code vision ; suite complète en code 0.
+- VALIDE : le wrapper affiche la sortie et le bon code retour.
+- EN ATTENTE : contrôles manuels fenêtrés (Phase 4, Chat LLM, Observatoire 1 et 2).
 
 ## Prochaine étape exacte
-Effectuer les contrôles manuels fenêtrés encore listés, ou instruire les échecs de vision avant un nouveau chantier fonctionnel.
+Effectuer les contrôles manuels fenêtrés de `tests_manuels.md` (Ollama actif, bureau virtuel IA_Life).
 
 ## Question bloquante pour la session suivante
 Aucune

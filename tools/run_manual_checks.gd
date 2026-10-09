@@ -285,7 +285,7 @@ func _test_game_data_settings() -> void:
 	_expect(restarted_main._ronces.size() == 5, "Test 6 : Relancer n'applique pas le nouveau nombre de ronciers.")
 	for spawned_ronce in restarted_main._ronces:
 		_expect(spawned_ronce.berries == 4, "Test 6 : Relancer n'applique pas le nouveau nombre de mûres.")
-	restarted_main.queue_free()
+	restarted_main.free()
 	character.queue_free()
 	ronce.queue_free()
 	for key in saved:

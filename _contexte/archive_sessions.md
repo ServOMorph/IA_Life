@@ -648,3 +648,20 @@ Valider ou remplacer le critère Phase 5 `llm_survie` (P1), puis instruire les �
 
 ## Question bloquante pour la session suivante
 Aucune
+
+---
+
+# Session du 2026-10-05
+
+## Décisions prises
+- `decor_collisions` est activé par défaut après réussite du gate Phase 5 ; les rochers restent bloquants.
+
+## Livrables produits ou modifiés
+- Phases 3 à 5 des décors : contournements automate et `llm_survie`, campagnes appariées, contrôles de placement et d'accessibilité.
+- `_docs/decisions/2026-10-03_decor_collisions_gate.md` : décision, résultats et limites du gate.
+- `tools/analyze_decor_collisions.py`, `tools/audit_decor_target_blocks.py` : analyse de campagne et audit spatial des blocages de cible.
+
+## Hypothèses validées / invalidées
+- VALIDE : le placement sûr et les contournements conservent la survie sur 6 cartes (automate 102,02 %, LLM 100,84 %).
+- VALIDE : aucun des 9 blocages LLM de cible avec collisions n'est attribuable à un tronc dans l'audit spatial.
+- EN ATTENTE : les 5 échecs Phase 8 vision restent à instruire.

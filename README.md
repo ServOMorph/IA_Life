@@ -56,7 +56,7 @@ L'arène compte 108 arbres bloquants par défaut (`decor_collisions = true`) ; p
 contournements automate et LLM, et campagne de contrôle sont terminés. Sur six cartes appariées,
 les collisions conservent 102,02 % de la vie automate et 100,84 % de la vie LLM ; détail dans
 `_docs/decisions/2026-10-03_decor_collisions_gate.md`. Les contrôles visuels Observatoire restent
-ouverts dans `tests_manuels.md`. Le nouveau relief rompt la comparabilité directe avec les parcours
+ouverts dans `tests_manuels.md`. La suite headless `tools/run_manual_checks.py` est verte. Le nouveau relief rompt la comparabilité directe avec les parcours
 enregistrés sur l'ancien terrain.
 
 Survie pilotée par LLM (`llm_survie`, `gemma3:1b`) livrée avec mémoire des ronciers et mémoire
