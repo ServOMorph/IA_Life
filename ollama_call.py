@@ -40,10 +40,10 @@ def main() -> int:
         print(f"ERREUR: connexion à Ollama impossible: {error.reason}", file=sys.stderr)
         return 1
     except TimeoutError:
-        print("ERREUR: délai d'attente Ollama dépassé", file=sys.stderr)
+        print("ERREUR: délai d’attente Ollama dépassé", file=sys.stderr)
         return 1
     except json.JSONDecodeError:
-        print("ERREUR: réponse JSON invalide d'Ollama", file=sys.stderr)
+        print("ERREUR: réponse JSON invalide d’Ollama", file=sys.stderr)
         return 1
 
     result = data.get("response") if isinstance(data, dict) else None
