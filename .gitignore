@@ -3,3 +3,4 @@ logs/
 results/
 __pycache__/
 .venv/
+**/_contexte/journal_session.md
